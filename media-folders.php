@@ -156,6 +156,18 @@ function media_folders_filter() {
 
     // Get the unassigned ID
     $unassigned_id = media_folders_get_unassigned_id();
+
+    // Find and extract the unassigned folder
+    $unassigned_folder = null;
+    $regular_folders = array();
+
+    foreach ($folders as $folder) {
+        if ($folder->term_id == $unassigned_id) {
+            $unassigned_folder = $folder;
+        } else {
+            $regular_folders[] = $folder;
+        }
+    }
     
     echo '<div class="media-folder-filter">';
     echo '<h3>Media Folders</h3>';
@@ -163,23 +175,29 @@ function media_folders_filter() {
     
     // Add "All Files" option
     $class = !isset($_GET['media_folder']) ? 'current' : '';
-    echo '<li class="' . $class . '"><a href="' . admin_url('upload.php') . '">All Files</a></li>';
+    echo '<li class="' . $class . ' all-files"><a href="' . admin_url('upload.php') . '">All Files</a></li>';
     
-    // Add each folder
-     foreach ($folders as $folder) {
-        $class = isset($_GET['media_folder']) && $_GET['media_folder'] === $folder->slug ? 'current' : '';
-        $is_unassigned = ($folder->term_id == $unassigned_id);
-        
-        echo '<li class="' . $class . ($is_unassigned ? ' unassigned-folder' : '') . '" data-folder-id="' . $folder->term_id . '">';
-        echo '<a href="' . admin_url('upload.php?media_folder=' . $folder->slug) . '">' . $folder->name . ' (' . $folder->count . ')</a>';
-        
-        // Only show delete button for non-unassigned folders
-        if (!$is_unassigned) {
-            echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '"></span>';
-        }
-        
+    // Add Unassigned folder immediately after All Files
+    if ($unassigned_folder) {
+        $class = isset($_GET['media_folder']) && $_GET['media_folder'] === $unassigned_folder->slug ? 'current' : '';
+        echo '<li class="' . $class . ' unassigned-folder" data-folder-id="' . $unassigned_folder->term_id . '">';
+        echo '<a href="' . admin_url('upload.php?media_folder=' . $unassigned_folder->slug) . '">' . $unassigned_folder->name . ' (' . $unassigned_folder->count . ')</a>';
         echo '</li>';
     }
+    
+    // Add separator
+    echo '<li class="folder-separator"></li>';
+    
+    // Add each regular folder
+    foreach ($regular_folders as $folder) {
+        $class = isset($_GET['media_folder']) && $_GET['media_folder'] === $folder->slug ? 'current' : '';
+        
+        echo '<li class="' . $class . ' custom-folder" data-folder-id="' . $folder->term_id . '">';
+        echo '<a href="' . admin_url('upload.php?media_folder=' . $folder->slug) . '">' . $folder->name . ' (' . $folder->count . ')</a>';
+        echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '"></span>';
+        echo '</li>';
+    }
+    
     echo '</ul>';
     echo '<a href="#" class="button button-primary add-new-folder">Add New Folder</a>';
     echo '</div>';
@@ -228,6 +246,77 @@ function media_folders_filter() {
         
         .media-folder-filter:hover {
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+              /* All Files Styling - Modern & Professional */
+        .media-folder-list li.all-files {
+            background: #f0f6fc;
+            border-left: none;
+            border-radius: 6px;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .media-folder-list li.all-files:hover {
+            background: #e5f1fb;
+            transform: translateX(3px);
+        }
+        
+        .media-folder-list li.all-files a {
+            color: #2271b1;
+            font-weight: 600;
+        }
+        
+        /* Unassigned Folder Styling - Modern & Professional */
+        .media-folder-list li.unassigned-folder {
+            background: #f8f9fa;
+            border-left: none;
+            border-radius: 6px;
+            margin-bottom: 15px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            position: relative;
+            padding-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+        
+        .media-folder-list li.unassigned-folder:hover {
+            background: #f1f2f3;
+            transform: translateX(3px);
+        }
+        
+        .media-folder-list .folder-separator {
+            padding: 0;
+        }
+
+        .media-folder-list li.unassigned-folder:after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            left: 10%;
+            width: 80%;
+            height: 1px;
+            background: #dcdcde;
+        }
+        
+        .media-folder-list li.unassigned-folder a {
+            color: #50575e;
+            font-style: italic;
+            font-weight: 500;
+        }
+        
+        /* Current state styling */
+        .media-folder-list li.all-files.current,
+        .media-folder-list li.unassigned-folder.current {
+            background: #e0f0ff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        }
+        
+        .media-folder-list li.all-files.current a,
+        .media-folder-list li.unassigned-folder.current a {
+            color: #135e96;
+            font-weight: 600;
         }
         
         /* Add New Folder Button */
