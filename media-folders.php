@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Apex Folders
  * Plugin URI: 
- * Description: Organize media library files into folders for better management
+ * Description: Reach the apex of media library organization.
  * Version: 0.9.7
  * Author: 
  * Text Domain: media-folders
@@ -345,7 +345,7 @@ function media_folders_filter() {
         
         /* Folder separator */
         .media-folder-list .folder-separator {
-            height: 8px;
+            height: 27px;
             background: #f0f0f1;
             padding: 0;
             border: none;
