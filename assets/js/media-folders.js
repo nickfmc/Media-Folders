@@ -136,6 +136,125 @@ window.updateFolderCounts = function() {
             return filter;
         }
     });
+
+    if (wp.media) {
+        // Original attachments browser
+        var oldMediaFrameSelect = wp.media.view.MediaFrame.Select;
+        
+        // Extend the original with our custom behavior
+        wp.media.view.MediaFrame.Select = oldMediaFrameSelect.extend({
+            initialize: function() {
+                // Call the original initialize
+                oldMediaFrameSelect.prototype.initialize.apply(this, arguments);
+                
+                // Add our custom sidebar
+                this.on('content:render:browse', this.addFolderFilter, this);
+            },
+            
+            addFolderFilter: function() {
+                var library = this.state().get('library');
+                var sidebar = this.sidebar.get();
+                
+                if (!this.folderFilterAdded && sidebar) {
+                    // Add a filter section
+                    var folderFilterView = new wp.media.view.AttachmentFilters.FolderFilter({
+                        controller: this,
+                        model: library,
+                        priority: -80
+                    });
+                    
+                    // Insert at the top
+                    sidebar.set('mediaFolderFilter', folderFilterView);
+                    
+                    // Flag so we don't add it multiple times
+                    this.folderFilterAdded = true;
+                }
+            }
+        });
+        
+        // Create custom filter view
+        if (!wp.media.view.AttachmentFilters.FolderFilter) {
+            wp.media.view.AttachmentFilters.FolderFilter = wp.media.view.AttachmentFilters.extend({
+                id: 'media-attachment-folder-filter',
+                className: 'attachment-filters attachment-folder-filter',
+                
+                createFilters: function() {
+                    var filters = {};
+                    
+                    // All Folders option
+                    filters.all = {
+                        text: 'All Folders',
+                        props: {
+                            media_folder: ''
+                        },
+                        priority: 10
+                    };
+                    
+                    // Get folders from our global variable
+                    if (window.mediaFolders) {
+                        // Group folders by hierarchy
+                        var unassigned = null;
+                        var parents = [];
+                        var children = {};
+                        
+                        // Organize folders
+                        window.mediaFolders.forEach(function(folder) {
+                            // We can check parent property to determine hierarchy
+                            if (folder.slug === 'unassigned') {
+                                unassigned = folder;
+                            } else if (!folder.parent) {
+                                parents.push(folder);
+                            } else {
+                                if (!children[folder.parent]) {
+                                    children[folder.parent] = [];
+                                }
+                                children[folder.parent].push(folder);
+                            }
+                        });
+                        
+                        // Add Unassigned first with priority 20
+                        if (unassigned) {
+                            filters['folder_' + unassigned.id] = {
+                                text: unassigned.name,
+                                props: {
+                                    media_folder: unassigned.id
+                                },
+                                priority: 20
+                            };
+                        }
+                        
+                        // Add parent folders starting with priority 30
+                        var priority = 30;
+                        parents.forEach(function(folder) {
+                            filters['folder_' + folder.id] = {
+                                text: folder.name,
+                                props: {
+                                    media_folder: folder.id
+                                },
+                                priority: priority++
+                            };
+                            
+                            // Add children if any
+                            if (children[folder.id]) {
+                                children[folder.id].forEach(function(child) {
+                                    filters['folder_' + child.id] = {
+                                        text: '-- ' + child.name,
+                                        props: {
+                                            media_folder: child.id
+                                        },
+                                        priority: priority++
+                                    };
+                                });
+                            }
+                        });
+                    }
+                    
+                    this.filters = filters;
+                }
+            });
+        }
+    }
+    
     
     // Listen for changes to the media_folder property
     var originalMediaQuery = wp.media.model.Query;

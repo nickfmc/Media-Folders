@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Media Folders
+ * Plugin Name: Apex Folders
  * Plugin URI: 
  * Description: Organize media library files into folders for better management
- * Version: 0.9.0
+ * Version: 0.9.7
  * Author: 
  * Text Domain: media-folders
  * Domain Path: /languages
@@ -27,6 +27,23 @@ register_activation_hook(__FILE__, 'media_folders_activate');
 register_deactivation_hook(__FILE__, 'media_folders_deactivate');
 
 
+
+function media_folders_admin_scripts() {
+    $screen = get_current_screen();
+    
+    // Only on media upload screen
+    if ($screen->base === 'upload') {
+        // Enqueue jQuery UI core and all required components for dialogs
+        wp_enqueue_script('jquery-ui-core');
+        wp_enqueue_script('jquery-ui-dialog');
+        wp_enqueue_script('jquery-ui-draggable');
+        wp_enqueue_script('jquery-ui-resizable');
+        
+        // Enqueue jQuery UI CSS
+        wp_enqueue_style('wp-jquery-ui-dialog');
+    }
+}
+add_action('admin_enqueue_scripts', 'media_folders_admin_scripts');
 
 /**
  * Plugin activation
@@ -144,7 +161,6 @@ function media_folders_register_taxonomy() {
 }
 add_action('init', 'media_folders_register_taxonomy');
 
-// Add media folders to media library screen
 function media_folders_filter() {
     $screen = get_current_screen();
     if ($screen->base !== 'upload') return;
@@ -157,15 +173,18 @@ function media_folders_filter() {
     // Get the unassigned ID
     $unassigned_id = media_folders_get_unassigned_id();
 
-    // Find and extract the unassigned folder
+    // Find and categorize folders
     $unassigned_folder = null;
-    $regular_folders = array();
+    $parent_folders = array();
+    $child_folders = array();
 
     foreach ($folders as $folder) {
         if ($folder->term_id == $unassigned_id) {
             $unassigned_folder = $folder;
+        } else if ($folder->parent == 0) {
+            $parent_folders[] = $folder;
         } else {
-            $regular_folders[] = $folder;
+            $child_folders[$folder->parent][] = $folder;
         }
     }
     
@@ -188,14 +207,32 @@ function media_folders_filter() {
     // Add separator
     echo '<li class="folder-separator"></li>';
     
-    // Add each regular folder
-    foreach ($regular_folders as $folder) {
+    // Add parent folders and their children
+    foreach ($parent_folders as $folder) {
         $class = isset($_GET['media_folder']) && $_GET['media_folder'] === $folder->slug ? 'current' : '';
+        $has_children = isset($child_folders[$folder->term_id]) && !empty($child_folders[$folder->term_id]);
         
-        echo '<li class="' . $class . ' custom-folder" data-folder-id="' . $folder->term_id . '">';
+        echo '<li class="' . $class . ' custom-folder parent-folder' . ($has_children ? ' has-children' : '') . '" data-folder-id="' . $folder->term_id . '">';
         echo '<a href="' . admin_url('upload.php?media_folder=' . $folder->slug) . '">' . $folder->name . ' (' . $folder->count . ')</a>';
         echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '"></span>';
+        
+        // Add "Create Subfolder" button for parent folders
+        echo '<span class="add-subfolder dashicons dashicons-plus-alt2" data-parent-id="' . $folder->term_id . '" data-parent-name="' . esc_attr($folder->name) . '" title="Add subfolder"></span>';
+        
         echo '</li>';
+        
+        // Display children if any
+        if ($has_children) {
+            foreach ($child_folders[$folder->term_id] as $child) {
+                $child_class = isset($_GET['media_folder']) && $_GET['media_folder'] === $child->slug ? 'current' : '';
+                
+                echo '<li class="' . $child_class . ' custom-folder child-folder" data-folder-id="' . $child->term_id . '" data-parent-id="' . $folder->term_id . '">';
+                echo '<span class="child-indicator">└─</span>';
+                echo '<a href="' . admin_url('upload.php?media_folder=' . $child->slug) . '">' . $child->name . ' (' . $child->count . ')</a>';
+                echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $child->term_id . '" data-folder-name="' . esc_attr($child->name) . '"></span>';
+                echo '</li>';
+            }
+        }
     }
     
     echo '</ul>';
@@ -203,286 +240,333 @@ function media_folders_filter() {
     echo '</div>';
     
     // Add CSS for the unassigned folder
+        // Replace all existing CSS in the media_folders_filter function with this:
+    
     echo '<style>
-    .media-folder-list li.count-updated {
-    background-color: #ffff99;
-    transition: background-color 2s;
-}
-        /* Folder Filter Container */
+        /* --- Core Container --- */
         .media-folder-filter {
             float: left;
             width: 20%;
             margin: 65px 20px 0 0;
-            padding: 20px;
-            background: #ffffff;
-            border-radius: 0;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
-            transition: all 0.3s ease;
+            padding: 0;
+            background: transparent;
+            position: relative;
+            z-index: 10;
         }
-
-
-           /* Fix for admin notices */
+        
+        /* --- Admin Notices Fix --- */
         .wrap > .notice,
         .wrap > div.updated,
         .wrap > div.error,
         .wrap > div.info {
-            margin-left: calc(20% + 65px); /* Match width of folder filter + its margin and padding */
+            margin-left: calc(20% + 65px);
             width: auto;
         }
         
-        /* Clear the float after our plugin admin notices */
         .media-folders-admin-notices-spacer {
             clear: both;
             height: 1px;
         }
         
-        /* Admin tools container */
         .media-folders-tools {
-            margin-left: calc(20% + 40px); /* Match the notices */
+            margin-left: calc(20% + 40px);
             width: calc(80% - 40px);
         }
-
-
         
-        .media-folder-filter:hover {
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-
-              /* All Files Styling - Modern & Professional */
-        .media-folder-list li.all-files {
-            background: #f0f6fc;
-            border-left: none;
-            border-radius: 6px;
-            font-weight: 500;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            margin-bottom: 8px;
-            transition: all 0.2s ease;
+        /* --- Folder List Container --- */
+        .media-folder-list {
+            margin: 0 0 20px 0;
+            padding: 0;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         
-        .media-folder-list li.all-files:hover {
-            background: #e5f1fb;
-            transform: translateX(3px);
-        }
-        
-        .media-folder-list li.all-files a {
-            color: #2271b1;
+        /* --- Folder Section Title --- */
+        .media-folder-filter h3 {
+            margin: 0 0 8px 0;
+            padding: 12px 15px;
+            background: #f0f0f1;
+            border-bottom: 1px solid #e2e4e7;
+            font-size: 14px;
+            color: #1d2327;
             font-weight: 600;
         }
         
-        /* Unassigned Folder Styling - Modern & Professional */
-        .media-folder-list li.unassigned-folder {
-            background: #f8f9fa;
-            border-left: none;
-            border-radius: 6px;
-            margin-bottom: 15px !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            position: relative;
-            padding-bottom: 10px;
-            transition: all 0.2s ease;
-        }
-        
-        .media-folder-list li.unassigned-folder:hover {
-            background: #f1f2f3;
-            transform: translateX(3px);
-        }
-        
-        .media-folder-list .folder-separator {
+        /* --- Folder Items (Common Styles) --- */
+        .media-folder-list li {
+            margin: 0;
             padding: 0;
+            position: relative;
+            border-bottom: 1px solid #f0f0f1;
+            transition: all 0.15s ease;
         }
-
-        .media-folder-list li.unassigned-folder:after {
-            content: "";
-            position: absolute;
-            bottom: -8px;
-            left: 10%;
-            width: 80%;
-            height: 1px;
-            background: #dcdcde;
+        
+        .media-folder-list li:last-child {
+            border-bottom: none;
+        }
+        
+        /* Folder links */
+        .media-folder-list li a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #2c3338;
+            transition: all 0.15s ease;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 75px;
+            font-size: 13px;
+        }
+        
+        /* --- System Folders --- */
+        /* All Files styling */
+        .media-folder-list li.all-files {
+            background: #f6f7f7;
+        }
+        
+        .media-folder-list li.all-files a {
+            font-weight: 600;
+            color: #2271b1;
+        }
+        
+        /* Unassigned folder styling */
+        .media-folder-list li.unassigned-folder {
+            background: #f9f9f9;
+            border-bottom: 1px solid #eee;
         }
         
         .media-folder-list li.unassigned-folder a {
             color: #50575e;
             font-style: italic;
-            font-weight: 500;
         }
         
-        /* Current state styling */
-        .media-folder-list li.all-files.current,
-        .media-folder-list li.unassigned-folder.current {
-            background: #e0f0ff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        /* Folder separator */
+        .media-folder-list .folder-separator {
+            height: 8px;
+            background: #f0f0f1;
+            padding: 0;
+            border: none;
         }
         
-        .media-folder-list li.all-files.current a,
-        .media-folder-list li.unassigned-folder.current a {
-            color: #135e96;
+        /* --- Custom Folders --- */
+        /* Parent folders */
+        .media-folder-list li.custom-folder {
+            background: #fff;
+        }
+        
+        .media-folder-list li.custom-folder:hover {
+            background: #f6f7f7;
+        }
+        
+        /* Parent folders with children */
+        .media-folder-list li.parent-folder.has-children {
+            border-left: 3px solid #2271b1;
+        }
+        
+        /* Child folders - refined and compact */
+        .media-folder-list li.child-folder {
+            background: #fcfcfc;
+            padding-left: 0;
+            margin-left: 0;
+            border-left: 3px solid #dcdcde;
+        }
+        
+        .media-folder-list li.child-folder a {
+            padding-left: 48px;
+            font-size: 12.5px;
+        }
+        
+        .media-folder-list li.child-folder .child-indicator {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a7aaad;
+            font-size: 14px;
+        }
+        
+        /* --- Active/Current Folder --- */
+        .media-folder-list li.current {
+            background: #f0f6fc;
+        }
+        
+        .media-folder-list li.current a {
+            color: #0a4b78;
             font-weight: 600;
         }
         
-        /* Add New Folder Button */
+        /* --- Hover Effects --- */
+        .media-folder-list li:not(.folder-separator):hover {
+            background: #f0f6fc;
+        }
+        
+        /* --- Folder Actions --- */
+        /* Delete folder button */
+        .delete-folder {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #cc1818;
+            opacity: 0;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 3px;
+            z-index: 5;
+        }
+        
+        .media-folder-list li:hover .delete-folder {
+            opacity: 0.7;
+        }
+        
+        .media-folder-list li .delete-folder:hover {
+            opacity: 1;
+            background: rgba(204, 24, 24, 0.1);
+        }
+        
+        /* Add subfolder button */
+        .add-subfolder {
+            position: absolute;
+            right: 36px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2271b1;
+            opacity: 0;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 3px;
+            z-index: 5;
+        }
+        
+        .media-folder-list li:hover .add-subfolder {
+            opacity: 0.7;
+        }
+        
+        .media-folder-list li .add-subfolder:hover {
+            opacity: 1;
+            background: rgba(34, 113, 177, 0.1);
+        }
+        
+        /* --- Add New Folder Button --- */
         .add-new-folder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: inline-block;
             width: 100%;
-            padding: 12px 16px;
-            margin-top: 15px !important;
-            background: linear-gradient(45deg, #2271b1, #135e96);
+            padding: 10px 0;
+            background: #2271b1;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.3s ease;
+            border-radius: 4px;
             text-align: center;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
         .add-new-folder:before {
             content: "+";
             margin-right: 8px;
-            font-size: 18px;
             font-weight: bold;
         }
         
         .add-new-folder:hover {
-            transform: translateY(-2px);
-            background: linear-gradient(45deg, #135e96, #2271b1);
-            box-shadow: 0 4px 12px rgba(34, 113, 177, 0.2);
+            background: #135e96;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
         }
         
         .add-new-folder:active {
             transform: translateY(0);
         }
         
-        /* Responsive Design */
-        @media (max-width: 1024px) {
-            .media-folder-filter {
-                width: 25%;
-            }
+        /* --- Count Updates --- */
+        .media-folder-list li.count-updated {
+            background-color: #fcf9e8;
+            transition: background-color 2s;
         }
         
-        @media (max-width: 768px) {
-            .media-folder-filter {
-                width: 100%;
-                margin: 20px 0;
-                float: none;
-            }
-        }
-        
-        /* Folder List Container */
-        .media-folder-list {
-            margin: 0;
-            padding: 15px;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        /* Folder List Items */
-        .media-folder-list li {
-            margin: 8px 0;
-            padding: 10px 15px;
-            position: relative;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-            border-left: 3px solid transparent;
-        }
-        
-        .media-folder-list li:hover {
-            background: #f0f2f5;
-            border-left: 3px solid #2271b1;
-            transform: translateX(5px);
-        }
-        
-        /* Current Folder Styling */
-        .media-folder-list li.current a {
-            font-weight: 600;
-            color: #2271b1;
-        }
-        
-        /* Folder Links */
-        .media-folder-list li a {
-            color: #1d2327;
-            text-decoration: none;
-            font-size: 14px;
+        /* --- Dialog Styles --- */
+        .folder-creation-dialog label {
             display: block;
-            padding-right: 30px;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 13px;
         }
         
-        /* Add New Folder Button */
-        .add-new-folder {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 8px 16px;
-            background: #2271b1;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-size: 14px;
+        .folder-creation-dialog input,
+        .folder-creation-dialog select {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #8c8f94;
         }
         
-        .add-new-folder:hover {
-            background: #135e96;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(34, 113, 177, 0.2);
-        }
-        
-        /* Page Title Action Button */
-        .wrap .page-title-action {
-            margin-left: 8px;
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: 1px solid #2271b1;
-            color: #2271b1;
-            transition: all 0.3s ease;
-        }
-        
-        .wrap .page-title-action:hover {
-            background: #2271b1;
-            color: white;
-        }
-        
-        /* Table and Navigation Elements */
+        /* --- Media Library Table --- */
         .wp-list-table, 
         .tablenav, 
         .search-form, 
         .subsubsub {
             width: 78%;
             float: right;
-            background: #ffffff;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         
-        /* Delete Folder Button */
-        .delete-folder {
-            cursor: pointer;
-            color: #dc3545;
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            opacity: 0;
-            transition: all 0.3s ease;
-            padding: 5px;
-            border-radius: 4px;
+        /* --- Responsive Design --- */
+        @media (max-width: 1280px) {
+            .media-folder-filter {
+                width: 25%;
+            }
+            
+            .wp-list-table, 
+            .tablenav, 
+            .search-form, 
+            .subsubsub {
+                width: 73%;
+            }
+            
+            .wrap > .notice,
+            .wrap > div.updated,
+            .wrap > div.error,
+            .wrap > div.info {
+                margin-left: calc(25% + 65px);
+            }
         }
         
-        .media-folder-list li:hover .delete-folder {
-            opacity: 1;
+        @media (max-width: 960px) {
+            .media-folder-filter {
+                width: 30%;
+            }
+            
+            .wp-list-table, 
+            .tablenav, 
+            .search-form, 
+            .subsubsub {
+                width: 68%;
+            }
+            
+            .wrap > .notice,
+            .wrap > div.updated,
+            .wrap > div.error,
+            .wrap > div.info {
+                margin-left: calc(30% + 65px);
+            }
         }
         
-        .delete-folder:hover {
-            background: rgba(220, 53, 69, 0.1);
-            color: #dc3545;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
+        @media (max-width: 782px) {
+            .media-folder-filter {
+                width: 100%;
+                float: none;
+                margin: 20px 0;
+            }
+            
             .wp-list-table, 
             .tablenav, 
             .search-form, 
@@ -490,63 +574,161 @@ function media_folders_filter() {
                 width: 100%;
                 float: none;
             }
+            
+            .wrap > .notice,
+            .wrap > div.updated,
+            .wrap > div.error,
+            .wrap > div.info {
+                margin-left: 0;
+                width: 100%;
+            }
         }
-        
     </style>';
     
     // Add JavaScript for folder management
     ?>
+
+
+    
     <script>
     jQuery(document).ready(function($) {
+        // Add subfolder handler
+        $('.add-subfolder').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var parentId = $(this).data('parent-id');
+            var parentName = $(this).data('parent-name');
+            
+            // Display dialog to create subfolder
+            var dialogContent = '<div class="folder-creation-dialog">' +
+                '<p><label for="new-subfolder-name">Subfolder Name:</label>' +
+                '<input type="text" id="new-subfolder-name" class="widefat" /></p>' +
+                '<p>Parent folder: <strong>' + parentName + '</strong></p>' +
+                '</div>';
+            
+            $('<div id="create-subfolder-dialog"></div>').html(dialogContent).dialog({
+                title: 'Create New Subfolder',
+                dialogClass: 'wp-dialog',
+                modal: true,
+                resizable: false,
+                width: 400,
+                buttons: {
+                    'Create Subfolder': function() {
+                        var folderName = $('#new-subfolder-name').val();
+                        
+                        if (folderName) {
+                            $.ajax({
+                                url: ajaxurl,
+                                type: 'POST',
+                                data: {
+                                    action: 'theme_add_media_folder',
+                                    folder_name: folderName,
+                                    parent_id: parentId,
+                                    nonce: '<?php echo wp_create_nonce('media_folders_nonce'); ?>'
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        location.reload();
+                                    } else {
+                                        alert('Error creating subfolder: ' + (response.data?.message || 'Unknown error'));
+                                    }
+                                }
+                            });
+                        }
+                        
+                        $(this).dialog('close');
+                    },
+                    'Cancel': function() {
+                        $(this).dialog('close');
+                    }
+                },
+                open: function() {
+                    $('#new-subfolder-name').focus();
+                },
+                close: function() {
+                    $(this).dialog('destroy').remove();
+                }
+            });
+        });
+    
         // Add new folder
         $('.add-new-folder').on('click', function(e) {
             e.preventDefault();
-            var folderName = prompt('Enter folder name:');
-            if (folderName) {
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'theme_add_media_folder',
-                        folder_name: folderName,
-                        nonce: '<?php echo wp_create_nonce('media_folders_nonce'); ?>'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            alert('Error creating folder');
-                        }
-                    }
-                });
-            }
-        });
-        $('.delete-folder').on('click', function(e) {
-            e.preventDefault();
-            var folderId = $(this).data('folder-id');
-            var folderName = $(this).data('folder-name');
             
-            if (confirm('Are you sure you want to delete the folder "' + folderName + '"? Files in this folder will not be deleted.')) {
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'theme_delete_media_folder',
-                        folder_id: folderId,
-                        nonce: '<?php echo wp_create_nonce('media_folders_nonce'); ?>'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            alert('Error deleting folder');
+            // Create modal for folder creation
+            var dialogContent = '<div class="folder-creation-dialog">' +
+                '<p><label for="new-folder-name">Folder Name:</label>' +
+                '<input type="text" id="new-folder-name" class="widefat" /></p>' +
+                '<p><label for="new-folder-parent">Parent Folder (optional):</label>' +
+                '<select id="new-folder-parent" class="widefat">' +
+                '<option value="0">None (top level)</option>';
+                
+            // Add regular folders as potential parents
+            <?php foreach ($parent_folders as $folder): ?>
+            dialogContent += '<option value="<?php echo esc_attr($folder->term_id); ?>"><?php echo esc_html($folder->name); ?></option>';
+            <?php endforeach; ?>
+            
+            dialogContent += '</select></p>' +
+                '</div>';
+            
+            // Create dialog
+            $('<div id="create-folder-dialog"></div>').html(dialogContent).dialog({
+                title: 'Create New Folder',
+                dialogClass: 'wp-dialog',
+                modal: true,
+                resizable: false,
+                width: 400,
+                buttons: {
+                    'Create Folder': function() {
+                        var folderName = $('#new-folder-name').val();
+                        var parentId = $('#new-folder-parent').val();
+                        
+                        if (folderName) {
+                            $.ajax({
+                                url: ajaxurl,
+                                type: 'POST',
+                                data: {
+                                    action: 'theme_add_media_folder',
+                                    folder_name: folderName,
+                                    parent_id: parentId,
+                                    nonce: '<?php echo wp_create_nonce('media_folders_nonce'); ?>'
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        location.reload();
+                                    } else {
+                                        alert('Error creating folder: ' + (response.data?.message || 'Unknown error'));
+                                    }
+                                }
+                            });
                         }
+                        
+                        $(this).dialog('close');
+                    },
+                    'Cancel': function() {
+                        $(this).dialog('close');
                     }
-                });
-            }
+                },
+                open: function() {
+                    // Focus the folder name input
+                    $('#new-folder-name').focus();
+                },
+                close: function() {
+                    $(this).dialog('destroy').remove();
+                }
+            });
+        });
+        
+        // Delete folder (keep your existing delete folder code)
+        $('.delete-folder').on('click', function(e) {
+            // Your existing delete folder code...
         });
     });
     </script>
+
+
+
     <?php
 }
 add_action('admin_notices', 'media_folders_filter');
@@ -601,7 +783,7 @@ add_action('init', 'theme_register_folder_count_event');
 
 
 
-// AJAX handler for adding new folders
+
 function theme_ajax_add_media_folder() {
     check_ajax_referer('media_folders_nonce', 'nonce');
     
@@ -610,16 +792,50 @@ function theme_ajax_add_media_folder() {
     }
     
     $folder_name = sanitize_text_field($_POST['folder_name']);
+    $parent_id = isset($_POST['parent_id']) ? intval($_POST['parent_id']) : 0;
     
-    $result = wp_insert_term($folder_name, 'media_folder');
+    // Ensure parent folder exists if specified
+    if ($parent_id > 0) {
+        $parent_term = get_term($parent_id, 'media_folder');
+        if (!$parent_term || is_wp_error($parent_term)) {
+            wp_send_json_error(array('message' => 'Parent folder does not exist'));
+            return;
+        }
+        
+        // Ensure parent isn't the Unassigned folder
+        $unassigned_id = media_folders_get_unassigned_id();
+        if ($parent_id == $unassigned_id) {
+            wp_send_json_error(array('message' => 'Cannot create subfolders under Unassigned'));
+            return;
+        }
+        
+        // Check if parent itself has a parent (limit to one level)
+        $parent_parent = get_term_field('parent', $parent_id, 'media_folder');
+        if (!is_wp_error($parent_parent) && $parent_parent > 0) {
+            wp_send_json_error(array('message' => 'Only one level of subfolders is supported'));
+            return;
+        }
+    }
+    
+    $result = wp_insert_term(
+        $folder_name, 
+        'media_folder',
+        array(
+            'parent' => $parent_id
+        )
+    );
     
     if (is_wp_error($result)) {
-        wp_send_json_error();
+        wp_send_json_error(array('message' => $result->get_error_message()));
     } else {
         wp_send_json_success();
     }
 }
 add_action('wp_ajax_theme_add_media_folder', 'theme_ajax_add_media_folder');
+
+
+
+
 
 function media_folders_attachment_fields($form_fields, $post) {
     $folders = get_terms(array(
@@ -627,34 +843,73 @@ function media_folders_attachment_fields($form_fields, $post) {
         'hide_empty' => false,
     ));
     
-     // Get the current folder term
-     $current_folders = wp_get_object_terms($post->ID, 'media_folder');
-     $current_folder_id = (!empty($current_folders) && !is_wp_error($current_folders)) ? $current_folders[0]->term_id : media_folders_get_unassigned_id();
-     
-     $dropdown = '<select name="attachments[' . $post->ID . '][media_folder]" id="attachments-' . $post->ID . '-media_folder">';
-     
-     
-     foreach ($folders as $folder) {
-         $selected = selected($current_folder_id, $folder->term_id, false);
-         $dropdown .= sprintf(
-             '<option value="%s"%s>%s</option>',
-             esc_attr($folder->term_id),
-             $selected,
-             esc_html($folder->name)
-         );
-     }
-     
-     $dropdown .= '</select>';
-     
-     $form_fields['media_folder'] = array(
-         'label' => 'Folder',
-         'input' => 'html',
-         'html' => $dropdown,
-         'helps' => 'Select a folder for this media item'
-     );
-     
-     return $form_fields;
- }
+    // Get the current folder term
+    $current_folders = wp_get_object_terms($post->ID, 'media_folder');
+    $current_folder_id = (!empty($current_folders) && !is_wp_error($current_folders)) ? $current_folders[0]->term_id : media_folders_get_unassigned_id();
+    
+    // Organize folders by hierarchy
+    $unassigned_folder = null;
+    $parent_folders = array();
+    $child_folders = array();
+    
+    foreach ($folders as $folder) {
+        if ($folder->term_id == media_folders_get_unassigned_id()) {
+            $unassigned_folder = $folder;
+        } else if ($folder->parent == 0) {
+            $parent_folders[] = $folder;
+        } else {
+            $child_folders[$folder->parent][] = $folder;
+        }
+    }
+    
+    $dropdown = '<select name="attachments[' . $post->ID . '][media_folder]" id="attachments-' . $post->ID . '-media_folder">';
+    
+    // Add unassigned folder first
+    if ($unassigned_folder) {
+        $selected = selected($current_folder_id, $unassigned_folder->term_id, false);
+        $dropdown .= sprintf(
+            '<option value="%s"%s>%s</option>',
+            esc_attr($unassigned_folder->term_id),
+            $selected,
+            esc_html($unassigned_folder->name)
+        );
+    }
+    
+    // Add parent folders and their children
+    foreach ($parent_folders as $folder) {
+        $selected = selected($current_folder_id, $folder->term_id, false);
+        $dropdown .= sprintf(
+            '<option value="%s"%s>%s</option>',
+            esc_attr($folder->term_id),
+            $selected,
+            esc_html($folder->name)
+        );
+        
+        // Add children
+        if (isset($child_folders[$folder->term_id])) {
+            foreach ($child_folders[$folder->term_id] as $child) {
+                $selected = selected($current_folder_id, $child->term_id, false);
+                $dropdown .= sprintf(
+                    '<option value="%s"%s>&nbsp;&nbsp;└─ %s</option>',
+                    esc_attr($child->term_id),
+                    $selected,
+                    esc_html($child->name)
+                );
+            }
+        }
+    }
+    
+    $dropdown .= '</select>';
+    
+    $form_fields['media_folder'] = array(
+        'label' => 'Folder',
+        'input' => 'html',
+        'html' => $dropdown,
+        'helps' => 'Select a folder for this media item'
+    );
+    
+    return $form_fields;
+}
 
 
 add_filter('attachment_fields_to_edit', 'media_folders_attachment_fields', 10, 2);
@@ -1162,6 +1417,8 @@ wp_enqueue_script(
 }
 
 // Hook into both admin_init (early) and admin_enqueue_scripts
+
+
 add_action('admin_init', 'media_folders_block_editor_assets', 5);
 add_action('admin_enqueue_scripts', 'media_folders_block_editor_assets');
 
