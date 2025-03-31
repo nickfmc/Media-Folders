@@ -92,13 +92,18 @@ function media_folders_get_unassigned_id() {
     return is_array($unassigned) ? $unassigned['term_id'] : $unassigned;
 }
 
-// Add before the existing theme_ajax_delete_media_folder function
+
+// Function to ensure all media items are assigned to a folder
+
+// Replace your existing theme_ajax_delete_media_folder function with this improved version
 function theme_ajax_delete_media_folder() {
     check_ajax_referer('media_folders_nonce', 'nonce');
     
     if (!current_user_can('upload_files')) {
         wp_send_json_error();
     }
+    
+    global $wpdb;
     
     $folder_id = intval($_POST['folder_id']);
     $unassigned_id = media_folders_get_unassigned_id();
@@ -109,16 +114,99 @@ function theme_ajax_delete_media_folder() {
         return;
     }
     
-    // Delete the term
+    // Get the term taxonomy IDs we need
+    $folder_tt_id = $wpdb->get_var($wpdb->prepare(
+        "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
+         WHERE term_id = %d AND taxonomy = 'media_folder'",
+        $folder_id
+    ));
+    
+    $unassigned_tt_id = $wpdb->get_var($wpdb->prepare(
+        "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
+         WHERE term_id = %d AND taxonomy = 'media_folder'",
+        $unassigned_id
+    ));
+    
+    if (!$folder_tt_id || !$unassigned_tt_id) {
+        wp_send_json_error(array('message' => 'Could not find taxonomy terms'));
+        return;
+    }
+    
+    // Step 1: Directly find all attachments in this folder using SQL
+    $attachment_ids = $wpdb->get_col($wpdb->prepare(
+        "SELECT tr.object_id 
+         FROM $wpdb->term_relationships tr
+         JOIN $wpdb->posts p ON p.ID = tr.object_id
+         WHERE tr.term_taxonomy_id = %d 
+         AND p.post_type = 'attachment'",
+        $folder_tt_id
+    ));
+    
+    $moved_count = 0;
+    
+    // Step 2: For each attachment, remove the old relationship and add the new one
+    if (!empty($attachment_ids)) {
+        foreach ($attachment_ids as $attachment_id) {
+            // First, remove the current folder assignment
+            $wpdb->delete(
+                $wpdb->term_relationships,
+                array(
+                    'object_id' => $attachment_id,
+                    'term_taxonomy_id' => $folder_tt_id
+                )
+            );
+            
+            // Then check if it's already in Unassigned
+            $exists = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM $wpdb->term_relationships 
+                 WHERE object_id = %d AND term_taxonomy_id = %d",
+                $attachment_id, $unassigned_tt_id
+            ));
+            
+            // Only add to Unassigned if it's not already there
+            if (!$exists) {
+                $wpdb->insert(
+                    $wpdb->term_relationships,
+                    array(
+                        'object_id' => $attachment_id,
+                        'term_taxonomy_id' => $unassigned_tt_id,
+                        'term_order' => 0
+                    )
+                );
+                $moved_count++;
+            }
+        }
+        
+        // Update both term counts
+        $wpdb->query($wpdb->prepare(
+            "UPDATE $wpdb->term_taxonomy 
+             SET count = count + %d 
+             WHERE term_taxonomy_id = %d",
+            $moved_count, $unassigned_tt_id
+        ));
+        
+        $wpdb->query($wpdb->prepare(
+            "UPDATE $wpdb->term_taxonomy 
+             SET count = 0 
+             WHERE term_taxonomy_id = %d",
+            $folder_tt_id
+        ));
+    }
+    
+    // Force term count updates and clear caches
+    clean_term_cache(array($folder_id, $unassigned_id), 'media_folder');
+    
+    // Step 3: Delete the term
     $result = wp_delete_term($folder_id, 'media_folder');
     
     if (is_wp_error($result)) {
-        wp_send_json_error();
+        wp_send_json_error(array('message' => $result->get_error_message()));
     } else {
-        wp_send_json_success();
+        wp_send_json_success(array(
+            'message' => 'Folder deleted. ' . count($attachment_ids) . ' files moved to Unassigned folder.'
+        ));
     }
 }
-
 /**
  * Plugin deactivation
  */
@@ -720,9 +808,36 @@ function media_folders_filter() {
             });
         });
         
-        // Delete folder (keep your existing delete folder code)
+        // Delete folder
         $('.delete-folder').on('click', function(e) {
-            // Your existing delete folder code...
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var folderId = $(this).data('folder-id');
+            var folderName = $(this).data('folder-name');
+            
+            if (confirm('Are you sure you want to delete the folder "' + folderName + '"?\n\nFiles in this folder will be moved to the Unassigned folder.')) {
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'theme_delete_media_folder',
+                        folder_id: folderId,
+                        nonce: '<?php echo wp_create_nonce('media_folders_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            var errorMsg = response.data && response.data.message ? response.data.message : 'Error deleting folder';
+                            alert(errorMsg);
+                        }
+                    },
+                    error: function() {
+                        alert('Network error when trying to delete folder');
+                    }
+                });
+            }
         });
     });
     </script>
@@ -731,6 +846,7 @@ function media_folders_filter() {
 
     <?php
 }
+add_action('wp_ajax_theme_delete_media_folder', 'theme_ajax_delete_media_folder');
 add_action('admin_notices', 'media_folders_filter');
 
 
