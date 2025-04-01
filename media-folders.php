@@ -21,6 +21,8 @@ define('MEDIA_FOLDERS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MEDIA_FOLDERS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MEDIA_FOLDERS_VERSION', '0.9.0');
 
+// Include the folder drag and drop class
+require_once MEDIA_FOLDERS_PLUGIN_DIR . 'class-folder-drag-drop.php';
 
 // Register activation and deactivation hooks
 register_activation_hook(__FILE__, 'media_folders_activate');
@@ -855,6 +857,23 @@ jQuery(document).ready(function($) {
                 if (response.success && response.data) {
                     console.log('Got updated folder counts:', response.data);
                     
+                    // Create a mapping of parent folders to their children
+                    var folderChildren = {};
+                    
+                    // First pass - identify parent-child relationships
+                    jQuery('.media-folder-list li.child-folder').each(function() {
+                        var $child = jQuery(this);
+                        var childId = $child.data('folder-id');
+                        var parentId = $child.data('parent-id');
+                        
+                        if (parentId) {
+                            if (!folderChildren[parentId]) {
+                                folderChildren[parentId] = [];
+                            }
+                            folderChildren[parentId].push(childId);
+                        }
+                    });
+                    
                     // Update all folder counts in the sidebar
                     jQuery('.media-folder-list li').each(function() {
                         var $this = jQuery(this);
@@ -864,13 +883,31 @@ jQuery(document).ready(function($) {
                             var folderData = response.data[folderId];
                             var $link = $this.find('a');
                             var linkText = $link.text();
+                            var isParentWithChildren = $this.hasClass('parent-folder') && 
+                                                      folderChildren[folderId] && 
+                                                      folderChildren[folderId].length > 0;
                             
-                            // Replace the count portion of the text
-                            var newText = linkText.replace(/\(\d+\)$/, '(' + folderData.count + ')');
-                            $link.text(newText);
+                            // Calculate total count for parent folders with children
+                            if (isParentWithChildren) {
+                                var totalCount = folderData.count;
+                                // Add counts from all children
+                                jQuery.each(folderChildren[folderId], function(_, childId) {
+                                    if (response.data[childId]) {
+                                        totalCount += response.data[childId].count;
+                                    }
+                                });
+                                
+                                // Replace the count portion with both counts
+                                var newText = linkText.replace(/\(\d+( \/ \d+ total)?\)$/, '(' + folderData.count + ' / ' + totalCount + ' total)');
+                                $link.text(newText);
+                            } else {
+                                // Regular folders - just update the count
+                                var newText = linkText.replace(/\(\d+\)$/, '(' + folderData.count + ')');
+                                $link.text(newText);
+                            }
                             
                             // Briefly highlight updated counts
-                            if (linkText !== newText) {
+                            if (linkText !== $link.text()) {
                                 $this.addClass('count-updated');
                                 setTimeout(function() {
                                     $this.removeClass('count-updated');
@@ -1318,22 +1355,43 @@ function media_folders_attachment_fields($form_fields, $post) {
     // Add parent folders and their children
     foreach ($parent_folders as $folder) {
         $selected = selected($current_folder_id, $folder->term_id, false);
-        $dropdown .= sprintf(
-            '<option value="%s"%s>%s</option>',
-            esc_attr($folder->term_id),
-            $selected,
-            esc_html($folder->name)
-        );
+        
+        // Calculate total count for display purposes
+        $total_count = $folder->count;
+        $has_children = isset($child_folders[$folder->term_id]) && !empty($child_folders[$folder->term_id]);
+        
+        if ($has_children) {
+            foreach ($child_folders[$folder->term_id] as $child) {
+                $total_count += $child->count;
+            }
+            $dropdown .= sprintf(
+                '<option value="%s"%s>%s (%d / %d total)</option>',
+                esc_attr($folder->term_id),
+                $selected,
+                esc_html($folder->name),
+                $folder->count,
+                $total_count
+            );
+        } else {
+            $dropdown .= sprintf(
+                '<option value="%s"%s>%s (%d)</option>',
+                esc_attr($folder->term_id),
+                $selected,
+                esc_html($folder->name),
+                $folder->count
+            );
+        }
         
         // Add children
-        if (isset($child_folders[$folder->term_id])) {
+        if ($has_children) {
             foreach ($child_folders[$folder->term_id] as $child) {
                 $selected = selected($current_folder_id, $child->term_id, false);
                 $dropdown .= sprintf(
-                    '<option value="%s"%s>&nbsp;&nbsp;└─ %s</option>',
+                    '<option value="%s"%s>&nbsp;&nbsp;└─ %s (%d)</option>',
                     esc_attr($child->term_id),
                     $selected,
-                    esc_html($child->name)
+                    esc_html($child->name),
+                    $child->count
                 );
             }
         }
