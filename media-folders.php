@@ -93,9 +93,22 @@ function media_folders_get_unassigned_id() {
 }
 
 
+function media_folders_enqueue_refresh_script() {
+    wp_add_inline_script('media-editor', '
+        // Force refresh helper
+        window.mediaFoldersRefreshView = function() {
+            if (wp.media.frame) {
+                wp.media.frame.library.props.set({ignore: (+ new Date())});
+                wp.media.frame.library.props.trigger("change");
+            }
+            jQuery(".attachments-browser .attachments").trigger("scroll");
+        };
+    ');
+}
+add_action('admin_enqueue_scripts', 'media_folders_enqueue_refresh_script');
+
 // Function to ensure all media items are assigned to a folder
 
-// Replace your existing theme_ajax_delete_media_folder function with this improved version
 function theme_ajax_delete_media_folder() {
     check_ajax_referer('media_folders_nonce', 'nonce');
     
@@ -277,7 +290,7 @@ function media_folders_filter() {
     }
     
     echo '<div class="media-folder-filter">';
-    echo '<h3>Media Folders</h3>';
+    echo '<h3>Apex Folders</h3>';
     echo '<ul class="media-folder-list">';
     
     // Add "All Files" option
@@ -677,8 +690,296 @@ function media_folders_filter() {
     ?>
 
 
+
+
+<script>
+jQuery(document).ready(function($) {
+    // Initialize a tracker for our current folder
+    var currentFolder = <?php echo isset($_GET['media_folder']) ? "'" . esc_js($_GET['media_folder']) . "'" : 'null'; ?>;
+    
+    // Track all attachment edits globally
+    var attachmentEditTracking = {};
+    
+    // Handle attachment fields save
+    $(document).on('click', '.attachment-save-submit', function() {
+        var $this = $(this);
+        var $form = $this.closest('form');
+        var attachmentId = $form.find('input[name="attachment_id"]').val();
+        var $folderSelect = $form.find('select[name^="attachments"][name$="[media_folder]"]');
+        var selectedFolderId = $folderSelect.val();
+        var originalValue = $folderSelect.find('option:selected').data('original-value');
+        
+        // Store in global tracking object instead of on the button
+        if (attachmentId) {
+            attachmentEditTracking[attachmentId] = {
+                id: attachmentId,
+                newFolderId: selectedFolderId,
+                originalFolder: originalValue
+            };
+            
+            console.log('Tracking attachment move:', attachmentEditTracking[attachmentId]);
+        }
+    });
+    
+    // Add data attribute to track original folder
+    $(document).on('focus', 'select[name^="attachments"][name$="[media_folder]"]', function() {
+        var $select = $(this);
+        // Only set original value once when first focused
+        if (!$select.data('original-tracked')) {
+            $select.find('option:selected').attr('data-original-value', $select.val());
+            $select.data('original-tracked', true);
+        }
+    });
+    
+
+    // Listen for successful attachment updates
+    $(document).ajaxComplete(function(event, xhr, settings) {
+        // Check if this is a save-attachment AJAX request
+        if (settings.data && settings.data.indexOf('action=save-attachment') !== -1) {
+            // Extract attachment ID from the AJAX request
+            var matches = settings.data.match(/attachment_id=(\d+)/i);
+            var attachmentId = matches ? matches[1] : null;
+            
+            console.log('AJAX Complete - Attachment ID from URL:', attachmentId);
+            
+            if (!attachmentId || !attachmentEditTracking[attachmentId]) {
+                console.log('No tracking data found');
+                return;
+            }
+            
+            var trackingData = attachmentEditTracking[attachmentId];
+            
+            // Get the term slug for the selected folder
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'get_folder_slug',
+                    folder_id: trackingData.newFolderId,
+                    nonce: '<?php echo wp_create_nonce('media_folders_get_slug'); ?>'
+                },
+                success: function(response) {
+                    console.log('Folder slug response:', response);
+                    
+                    if (response.success && response.data && response.data.slug) {
+                        var newFolderSlug = response.data.slug;
+                        
+                        console.log('New folder slug:', newFolderSlug, 'Current folder:', currentFolder);
+                        
+                        // If we're viewing a specific folder
+                        if (currentFolder) {
+                            if (newFolderSlug !== currentFolder) {
+                                // CASE 1: File moved OUT OF current folder - remove it
+                                console.log('Removing attachment from view:', attachmentId);
+                                
+                                // APPROACH 1: Force immediate refresh of the current view
+                                if (wp.media && wp.media.frame) {
+                                    try {
+                                        // Try to refresh the media library directly
+                                        if (wp.media.frame.content.get() && wp.media.frame.content.get().collection) {
+                                            // Force collection refresh by changing a dummy property and refreshing
+                                            wp.media.frame.content.get().collection.props.set({
+                                                '__refresh': new Date().getTime()
+                                            });
+                                            wp.media.frame.content.get().collection.reset(wp.media.frame.content.get().collection.models);
+                                        }
+                                    } catch(e) {
+                                        console.error('Error refreshing collection:', e);
+                                    }
+                                }
+                                
+                                // APPROACH 2: Direct DOM manipulation with robust selectors
+                                setTimeout(function() {
+                                    var $items = $('#post-' + attachmentId + ', ' + 
+                                                  'tr#post-' + attachmentId + ', ' +
+                                                  'li.attachment[data-id="' + attachmentId + '"], ' +
+                                                  'div.attachment[data-id="' + attachmentId + '"], ' +
+                                                  'tr.attachment[data-id="' + attachmentId + '"]');
+                                                  
+                                    console.log('Found ' + $items.length + ' DOM elements to remove');
+                                    
+                                    $items.fadeOut(300, function() {
+                                        $(this).remove();
+                                    });
+                                    
+                                    // APPROACH 3: Last resort direct page refresh
+                                    setTimeout(function() {
+                                        // If we still see the attachment, force page reload
+                                        var stillExists = $('#post-' + attachmentId + ', ' + 
+                                                         'li.attachment[data-id="' + attachmentId + '"], ' +
+                                                         'div.attachment[data-id="' + attachmentId + '"]').length > 0;
+                                        
+                                        if (stillExists) {
+                                            console.log('Item still in DOM, reloading page');
+                                            window.location.reload();
+                                        }
+                                    }, 1000);
+                                }, 300);
+                                
+                                // Update folder counts
+                                updateFolderCounts();
+                            } else {
+                                // Just update counts if file is in the same folder
+                                updateFolderCounts();
+                            }
+                        } else {
+                            // We're on the "All Files" view
+                            updateFolderCounts();
+                        }
+                        
+                        // Clean up tracking
+                        delete attachmentEditTracking[attachmentId];
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error getting folder slug:', error);
+                }
+            });
+        }
+    });  // Add this inside your existing jQuery document.ready block,
+    // right after the AJAX complete handler for attachment updates
+    
+    // Global function to handle visual updates when folder assignments change
+    window.updateFolderCounts = function() {
+        console.log('Updating folder counts...');
+        
+        // Make an AJAX request to get updated folder information
+        jQuery.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'theme_get_folder_counts',
+                nonce: '<?php echo wp_create_nonce("media_folders_nonce"); ?>'
+            },
+            success: function(response) {
+                if (response.success && response.data) {
+                    console.log('Got updated folder counts:', response.data);
+                    
+                    // Update all folder counts in the sidebar
+                    jQuery('.media-folder-list li').each(function() {
+                        var $this = jQuery(this);
+                        var folderId = $this.data('folder-id');
+                        
+                        if (folderId && response.data[folderId]) {
+                            var folderData = response.data[folderId];
+                            var $link = $this.find('a');
+                            var linkText = $link.text();
+                            
+                            // Replace the count portion of the text
+                            var newText = linkText.replace(/\(\d+\)$/, '(' + folderData.count + ')');
+                            $link.text(newText);
+                            
+                            // Briefly highlight updated counts
+                            if (linkText !== newText) {
+                                $this.addClass('count-updated');
+                                setTimeout(function() {
+                                    $this.removeClass('count-updated');
+                                }, 2000);
+                            }
+                        }
+                    });
+                    
+                    // Check if we need to update the current view
+                    // If we're in the "All Files" view, we should refresh the page after a delay
+                    if (!currentFolder) {
+                        // Only show the refresh notification if we're actually viewing the media library grid
+                        if (jQuery('.wp-list-table.media').length) {
+                            // Create visual notification
+                            var $notice = jQuery('<div class="notice notice-info is-dismissible" style="position:fixed; top:32px; right:20px; z-index:9999; width:300px;">' +
+                                '<p>Media has been reorganized. <a href="#" class="reload-page">Refresh</a> to update the view.</p>' +
+                                '<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button>' +
+                                '</div>');
+                            
+                            jQuery('body').append($notice);
+                            
+                            // Handle refresh link click
+                            $notice.find('.reload-page').on('click', function(e) {
+                                e.preventDefault();
+                                location.reload();
+                            });
+                            
+                            // Handle dismiss button
+                            $notice.find('.notice-dismiss').on('click', function() {
+                                $notice.fadeOut(300, function() { jQuery(this).remove(); });
+                            });
+                            
+                            // Auto-dismiss after 10 seconds
+                            setTimeout(function() {
+                                $notice.fadeOut(300, function() { jQuery(this).remove(); });
+                            }, 10000);
+                        }
+                    }
+                }
+            }
+        });
+    };
+});
+</script>
+
     
     <script>
+
+// Add this to your existing JavaScript
+jQuery(document).ready(function($) {
+    // Handle media library refreshes
+ function refreshMediaLibrary() {
+     // Refresh grid view
+     if ($('.wp-list-table.media').length) {
+         // List view
+         location.reload();
+     } else {
+         // Grid view
+         if (wp.media.frame && wp.media.frame.library && wp.media.frame.library.props) {
+             try {
+                 wp.media.frame.library.props.set({ignore: (+ new Date())});
+                 // Remove the trigger call that's causing the error
+                 // wp.media.frame.library.props.trigger('change');
+             } catch(e) {
+                 console.log('Media refresh error:', e);
+             }
+         }
+         
+         // Trigger scroll to refresh lazy-loaded images
+         $('.attachments-browser .attachments').trigger('scroll');
+     }
+ }
+ 
+
+    // Listen for attachment updates
+    $(document).on('change', 'select[name^="attachments"][name$="[media_folder]"]', function() {
+        var $select = $(this);
+        var newValue = $select.val();
+        var originalValue = $select.find('option:selected').data('original-value');
+        
+        if (newValue !== originalValue) {
+            // Schedule a refresh after the save completes
+            setTimeout(function() {
+                refreshMediaLibrary();
+            }, 500);
+        }
+    });
+
+    // Hook into the media frame to catch saves
+    if (wp.media && wp.media.frame) {
+        wp.media.frame.on('edit:attachment', function() {
+            setTimeout(function() {
+                refreshMediaLibrary();
+            }, 500);
+        });
+    }
+    
+    // Also refresh when closing the edit modal
+    $(document).on('click', '.media-modal-close, .media-modal-backdrop', function() {
+        setTimeout(function() {
+            refreshMediaLibrary();
+        }, 500);
+    });
+});
+
+
+
+
+
     jQuery(document).ready(function($) {
         // Add subfolder handler
         $('.add-subfolder').on('click', function(e) {
@@ -899,6 +1200,29 @@ add_action('init', 'theme_register_folder_count_event');
 
 
 
+function get_folder_slug_ajax() {
+    check_ajax_referer('media_folders_get_slug', 'nonce');
+    
+    if (!current_user_can('upload_files')) {
+        wp_send_json_error();
+    }
+    
+    $folder_id = isset($_POST['folder_id']) ? intval($_POST['folder_id']) : 0;
+    
+    if ($folder_id) {
+        $term = get_term($folder_id, 'media_folder');
+        if ($term && !is_wp_error($term)) {
+            wp_send_json_success(array(
+                'slug' => $term->slug,
+                'name' => $term->name
+            ));
+        }
+    }
+    
+    wp_send_json_error();
+}
+add_action('wp_ajax_get_folder_slug', 'get_folder_slug_ajax');
+
 
 function theme_ajax_add_media_folder() {
     check_ajax_referer('media_folders_nonce', 'nonce');
@@ -1061,12 +1385,39 @@ function media_folders_attachment_save($post, $attachment) {
             $unassigned_id = media_folders_get_unassigned_id();
             wp_set_object_terms($post_id, array($unassigned_id), 'media_folder', false);
         }
+
+        // Add this JavaScript to force refresh
+        add_action('admin_footer', function() use ($post_id, $folder_id) {
+            ?>
+            <script>
+            jQuery(document).ready(function($) {
+                // Force refresh of the media library view
+                if (wp.media.frame) {
+                    wp.media.frame.library.props.set({ignore: (+ new Date())});
+                    wp.media.frame.library.props.trigger('change');
+                }
+                
+                // If we're in grid mode, refresh that too
+                if (wp.media.view.Attachment.Library) {
+                    $('.attachments-browser .attachments').trigger('scroll');
+                }
+                
+                // Update folder counts
+                if (typeof window.updateFolderCounts === 'function') {
+                    window.updateFolderCounts();
+                }
+            });
+            </script>
+            <?php
+        });
+
     } finally {
         $is_processing_media_folder = false;
     }
     
     return $post;
 }
+
 
 
 /**
