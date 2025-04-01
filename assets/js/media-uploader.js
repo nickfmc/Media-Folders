@@ -47,6 +47,12 @@
         // Function to add folder dropdown to uploader
         addFolderDropdownToUploader: function() {
             console.log("Attempting to add folder dropdown");
+    
+            // Guard against potential errors
+            if (typeof $ === 'undefined') {
+                console.error('jQuery not available');
+                return;
+            }
             
             // Simplify targeting - look for common upload interface elements
             var $uploadUI = $(".upload-ui");

@@ -151,24 +151,44 @@ window.updateFolderCounts = function() {
                 this.on('content:render:browse', this.addFolderFilter, this);
             },
             
-            addFolderFilter: function() {
-                var library = this.state().get('library');
-                var sidebar = this.sidebar.get();
-                
-                if (!this.folderFilterAdded && sidebar) {
-                    // Add a filter section
-                    var folderFilterView = new wp.media.view.AttachmentFilters.FolderFilter({
-                        controller: this,
-                        model: library,
-                        priority: -80
-                    });
+                      // Find the addFolderFilter function (around line 156) and replace it with this version:
+            
+                        addFolderFilter: function() {
+                // Check if sidebar exists before trying to use it
+                if (!this.sidebar) {
+                    console.log('Media library sidebar not yet initialized');
                     
-                    // Insert at the top
-                    sidebar.set('mediaFolderFilter', folderFilterView);
+                    // Set up a retry mechanism with a limit to prevent infinite loops
+                    if (!this._retryCount) {
+                        this._retryCount = 0;
+                    }
                     
-                    // Flag so we don't add it multiple times
-                    this.folderFilterAdded = true;
+                    // Limit retries to avoid infinite loops
+                    if (this._retryCount < 10) {
+                        this._retryCount++;
+                        
+                        // Try again after a short delay
+                        var self = this;
+                        setTimeout(function() {
+                            self.addFolderFilter();
+                        }, 500);
+                    } else {
+                        console.warn('Maximum retry attempts reached for addFolderFilter');
+                    }
+                    return;
                 }
+                
+                // Reset retry counter if we successfully reach this point
+                this._retryCount = 0;
+                
+                // Create our folder browser/filter component for the sidebar
+                var folderBrowser = new wp.media.view.MediaFolderBrowser({
+                    controller: this,
+                    model: this.state().get('library')
+                });
+                
+                // Add it to the sidebar
+                this.sidebar.set('folder', folderBrowser);
             }
         });
         
