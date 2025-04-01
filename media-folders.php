@@ -1525,9 +1525,9 @@ function media_folders_block_editor_assets() {
   // Then, enqueue our filtering script - IMPORTANT: set in_footer to FALSE
 wp_enqueue_script(
     'media-folder-filters',
-    MEDIA_FOLDERS_PLUGIN_URL . 'assets/js/media-folders.js', 
+    MEDIA_FOLDERS_PLUGIN_URL . 'assets/js/apex-folders.js', 
     array('jquery', 'wp-blocks', 'media-editor', 'media-folder-data'), 
-    filemtime(MEDIA_FOLDERS_PLUGIN_DIR . 'assets/js/media-folders.js'),
+    filemtime(MEDIA_FOLDERS_PLUGIN_DIR . 'assets/js/apex-folders.js'),
     false // <-- This is important, load in header, not footer
 );
   // Add server-side support for the filter
@@ -1665,100 +1665,29 @@ function media_folders_uploader() {
     $dropdown_html .= '</div>';
     
 
+    // Enqueue the script
+    wp_enqueue_script(
+        'media-folders-uploader',
+        MEDIA_FOLDERS_PLUGIN_URL . 'assets/js/media-uploader.js',
+        array('jquery'),
+        MEDIA_FOLDERS_VERSION,
+        true
+    );
     
-    // Add JavaScript to handle the folder selection
-    $js = '
-        <script>
-        jQuery(document).ready(function($) {
-            console.log("Media folder uploader script loaded");
-            
-            // Function to add folder dropdown to uploader
-            function addFolderDropdownToUploader() {
-                console.log("Attempting to add folder dropdown");
-                
-                // Simplify targeting - look for common upload interface elements
-                var $uploadUI = $(".upload-ui");
-                if ($uploadUI.length && !$uploadUI.next(".media-folder-select-container").length) {
-                    console.log("Found upload UI, adding dropdown");
-                    $uploadUI.after(\'' . $dropdown_html . '\');
-                }
-                
-                // Also try for media modal uploader
-                var $modalUploadUI = $(".media-modal .uploader-inline-content .upload-ui");
-                if ($modalUploadUI.length && !$modalUploadUI.next(".media-folder-select-container").length) {
-                    console.log("Found modal upload UI, adding dropdown");
-                    $modalUploadUI.after(\'' . $dropdown_html . '\');
-                }
-                
-                              // Hook into the uploader to capture the folder selection
-                if (typeof wp !== "undefined" && wp.Uploader && wp.Uploader.prototype && !window.mediaFolderHooked) {
-                    var originalInit = wp.Uploader.prototype.init;
-                    
-                    wp.Uploader.prototype.init = function() {
-                        originalInit.apply(this, arguments);
-                        
-                        this.uploader.bind("BeforeUpload", function(up, file) {
-                            var folder_id = $("#media-folder-select").val();
-                            console.log("Setting upload folder to: " + folder_id);
-                            up.settings.multipart_params.media_folder_id = folder_id;
-                        });
-                        
-                        // ADD THIS CODE HERE - For updating folder counts after upload
-                                              this.uploader.bind("FileUploaded", function(up, file, response) {
-                            console.log("File uploaded, will update counts soon");
-                            setTimeout(function() {
-                                if (typeof window.updateFolderCounts === "function") {
-                                    window.updateFolderCounts();
-                                } else {
-                                    console.error("updateFolderCounts function not found in global scope!");
-                                    // Fallback: just reload the folder data via AJAX
-                                    jQuery.post(ajaxurl, {
-                                        action: "theme_get_folder_counts"
-                                    });
-                                }
-                            }, 1000);
-                        });
-                    };
-                    
-                    window.mediaFolderHooked = true;
-                    console.log("Successfully hooked into wp.Uploader");
-                }
-            }
-            
-            // Run on page load
-            addFolderDropdownToUploader();
-            
-            // Handle dynamic uploader initialization
-            $(document).on("click", ".media-modal .upload-files, .insert-media, .add_media", function() {
-                console.log("Media upload button clicked");
-                setTimeout(addFolderDropdownToUploader, 200);
-            });
-            
-            // Extra check with a longer delay to catch late-initializing uploaders
-            $(document).on("DOMNodeInserted", ".media-modal", function() {
-                setTimeout(addFolderDropdownToUploader, 500);
-            });
-            
-            // Final fallback - periodically check for upload UI that might appear later
-            var checkCount = 0;
-            var checkInterval = setInterval(function() {
-                if ($(".upload-ui").length && !$(".upload-ui").next(".media-folder-select-container").length) {
-                    addFolderDropdownToUploader();
-                }
-                
-                checkCount++;
-                if (checkCount > 10) clearInterval(checkInterval);
-            }, 1000);
-        });
-        </script>
-    ';
-    
-    // Output CSS and JavaScript
-    echo  $js;
+    // Pass data to the script
+    wp_localize_script(
+        'media-folders-uploader',
+        'MediaFolderUploaderData',
+        array(
+            'currentFolder' => isset($_GET['media_folder']) ? sanitize_text_field($_GET['media_folder']) : null,
+            'dropdownHtml' => $dropdown_html,
+            'folderNonce' => wp_create_nonce('media_folders_nonce')
+        )
+    );
 }
 
-// THIS IS THE MISSING HOOK - Add this to make it work
-add_action('admin_footer', 'media_folders_uploader');
+// Add to admin_enqueue_scripts hook
+add_action('admin_enqueue_scripts', 'media_folders_uploader');
 
 
 
