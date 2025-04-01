@@ -47,6 +47,9 @@ function media_folders_admin_scripts() {
 }
 add_action('admin_enqueue_scripts', 'media_folders_admin_scripts');
 
+
+
+
 /**
  * Plugin activation
  */
@@ -93,6 +96,20 @@ function media_folders_get_unassigned_id() {
     
     return is_array($unassigned) ? $unassigned['term_id'] : $unassigned;
 }
+
+
+function media_folders_enqueue_styles() {
+    $screen = get_current_screen();
+    if ($screen->base === 'upload') {
+        wp_enqueue_style(
+            'media-folders-css',
+            MEDIA_FOLDERS_PLUGIN_URL . 'assets/css/apex-main.css',
+            array(),
+            MEDIA_FOLDERS_VERSION
+        );
+    }
+}
+add_action('admin_enqueue_scripts', 'media_folders_enqueue_styles');
 
 
 function media_folders_enqueue_refresh_script() {
@@ -342,351 +359,7 @@ function media_folders_filter() {
     echo '<a href="#" class="button button-primary add-new-folder">Add New Folder</a>';
     echo '</div>';
     
-    // Add CSS for the unassigned folder
-        // Replace all existing CSS in the media_folders_filter function with this:
-    
-    echo '<style>
-        /* --- Core Container --- */
-        .media-folder-filter {
-            float: left;
-            width: 20%;
-            margin: 65px 20px 0 0;
-            padding: 0;
-            background: transparent;
-            position: relative;
-            z-index: 10;
-        }
-        
-        /* --- Admin Notices Fix --- */
-        .wrap > .notice,
-        .wrap > div.updated,
-        .wrap > div.error,
-        .wrap > div.info {
-            margin-left: calc(20% + 65px);
-            width: auto;
-        }
-        
-        .media-folders-admin-notices-spacer {
-            clear: both;
-            height: 1px;
-        }
-        
-        .media-folders-tools {
-            margin-left: calc(20% + 40px);
-            width: calc(80% - 40px);
-        }
-        
-        /* --- Folder List Container --- */
-        .media-folder-list {
-            margin: 0 0 20px 0;
-            padding: 0;
-            background: #fff;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        /* --- Folder Section Title --- */
-        .media-folder-filter h3 {
-            margin: 0 0 8px 0;
-            padding: 12px 15px;
-            background: #f0f0f1;
-            border-bottom: 1px solid #e2e4e7;
-            font-size: 14px;
-            color: #1d2327;
-            font-weight: 600;
-        }
-        
-        /* --- Folder Items (Common Styles) --- */
-        .media-folder-list li {
-            margin: 0;
-            padding: 0;
-            position: relative;
-            border-bottom: 1px solid #f0f0f1;
-            transition: all 0.15s ease;
-        }
-        
-        .media-folder-list li:last-child {
-            border-bottom: none;
-        }
-        
-        /* Folder links */
-        .media-folder-list li a {
-            display: block;
-            padding: 10px 15px;
-            text-decoration: none;
-            color: #2c3338;
-            transition: all 0.15s ease;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding-right: 75px;
-            font-size: 13px;
-        }
-        
-        /* --- System Folders --- */
-        /* All Files styling */
-        .media-folder-list li.all-files {
-            background: #f6f7f7;
-        }
-        
-        .media-folder-list li.all-files a {
-            font-weight: 600;
-            color: #2271b1;
-        }
-        
-        /* Unassigned folder styling */
-        .media-folder-list li.unassigned-folder {
-            background: #f9f9f9;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .media-folder-list li.unassigned-folder a {
-            color: #50575e;
-            font-style: italic;
-        }
-        
-        /* Folder separator */
-        .media-folder-list .folder-separator {
-            height: 27px;
-            background: #f0f0f1;
-            padding: 0;
-            border: none;
-        }
-        
-        /* --- Custom Folders --- */
-        /* Parent folders */
-        .media-folder-list li.custom-folder {
-            background: #fff;
-        }
-        
-        .media-folder-list li.custom-folder:hover {
-            background: #f6f7f7;
-        }
-        
-        /* Parent folders with children */
-        .media-folder-list li.parent-folder.has-children {
-            border-left: 3px solid #2271b1;
-        }
-        
-        /* Child folders - refined and compact */
-        .media-folder-list li.child-folder {
-            background: #fcfcfc;
-            padding-left: 0;
-            margin-left: 0;
-            border-left: 3px solid #dcdcde;
-        }
-        
-        .media-folder-list li.child-folder a {
-            padding-left: 48px;
-            font-size: 12.5px;
-        }
-        
-        .media-folder-list li.child-folder .child-indicator {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #a7aaad;
-            font-size: 14px;
-        }
-        
-        /* --- Active/Current Folder --- */
-        .media-folder-list li.current {
-            background: #f0f6fc;
-        }
-        
-        .media-folder-list li.current a {
-            color: #0a4b78;
-            font-weight: 600;
-        }
-        
-        /* --- Hover Effects --- */
-        .media-folder-list li:not(.folder-separator):hover {
-            background: #f0f6fc;
-        }
-        
-        /* --- Folder Actions --- */
-        /* Delete folder button */
-        .delete-folder {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #cc1818;
-            opacity: 0;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 3px;
-            z-index: 5;
-        }
-        
-        .media-folder-list li:hover .delete-folder {
-            opacity: 0.7;
-        }
-        
-        .media-folder-list li .delete-folder:hover {
-            opacity: 1;
-            background: rgba(204, 24, 24, 0.1);
-        }
-        
-        /* Add subfolder button */
-        .add-subfolder {
-            position: absolute;
-            right: 36px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #2271b1;
-            opacity: 0;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 3px;
-            z-index: 5;
-        }
-        
-        .media-folder-list li:hover .add-subfolder {
-            opacity: 0.7;
-        }
-        
-        .media-folder-list li .add-subfolder:hover {
-            opacity: 1;
-            background: rgba(34, 113, 177, 0.1);
-        }
-        
-        /* --- Add New Folder Button --- */
-        .add-new-folder {
-            display: inline-block;
-            width: 100%;
-            padding: 10px 0;
-            background: #2271b1;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            text-align: center;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        
-        .add-new-folder:before {
-            content: "+";
-            margin-right: 8px;
-            font-weight: bold;
-        }
-        
-        .add-new-folder:hover {
-            background: #135e96;
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-        }
-        
-        .add-new-folder:active {
-            transform: translateY(0);
-        }
-        
-        /* --- Count Updates --- */
-        .media-folder-list li.count-updated {
-            background-color: #fcf9e8;
-            transition: background-color 2s;
-        }
-        
-        /* --- Dialog Styles --- */
-        .folder-creation-dialog label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 13px;
-        }
-        
-        .folder-creation-dialog input,
-        .folder-creation-dialog select {
-            width: 100%;
-            margin-bottom: 15px;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #8c8f94;
-        }
-        
-        /* --- Media Library Table --- */
-        .wp-list-table, 
-        .tablenav, 
-        .search-form, 
-        .subsubsub {
-            width: 78%;
-            float: right;
-        }
-        
-        /* --- Responsive Design --- */
-        @media (max-width: 1280px) {
-            .media-folder-filter {
-                width: 25%;
-            }
-            
-            .wp-list-table, 
-            .tablenav, 
-            .search-form, 
-            .subsubsub {
-                width: 73%;
-            }
-            
-            .wrap > .notice,
-            .wrap > div.updated,
-            .wrap > div.error,
-            .wrap > div.info {
-                margin-left: calc(25% + 65px);
-            }
-        }
-        
-        @media (max-width: 960px) {
-            .media-folder-filter {
-                width: 30%;
-            }
-            
-            .wp-list-table, 
-            .tablenav, 
-            .search-form, 
-            .subsubsub {
-                width: 68%;
-            }
-            
-            .wrap > .notice,
-            .wrap > div.updated,
-            .wrap > div.error,
-            .wrap > div.info {
-                margin-left: calc(30% + 65px);
-            }
-        }
-        
-        @media (max-width: 782px) {
-            .media-folder-filter {
-                width: 100%;
-                float: none;
-                margin: 20px 0;
-            }
-            
-            .wp-list-table, 
-            .tablenav, 
-            .search-form, 
-            .subsubsub {
-                width: 100%;
-                float: none;
-            }
-            
-            .wrap > .notice,
-            .wrap > div.updated,
-            .wrap > div.error,
-            .wrap > div.info {
-                margin-left: 0;
-                width: 100%;
-            }
-        }
-    </style>';
+   
     
     // Add JavaScript for folder management
     ?>
@@ -1991,29 +1664,7 @@ function media_folders_uploader() {
     $dropdown_html .= '</select>';
     $dropdown_html .= '</div>';
     
-    // Add CSS to style the folder dropdown
-    $css = '
-        <style>
-            .media-folder-select-container {
-                margin: 10px 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .media-folder-select-container label {
-                margin-right: 8px;
-                font-weight: bold;
-            }
-            .media-folder-select-container select {
-                flex-grow: 1;
-                max-width: 300px;
-            }
-            /* Fixes for WordPress media modal */
-            .media-modal .uploader-inline .media-folder-select-container {
-                padding: 0 16px;
-            }
-        </style>
-    ';
+
     
     // Add JavaScript to handle the folder selection
     $js = '
@@ -2103,7 +1754,7 @@ function media_folders_uploader() {
     ';
     
     // Output CSS and JavaScript
-    echo $css . $js;
+    echo  $js;
 }
 
 // THIS IS THE MISSING HOOK - Add this to make it work
