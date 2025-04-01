@@ -2,7 +2,6 @@
 /**
  * Plugin Name: Apex Folders
  * Plugin URI: https://mountainairweb.com
- * Description: A plugin to organize media files into folders.
  * Description: Reach the apex of media library organization.
  * Version: 0.9.9
  * Author: 
