@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 define('MEDIA_FOLDERS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MEDIA_FOLDERS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MEDIA_FOLDERS_VERSION', '0.9.0');
-
+ 
 // Include the folder drag and drop class
 require_once MEDIA_FOLDERS_PLUGIN_DIR . 'class-folder-drag-drop.php';
 
