@@ -1,11 +1,12 @@
 <?php
 /**
  * Plugin Name: Apex Folders
- * Plugin URI: 
+ * Plugin URI: https://mountainairweb.com
+ * Description: A plugin to organize media files into folders.
  * Description: Reach the apex of media library organization.
- * Version: 0.9.7
+ * Version: 0.9.9
  * Author: 
- * Text Domain: media-folders
+ * Text Domain: apex-folders
  * Domain Path: /languages
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
