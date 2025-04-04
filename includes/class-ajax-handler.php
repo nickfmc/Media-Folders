@@ -21,6 +21,7 @@ class Media_Folders_AJAX_Handler {
      */
     public function __construct() {
         // Register AJAX handlers
+        add_action('wp_ajax_theme_rename_media_folder', array($this, 'rename_media_folder'));
         add_action('wp_ajax_theme_delete_media_folder', array($this, 'delete_media_folder'));
         add_action('wp_ajax_get_folder_slug', array($this, 'get_folder_slug'));
         add_action('wp_ajax_theme_add_media_folder', array($this, 'add_media_folder'));
@@ -261,6 +262,52 @@ class Media_Folders_AJAX_Handler {
                 wp_set_object_terms($attachment_id, array($folder_id), 'media_folder', false);
                 error_log("Async assigned attachment ID $attachment_id to folder ID $folder_id");
             }
+        }
+    }
+
+
+    /**
+     * Rename a media folder.
+     */
+    public function rename_media_folder() {
+        check_ajax_referer('media_folders_nonce', 'nonce');
+        
+        if (!current_user_can('upload_files')) {
+            wp_send_json_error();
+        }
+        
+        $folder_id = intval($_POST['folder_id']);
+        $new_name = sanitize_text_field($_POST['new_name']);
+        $unassigned_id = media_folders_get_unassigned_id();
+        
+        // Validate input
+        if (empty($new_name)) {
+            wp_send_json_error(array('message' => 'Folder name cannot be empty.'));
+            return;
+        }
+        
+        // Prevent renaming the Unassigned folder
+        if ($folder_id === $unassigned_id) {
+            wp_send_json_error(array('message' => 'The Unassigned folder cannot be renamed.'));
+            return;
+        }
+        
+        // Check if the folder exists
+        $term = get_term($folder_id, 'media_folder');
+        if (!$term || is_wp_error($term)) {
+            wp_send_json_error(array('message' => 'Folder not found.'));
+            return;
+        }
+        
+        // Update the term
+        $result = wp_update_term($folder_id, 'media_folder', array(
+            'name' => $new_name
+        ));
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        } else {
+            wp_send_json_success(array('message' => 'Folder renamed successfully.'));
         }
     }
 }

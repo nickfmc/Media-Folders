@@ -359,3 +359,36 @@
     padding: 0 16px;
 }
 
+
+.edit-folder {
+    position: absolute;
+    right: 36px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #50575e;
+    opacity: 0;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 3px;
+    z-index: 5;
+}
+
+.media-folder-list li:hover .edit-folder {
+    opacity: 0.7;
+}
+
+.media-folder-list li .edit-folder:hover {
+    opacity: 1;
+    background: rgba(80, 87, 94, 0.1);
+}
+
+/* Adjust delete button position */
+.delete-folder {
+    right: 10px;
+}
+
+/* Adjust add subfolder button position */
+.add-subfolder {
+    right: 62px;
+}

@@ -137,6 +137,7 @@ function media_folders_filter() {
         
         echo '<li class="' . $class . ' custom-folder parent-folder' . ($has_children ? ' has-children' : '') . '" data-folder-id="' . $folder->term_id . '">';
         echo '<a href="' . admin_url('upload.php?media_folder=' . $folder->slug) . '">' . $folder->name . ' (' . $folder->count . ')</a>';
+        echo '<span class="edit-folder dashicons dashicons-edit" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '" title="Edit folder"></span>';
         echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '"></span>';
         
         // Add "Create Subfolder" button for parent folders
@@ -152,6 +153,7 @@ function media_folders_filter() {
                 echo '<li class="' . $child_class . ' custom-folder child-folder" data-folder-id="' . $child->term_id . '" data-parent-id="' . $folder->term_id . '">';
                 echo '<span class="child-indicator">└─</span>';
                 echo '<a href="' . admin_url('upload.php?media_folder=' . $child->slug) . '">' . $child->name . ' (' . $child->count . ')</a>';
+                echo '<span class="edit-folder dashicons dashicons-edit" data-folder-id="' . $child->term_id . '" data-folder-name="' . esc_attr($child->name) . '" title="Edit folder"></span>';
                 echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $child->term_id . '" data-folder-name="' . esc_attr($child->name) . '"></span>';
                 echo '</li>';
             }
@@ -617,6 +619,66 @@ jQuery(document).ready(function($) {
                 open: function() {
                     // Focus the folder name input
                     $('#new-folder-name').focus();
+                },
+                close: function() {
+                    $(this).dialog('destroy').remove();
+                }
+            });
+        });
+
+
+        // Edit folder
+        $('.edit-folder').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var folderId = $(this).data('folder-id');
+            var currentName = $(this).data('folder-name');
+            
+            // Display dialog to rename folder
+            var dialogContent = '<div class="folder-creation-dialog">' +
+                '<p><label for="edit-folder-name">New Name:</label>' +
+                '<input type="text" id="edit-folder-name" class="widefat" value="' + currentName + '" /></p>' +
+                '</div>';
+            
+            $('<div id="edit-folder-dialog"></div>').html(dialogContent).dialog({
+                title: 'Rename Folder',
+                dialogClass: 'wp-dialog',
+                modal: true,
+                resizable: false,
+                width: 400,
+                buttons: {
+                    'Cancel': function() {
+                        $(this).dialog('close');
+                    },
+                    'Save': function() {
+                        var newName = $('#edit-folder-name').val();
+                        
+                        if (newName && newName !== currentName) {
+                            $.ajax({
+                                url: ajaxurl,
+                                type: 'POST',
+                                data: {
+                                    action: 'theme_rename_media_folder',
+                                    folder_id: folderId,
+                                    new_name: newName,
+                                    nonce: '<?php echo wp_create_nonce('media_folders_nonce'); ?>'
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        location.reload();
+                                    } else {
+                                        alert('Error renaming folder: ' + (response.data?.message || 'Unknown error'));
+                                    }
+                                }
+                            });
+                        }
+                        
+                        $(this).dialog('close');
+                    }
+                },
+                open: function() {
+                    $('#edit-folder-name').focus().select();
                 },
                 close: function() {
                     $(this).dialog('destroy').remove();
