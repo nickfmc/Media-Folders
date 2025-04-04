@@ -110,6 +110,8 @@
     function handleDragStart(event, ui, $attachment) {
         MediaFolderDragDrop.isDragging = true;
         
+         // Add dragging class to body to prevent text selection
+    $('body').addClass('media-folders-dragging');
         // Add dragging class to the original element
         $attachment.addClass('is-dragging');
         
@@ -125,35 +127,44 @@
         });
         
         // Check if we're in selection mode - if so, collect all selected items
-        if ($('body').hasClass('selecting-mode')) {
+        if (MediaFolderDragDrop.bulkModeActive) {
             var $selectedItems = $('.attachments-browser .attachment.selected');
-            if ($selectedItems.length > 1) {
+            
+            if ($selectedItems.length > 0) {
+                // Collect IDs of all selected items
                 MediaFolderDragDrop.draggedItems = [];
                 $selectedItems.each(function() {
-                    MediaFolderDragDrop.draggedItems.push($(this).data('id'));
+                    var id = $(this).data('id');
+                    if (id) {
+                        MediaFolderDragDrop.draggedItems.push(id);
+                    }
                 });
+                
+                // If the dragged item isn't in the selection, add it
+                var draggedId = $attachment.data('id');
+                if (draggedId && MediaFolderDragDrop.draggedItems.indexOf(draggedId) === -1) {
+                    MediaFolderDragDrop.draggedItems.push(draggedId);
+                }
                 
                 // Update helper text to show multiple items
                 showDragHelper('Moving ' + MediaFolderDragDrop.draggedItems.length + ' items');
             } else {
-                // Single item
+                // No items selected, just drag the current item
                 MediaFolderDragDrop.draggedItems = [$attachment.data('id')];
-                
-                // Get attachment title
                 var title = $attachment.find('.attachment-preview').attr('title') || 'item';
                 showDragHelper('Moving: ' + title);
             }
         } else {
             // Single item drag mode
             MediaFolderDragDrop.draggedItems = [$attachment.data('id')];
-            
-            // Get attachment title
             var title = $attachment.find('.attachment-preview').attr('title') || 'item';
             showDragHelper('Moving: ' + title);
         }
         
         // Show all droppable folders
         $('.media-folder-list li.droppable').addClass('active-drag');
+        
+        console.log("Items being dragged:", MediaFolderDragDrop.draggedItems);
     }
 
     /**
@@ -161,7 +172,8 @@
      */
     function handleDragStop(event, ui, $attachment) {
         MediaFolderDragDrop.isDragging = false;
-        
+        // Remove the dragging class from body
+    $('body').removeClass('media-folders-dragging');
         // Remove dragging class
         $attachment.removeClass('is-dragging');
         
@@ -188,9 +200,21 @@
     /**
      * Show the drag helper with text
      */
-    function showDragHelper(text) {
+      function showDragHelper(text) {
         if (MediaFolderDragDrop.dragHelper) {
-            MediaFolderDragDrop.dragHelper.text(text).show();
+            MediaFolderDragDrop.dragHelper
+                .text(text)
+                .css({
+                    'position': 'fixed',
+                    'padding': '8px 12px',
+                    'background': 'rgba(0, 0, 0, 0.8)',
+                    'color': 'white',
+                    'border-radius': '4px',
+                    'font-size': '13px',
+                    'box-shadow': '0 2px 8px rgba(0,0,0,0.3)',
+                    'z-index': 999999
+                })
+                .show();
         }
     }
 
@@ -341,7 +365,8 @@
         });
     }
 
-    /**
+  
+        /**
      * Add support for bulk selection mode
      */
     function addBulkSelectionSupport() {
@@ -350,39 +375,217 @@
             $('.media-toolbar-secondary').prepend(
                 '<button type="button" class="button select-mode-toggle-button media-folder-bulk-select">' +
                 '<span class="screen-reader-text">Select multiple files for organization</span>' +
-                'Select Files to Move</button>'
+                'Bulk Drag and Drop</button>'
             );
         }
+
+                // Force refresh the view to ensure normal behavior returns
+        setTimeout(function() {
+            // Trigger a slight scroll to refresh handlers
+            $(window).scrollTop($(window).scrollTop() + 1);
+        }, 100);
         
-        // Handle bulk selection button click
-        $(document).on('click', '.media-folder-bulk-select', function(e) {
-            e.preventDefault();
-            
-            // Toggle media frame selection mode
-            if (wp.media.frame) {
-                if ($('body').hasClass('selecting-mode')) {
-                    // Turn off selection mode
-                    wp.media.frame.trigger('escape');
-                    $(this).text('Select Files to Move');
-                    MediaFolderDragDrop.bulkModeActive = false;
-                } else {
-                    // Turn on selection mode
-                    $('body').addClass('selecting-mode');
-                    $(this).text('Exit Selection Mode');
-                    MediaFolderDragDrop.bulkModeActive = true;
+        
+        
+                   // Handle bulk selection button click
+                $(document).on('click', '.media-folder-bulk-select', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    console.log("Selection button clicked");
+                    
+                    if ($('body').hasClass('selecting-mode')) {
+                        // Turn off selection mode
+                        console.log("Exiting selection mode");
+                        $('body').removeClass('selecting-mode');
+                        $(this).text('Bulk Drag and Drop');
+                        MediaFolderDragDrop.bulkModeActive = false;
+                        
+                        // Remove our overlay that prevents clicks
+                        $('.media-folders-selection-overlay').remove();
+                        
+                        // Remove the floating exit button 
+                        $('.media-folders-exit-selection').remove();
+                        
+                        // Deselect all items
+                        $('.attachment.selected').removeClass('selected');
+                        $('.attachment').css('box-shadow', '');
+                        $('.selection-indicator').remove();
+                        
+                        // Force refresh the view to ensure normal behavior returns
+                        setTimeout(function() {
+                            $(window).scrollTop($(window).scrollTop() + 1);
+                        }, 100);
+                        
+                    } else {
+                        // Turn on selection mode
+                        console.log("Entering selection mode");
+                        $('body').addClass('selecting-mode');
+                        // $(this).text('Exit Selection Mode');
+                        MediaFolderDragDrop.bulkModeActive = true;
+                        
+                        // Create overlay FIRST before adding buttons
+                        $('<div class="media-folders-selection-overlay"></div>')
+                            .css({
+                                'position': 'absolute',
+                                'top': 0,
+                                'left': 0,
+                                'right': 0, 
+                                'bottom': 0,
+                                'z-index': 99999,
+                                'background': 'rgba(0,0,0,0.01)', // Barely visible but ensures clicks are caught
+                                'cursor': 'pointer'
+                            })
+                            .appendTo('.attachments-browser .attachments');
+                        
+                        // Add a floating Exit button that's always accessible
+                        $('<button type="button" class="media-folders-exit-selection button button-primary">Exit Selection Mode</button>')
+                            .css({
+                                'position': 'fixed',
+                                'bottom': '60px',           
+                                'right': '40%',         
+                                'z-index': '9999999',    
+                                'pointer-events': 'auto',
+                                'padding': '5px 15px',   
+                                'font-weight': 'bold',   
+                                'box-shadow': '0 2px 5px rgba(0,0,0,0.3)'
+                            })
+                            .appendTo('body')
+                            .on('click', function(e) {
+                                e.stopPropagation(); 
+                                $('.media-folder-bulk-select').trigger('click');
+                                return false;
+                            });
+                        
+                        // Show helper message
+                        var $notice = $('<div class="notice notice-info" style="position:fixed; bottom:20px; right:20px; z-index:9999; width:300px;">' +
+                            '<p>🔍 <strong>Selection Mode:</strong> Click on items to select multiple files, then drag any selected item to a folder.</p>' +
+                            '</div>');
+                        $('body').append($notice);
+                        setTimeout(function() {
+                            $notice.fadeOut(300, function() { $(this).remove(); });
+                        }, 5000);
+                        
+                        // Add selection indicators to each attachment
+                        $('.attachment').append('<div class="selection-indicator"></div>');
+                    }
+                });
+        
+                 // Handle clicks on the selection overlay
+            $(document).on('click', '.media-folders-selection-overlay', function(e) {
+                // Prevent the default WordPress behavior
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Temporarily hide the overlay to find what's underneath
+                $(this).hide();
+                
+                // Find the element at the click position
+                var elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+                
+                // Show the overlay again
+                $(this).show();
+                
+                // Find the attachment that was clicked
+                var $attachment = $(elementBelow).closest('.attachment');
+                
+                if ($attachment.length) {
+                    // Toggle the selected class
+                    $attachment.toggleClass('selected');
+                    
+                    // Store the ID for later use in dragging
+                    var attachmentId = $attachment.data('id');
+                    console.log("Attachment clicked:", attachmentId);
+                    
+                    // Show visual feedback
+                    if ($attachment.hasClass('selected')) {
+                        $attachment.css('box-shadow', '0 0 0 3px #0073aa');
+                        // Make sure the indicator shows the selected state
+                        $attachment.find('.selection-indicator').css('background', '#0073aa');
+                    } else {
+                        $attachment.css('box-shadow', '');
+                        // Reset the indicator
+                        $attachment.find('.selection-indicator').css('background', '#f0f0f0');
+                    }
                 }
+                
+                return false; // Important to prevent default behavior
+            });
+
+                       // Allow dragging to start through the overlay
+                $(document).on('mousedown', '.media-folders-selection-overlay', function(e) {
+                    // Temporarily hide the overlay
+                    $(this).hide();
+                    
+                    // Find the element at the click position
+                    var elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+                    
+                    // Find the attachment that was clicked
+                    var $attachment = $(elementBelow).closest('.attachment');
+                    
+                    // Show the overlay again with pointer-events disabled
+                    $(this).css('pointer-events', 'none').show();
+                    
+                    if ($attachment.length && $attachment.hasClass('selected')) {
+                        console.log("Starting drag on selected attachment:", $attachment.data('id'));
+                        
+                        // Create and dispatch a new mousedown event
+                        var mouseEvent = new MouseEvent('mousedown', {
+                            'bubbles': true,
+                            'cancelable': true,
+                            'view': window,
+                            'clientX': e.clientX,
+                            'clientY': e.clientY
+                        });
+                        
+                        $attachment[0].dispatchEvent(mouseEvent);
+                        
+                        // Set a timeout to restore pointer events
+                        setTimeout(function() {
+                            $('.media-folders-selection-overlay').css('pointer-events', 'auto');
+                        }, 500); // Longer timeout to ensure drag starts
+                    } else {
+                        // If not a selected attachment, restore pointer events immediately
+                        $(this).css('pointer-events', 'auto');
+                    }
+                });
+        
+        // Also enable attachment selection when in selection mode
+        $(document).on('click', '.attachments-browser .attachment', function(e) {
+            if ($('body').hasClass('selecting-mode')) {
+                $(this).toggleClass('selected');
+                e.preventDefault();
+                e.stopPropagation();
             }
         });
         
         // Listen for escape key to exit selection mode
         $(document).on('keydown', function(e) {
             if (e.keyCode === 27 && MediaFolderDragDrop.bulkModeActive) {
-                $('.media-folder-bulk-select').text('Select Files to Move');
-                MediaFolderDragDrop.bulkModeActive = false;
+                $('.media-folder-bulk-select').trigger('click');
             }
         });
-    }
-
+        
+        
+               $('<style>')
+            .text(
+                                '.media-folders-exit-selection { font-weight: bold !important; box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important; }' +
+                '.media-folders-selection-overlay { pointer-events: auto !important; }' +
+                                '.media-folders-dragging { cursor: grabbing !important; }' +
+                '.media-folders-dragging * { user-select: none !important; -webkit-user-select: none !important; }' +
+                '.media-folder-list { z-index: 101 !important; }' + // Make sure folders are above the overlay
+                '.selecting-mode .attachment:hover { cursor: pointer !important; }' +
+                '.selecting-mode .attachment .check { display: none !important; }' +
+                '.selecting-mode .attachment.selected { outline: 3px solid #0073aa !important; background-color: rgba(0, 115, 170, 0.1) !important; }' +
+                '.selecting-mode .attachment .selection-indicator { display: block !important; position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,0.3); background: #f0f0f0; z-index: 100; pointer-events: none; }' +
+                '.selecting-mode .attachment.selected .selection-indicator { background: #0073aa !important; }' +
+                '.selecting-mode .attachments-browser .attachment .thumbnail::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.1); opacity: 0; }' +
+                '.selecting-mode .attachments-browser .attachment:hover .thumbnail::after { opacity: 1; }' +
+                '.media-folders-selection-overlay { position: absolute !important; top: 0; left: 0; right: 0; bottom: 0; z-index: 100 !important; background: transparent; cursor: pointer; border: 2px dashed #ccc;}' +
+                '.media-folder-bulk-select { position: relative; z-index: 100001 !important; }' // Ensure button is above overlay
+            )
+            .appendTo('head');
+        } 
     /**
      * Listen for media library refreshes to reinitialize drag and drop
      */
