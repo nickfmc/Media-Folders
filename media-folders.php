@@ -21,8 +21,10 @@ define('MEDIA_FOLDERS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MEDIA_FOLDERS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MEDIA_FOLDERS_VERSION', '0.9.0');
  
-// Include the folder drag and drop class
+// Includes
 require_once MEDIA_FOLDERS_PLUGIN_DIR . 'class-folder-drag-drop.php';
+require_once MEDIA_FOLDERS_PLUGIN_DIR . 'includes/class-media-folders-unassigned.php';
+require_once MEDIA_FOLDERS_PLUGIN_DIR . 'includes/class-media-folders-utilities.php';
 require_once MEDIA_FOLDERS_PLUGIN_DIR . 'includes/class-ajax-handler.php';
 
 // Register activation and deactivation hooks
@@ -32,19 +34,7 @@ register_deactivation_hook(__FILE__, 'media_folders_deactivate');
 
 
 function media_folders_admin_scripts() {
-    $screen = get_current_screen();
-    
-    // Only on media upload screen
-    if ($screen->base === 'upload') {
-        // Enqueue jQuery UI core and all required components for dialogs
-        wp_enqueue_script('jquery-ui-core');
-        wp_enqueue_script('jquery-ui-dialog');
-        wp_enqueue_script('jquery-ui-draggable');
-        wp_enqueue_script('jquery-ui-resizable');
-        
-        // Enqueue jQuery UI CSS
-        wp_enqueue_style('wp-jquery-ui-dialog');
-    }
+    Media_Folders_Utilities::enqueue_admin_scripts();
 }
 add_action('admin_enqueue_scripts', 'media_folders_admin_scripts');
 
@@ -55,25 +45,15 @@ add_action('admin_enqueue_scripts', 'media_folders_admin_scripts');
  * Plugin activation
  */
 
-function media_folders_activate() {
+ function media_folders_activate() {
     // Register taxonomy on activation
-    media_folders_register_taxonomy();
+    Media_Folders_Utilities::register_taxonomy();
     
     // Create default "Unassigned" folder if it doesn't exist
-    $unassigned = term_exists('Unassigned', 'media_folder');
-    if (!$unassigned) {
-        wp_insert_term(
-            'Unassigned', 
-            'media_folder',
-            array(
-                'description' => 'Default folder for media items not assigned to any other folder',
-                'slug' => 'unassigned'
-            )
-        );
-    }
+    $unassigned_id = Media_Folders_Unassigned::get_id();
     
     // Migrate existing unassigned media immediately
-    media_folders_ensure_all_assigned();
+    Media_Folders_Unassigned::ensure_all_assigned();
     
     // Flush rewrite rules
     flush_rewrite_rules();
@@ -82,48 +62,17 @@ function media_folders_activate() {
  * Get the Unassigned folder ID
  */
 function media_folders_get_unassigned_id() {
-    $unassigned = term_exists('Unassigned', 'media_folder');
-    if (!$unassigned) {
-        // Create it if it doesn't exist
-        $unassigned = wp_insert_term(
-            'Unassigned', 
-            'media_folder',
-            array(
-                'description' => 'Default folder for media items not assigned to any other folder',
-                'slug' => 'unassigned'
-            )
-        );
-    }
-    
-    return is_array($unassigned) ? $unassigned['term_id'] : $unassigned;
+    return Media_Folders_Unassigned::get_id();
 }
 
-
 function media_folders_enqueue_styles() {
-    $screen = get_current_screen();
-    if ($screen->base === 'upload') {
-        wp_enqueue_style(
-            'media-folders-css',
-            MEDIA_FOLDERS_PLUGIN_URL . 'assets/css/apex-main.css',
-            array(),
-            MEDIA_FOLDERS_VERSION
-        );
-    }
+    Media_Folders_Utilities::enqueue_styles();
 }
 add_action('admin_enqueue_scripts', 'media_folders_enqueue_styles');
 
 
 function media_folders_enqueue_refresh_script() {
-    wp_add_inline_script('media-editor', '
-        // Force refresh helper
-        window.mediaFoldersRefreshView = function() {
-            if (wp.media.frame) {
-                wp.media.frame.library.props.set({ignore: (+ new Date())});
-                wp.media.frame.library.props.trigger("change");
-            }
-            jQuery(".attachments-browser .attachments").trigger("scroll");
-        };
-    ');
+    Media_Folders_Utilities::enqueue_refresh_script();
 }
 add_action('admin_enqueue_scripts', 'media_folders_enqueue_refresh_script');
 
@@ -141,35 +90,9 @@ function media_folders_deactivate() {
 
 // Register 'media_folder' taxonomy
 function media_folders_register_taxonomy() {
-    register_taxonomy(
-        'media_folder',
-        'attachment',
-        array(
-            'labels' => array(
-                'name' => 'Media Folders',
-                'singular_name' => 'Media Folder',
-                'menu_name' => 'Folders',
-                'all_items' => 'All Folders',
-                'edit_item' => 'Edit Folder',
-                'view_item' => 'View Folder',
-                'update_item' => 'Update Folder',
-                'add_new_item' => 'Add New Folder',
-                'new_item_name' => 'New Folder Name',
-                'parent_item' => 'Parent Folder',
-                'parent_item_colon' => 'Parent Folder:',
-                'search_items' => 'Search Folders',
-            ),
-            'hierarchical' => true,
-            'show_ui' => true,
-            'show_in_menu' => false,
-            'show_in_nav_menus' => false,
-            'show_in_rest' => true,
-            'show_admin_column' => true,
-            'query_var' => true,
-            'rewrite' => array('slug' => 'media-folder'),
-        )
-    );
+    Media_Folders_Utilities::register_taxonomy();
 }
+
 add_action('init', 'media_folders_register_taxonomy');
 
 function media_folders_filter() {
@@ -182,28 +105,11 @@ function media_folders_filter() {
          return; // Exit early if in list view
      }
 
-    $folders = get_terms(array(
-        'taxonomy' => 'media_folder',
-        'hide_empty' => false,
-    ));
-
-    // Get the unassigned ID
-    $unassigned_id = media_folders_get_unassigned_id();
-
-    // Find and categorize folders
-    $unassigned_folder = null;
-    $parent_folders = array();
-    $child_folders = array();
-
-    foreach ($folders as $folder) {
-        if ($folder->term_id == $unassigned_id) {
-            $unassigned_folder = $folder;
-        } else if ($folder->parent == 0) {
-            $parent_folders[] = $folder;
-        } else {
-            $child_folders[$folder->parent][] = $folder;
-        }
-    }
+    // Get organized folders using the utility class
+    $organized = Media_Folders_Utilities::get_organized_folders();
+    $unassigned_folder = $organized['unassigned'];
+    $parent_folders = $organized['parents'];
+    $child_folders = $organized['children'];
     
     echo '<div class="media-folder-filter">';
     echo '<h3>Apex Folders</h3>';
@@ -954,49 +860,16 @@ function media_folders_attachment_save($post, $attachment) {
 /**
  * Prevent creation of terms with numeric names that should be IDs
  */
+// Update the prevent_numeric_term_creation function
 function prevent_numeric_term_creation($term, $taxonomy) {
-    // Only check media_folder taxonomy
-    if ($taxonomy !== 'media_folder') {
-        return $term;
-    }
-    
-    // If term is numeric, it's likely an ID being misinterpreted
-    // Changed condition to catch "0" as well
-    if (is_numeric($term)) {
-        error_log("Preventing creation of numeric term: " . $term);
-        
-        // Return an error to prevent term creation
-        return new WP_Error('invalid_term', "Can't create term with numeric name");
-    }
-    
-    return $term;
+    return Media_Folders_Utilities::prevent_numeric_term_creation($term, $taxonomy);
 }
+
 add_filter('pre_insert_term', 'prevent_numeric_term_creation', 10, 2);
 
 
 function debug_media_folder_assignment($post_id, $terms, $tt_ids, $taxonomy) {
-    if ($taxonomy !== 'media_folder') {
-        return;
-    }
-    
-    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
-    $caller_info = array();
-    $ignore_functions = array('debug_media_folder_assignment', 'apply_filters', 'do_action');
-    
-    foreach ($backtrace as $trace) {
-        if (isset($trace['function']) && !in_array($trace['function'], $ignore_functions)) {
-            $caller_info[] = $trace['function'];
-        }
-    }
-    
-    if (!empty($caller_info)) {
-        error_log(sprintf(
-            "[Media Folder Debug] Post: %d, Original Caller: %s, Terms: %s",
-            $post_id,
-            implode(' -> ', array_reverse($caller_info)),
-            json_encode($terms)
-        ));
-    }
+    Media_Folders_Utilities::debug_folder_assignment($post_id, $terms, $tt_ids, $taxonomy);
 }
 
 
@@ -1204,83 +1077,7 @@ function media_folders_force_rebuild_unassigned() {
  */
 
 function media_folders_ensure_all_assigned() {
-    global $wpdb;
-    
-    // Get the unassigned folder ID
-    $unassigned_id = media_folders_get_unassigned_id();
-    
-    // Get the term taxonomy ID
-    $tt_id = $wpdb->get_var($wpdb->prepare(
-        "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-         WHERE term_id = %d AND taxonomy = 'media_folder'",
-        $unassigned_id
-    ));
-    
-    if (!$tt_id) {
-        error_log("Error: Could not find term_taxonomy_id for Unassigned folder (ID: $unassigned_id)");
-        return 0;
-    }
-    
-    // Find all attachments that don't have ANY folder assignment
-    $unassigned_attachments = $wpdb->get_col(
-        "SELECT p.ID FROM $wpdb->posts p
-         WHERE p.post_type = 'attachment'
-         AND NOT EXISTS (
-             SELECT 1 FROM $wpdb->term_relationships tr
-             JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-             WHERE tt.taxonomy = 'media_folder' AND tr.object_id = p.ID
-         )"
-    );
-    
-    $count = 0;
-    
-    // Log what we found
-    error_log("Found " . count($unassigned_attachments) . " attachments with no folder assignment");
-    
-    // Process in batches to avoid timeouts
-    foreach ($unassigned_attachments as $attachment_id) {
-        // Direct SQL approach to ensure reliability
-        $exists = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $wpdb->term_relationships 
-             WHERE object_id = %d AND term_taxonomy_id = %d",
-            $attachment_id, $tt_id
-        ));
-        
-        if (!$exists) {
-            // Insert the relationship directly
-            $wpdb->insert(
-                $wpdb->term_relationships,
-                array(
-                    'object_id' => $attachment_id,
-                    'term_taxonomy_id' => $tt_id,
-                    'term_order' => 0
-                )
-            );
-            
-            if ($wpdb->insert_id || $wpdb->rows_affected) {
-                $count++;
-            }
-        }
-    }
-    
-    // Update term count
-    if ($count > 0) {
-        // Update the count in the database directly
-        $wpdb->query($wpdb->prepare(
-            "UPDATE $wpdb->term_taxonomy 
-             SET count = count + %d
-             WHERE term_taxonomy_id = %d",
-            $count, $tt_id
-        ));
-        
-        // Clear cache
-        clean_term_cache($unassigned_id, 'media_folder');
-    }
-    
-    // Force update all term counts to be sure
-    theme_update_media_folder_counts();
-    
-    return $count;
+    return Media_Folders_Unassigned::ensure_all_assigned();
 }
 
 
@@ -1575,21 +1372,11 @@ function media_folders_migrate_unassigned() {
 /**
  * Ensure all attachments have a folder assignment
  */
+
 function media_folders_ensure_folder_assignment($post_id) {
-    // Only proceed for attachments
-    if (get_post_type($post_id) !== 'attachment') {
-        return;
-    }
-    
-    // Check if the attachment already has a folder
-    $terms = wp_get_object_terms($post_id, 'media_folder');
-    
-    // If it doesn't have any folder, assign to Unassigned
-    if (empty($terms) || is_wp_error($terms)) {
-        $unassigned_id = media_folders_get_unassigned_id();
-        wp_set_object_terms($post_id, array($unassigned_id), 'media_folder', false);
-    }
+    Media_Folders_Unassigned::ensure_attachment_has_folder($post_id);
 }
+
 add_action('save_post', 'media_folders_ensure_folder_assignment');
 add_action('edit_attachment', 'media_folders_ensure_folder_assignment');
 
@@ -1599,39 +1386,7 @@ add_action('edit_attachment', 'media_folders_ensure_folder_assignment');
  * Force update term counts for media folders
  */
 function theme_update_media_folder_counts() {
-    global $wpdb;
-    
-    // Get all media folder terms
-    $folders = get_terms(array(
-        'taxonomy' => 'media_folder',
-        'hide_empty' => false,
-    ));
-    
-    if (empty($folders)) {
-        return;
-    }
-    
-    foreach ($folders as $folder) {
-        // Count attachments in this folder
-        $count = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $wpdb->term_relationships
-             JOIN $wpdb->posts ON $wpdb->posts.ID = $wpdb->term_relationships.object_id
-             WHERE $wpdb->term_relationships.term_taxonomy_id = %d
-             AND $wpdb->posts.post_type = 'attachment'",
-             $folder->term_taxonomy_id
-        ));
-        
-        // Update the count in the database directly
-        $wpdb->update(
-            $wpdb->term_taxonomy,
-            array('count' => $count),
-            array('term_taxonomy_id' => $folder->term_taxonomy_id)
-        );
-    }
-    
-    // Clear caches
-    clean_term_cache(wp_list_pluck($folders, 'term_id'), 'media_folder');
-    delete_transient('media_folder_counts');
+    Media_Folders_Utilities::update_folder_counts();
 }
 
 
