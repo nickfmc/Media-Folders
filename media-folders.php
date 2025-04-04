@@ -176,6 +176,12 @@ function media_folders_filter() {
     $screen = get_current_screen();
     if ($screen->base !== 'upload') return;
     
+     // Check if we're in list view - if so, don't show the folders
+     $mode = isset($_GET['mode']) ? $_GET['mode'] : '';
+     if ($mode === 'list') {
+         return; // Exit early if in list view
+     }
+
     $folders = get_terms(array(
         'taxonomy' => 'media_folder',
         'hide_empty' => false,
@@ -1697,3 +1703,7 @@ function media_folders_flush_term_cache() {
     }
 }
 add_action('admin_init', 'media_folders_flush_term_cache');
+
+
+
+

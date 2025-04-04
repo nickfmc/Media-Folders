@@ -334,6 +334,8 @@ function setupFolderCountUpdates() {
 // Run setup when document is ready
 jQuery(document).ready(function() {
     setupFolderCountUpdates();
+
+    
 });
 
 
