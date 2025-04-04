@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 
 /**
  * Class for utility functions
- */
+ */ 
 class Media_Folders_Utilities {
     
     /**
