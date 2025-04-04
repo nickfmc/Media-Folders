@@ -1340,7 +1340,8 @@ function media_folders_uploader() {
         array(
             'currentFolder' => isset($_GET['media_folder']) ? sanitize_text_field($_GET['media_folder']) : null,
             'dropdownHtml' => $dropdown_html,
-            'folderNonce' => wp_create_nonce('media_folders_nonce')
+            'folderNonce' => wp_create_nonce('media_folders_nonce'),
+            'unassignedId' => $unassigned_id  // Add this line to pass the unassigned folder ID
         )
     );
 }
@@ -1350,24 +1351,61 @@ add_action('admin_enqueue_scripts', 'media_folders_uploader');
 
 
 
-// Handle file uploads with folder assignment
 function media_folders_handle_upload($file) {
     // For debugging
     error_log('Upload handler called for file: ' . $file['name']);
     
-    // Check if a folder was selected
+    // Check all possible sources for the folder ID
+    $folder_id = 0;
+    $source = 'unknown';
+    
+    // Check various parameter names
     if (isset($_POST['media_folder_id'])) {
-        error_log('Folder ID found in request: ' . $_POST['media_folder_id']);
-        // Store folder ID in a transient with the filename as key
-        // This lets us retrieve it later when the attachment is created
-        set_transient('media_folder_for_' . sanitize_file_name($file['name']), intval($_POST['media_folder_id']), 5 * MINUTE_IN_SECONDS);
-    } else {
-        error_log('No folder ID found in upload request');
+        $folder_id = intval($_POST['media_folder_id']);
+        $source = 'POST media_folder_id';
+    } 
+    elseif (isset($_POST['media-folder-select'])) {
+        $folder_id = intval($_POST['media-folder-select']);
+        $source = 'POST media-folder-select';
     }
+    
+    // If not in POST, try REQUEST (which combines GET, POST, COOKIE)
+    if (!$folder_id) {
+        if (isset($_REQUEST['media_folder_id'])) {
+            $folder_id = intval($_REQUEST['media_folder_id']);
+            $source = 'REQUEST media_folder_id';
+        }
+        elseif (isset($_REQUEST['media-folder-select'])) {
+            $folder_id = intval($_REQUEST['media-folder-select']);
+            $source = 'REQUEST media-folder-select';
+        }
+    }
+    
+    // Cookie fallback
+    if (!$folder_id && isset($_COOKIE['media_folder_upload_id'])) {
+        $folder_id = intval($_COOKIE['media_folder_upload_id']);
+        $source = 'COOKIE';
+    }
+    
+    // If we still don't have a folder ID, use unassigned
+    if (!$folder_id) {
+        $folder_id = media_folders_get_unassigned_id();
+        $source = 'DEFAULT (unassigned)';
+    }
+    
+    error_log("Found folder ID {$folder_id} from {$source} for file: {$file['name']}");
+    
+    // Store this in a transient for later retrieval
+    set_transient('media_folder_for_' . sanitize_file_name($file['name']), $folder_id, 5 * MINUTE_IN_SECONDS);
+    
+    // Also store in a global request variable to ensure it's available elsewhere
+    $_REQUEST['media_folder_id'] = $folder_id;
     
     return $file;
 }
 add_filter('wp_handle_upload_prefilter', 'media_folders_handle_upload');
+
+
 
 // Assign folder to newly uploaded attachment
 function media_folders_attachment_uploaded($attachment_id) {
@@ -1378,34 +1416,98 @@ function media_folders_attachment_uploaded($attachment_id) {
     // Get the original filename
     $filename = basename(get_attached_file($attachment_id));
     
-    // Try to get the folder ID from the transient
-    $folder_id = get_transient('media_folder_for_' . sanitize_file_name($filename));
+    error_log("Processing new attachment ID $attachment_id (file: $filename)");
     
-    // Check for folder ID directly in the request as well
-    if (!$folder_id && isset($_POST['media_folder_id'])) {
+    // Try multiple approaches to get the folder ID, in order of preference:
+    $folder_id = 0;
+    $source = 'unknown';
+    
+    // 1. Check POST data directly with additional fallbacks
+    if (isset($_POST['media_folder_id'])) {
         $folder_id = intval($_POST['media_folder_id']);
+        $source = 'POST media_folder_id';
+    } 
+    elseif (isset($_POST['media-folder-select'])) {
+        $folder_id = intval($_POST['media-folder-select']);
+        $source = 'POST select dropdown';
     }
     
-    error_log("Checking folder assignment for attachment ID $attachment_id (file: $filename)");
-    
-    // If we have a valid folder ID, assign the attachment to it
-    if ($folder_id && $folder_id > 0) {
-        // Assign to folder
-        wp_set_object_terms($attachment_id, array($folder_id), 'media_folder', false);
-        error_log("Assigned attachment ID $attachment_id to folder ID $folder_id");
-    } else {
-        // No folder specified, assign to Unassigned folder
-        $unassigned_id = media_folders_get_unassigned_id();
-        wp_set_object_terms($attachment_id, array($unassigned_id), 'media_folder', false);
-        error_log("Assigned attachment ID $attachment_id to Unassigned folder ID $unassigned_id");
+    // 2. If that failed, try the transient
+    if (!$folder_id) {
+        $folder_id = get_transient('media_folder_for_' . sanitize_file_name($filename));
+        if ($folder_id) $source = 'transient';
     }
     
-    // Force update term counts
-    theme_update_media_folder_counts();
+    // 3. Try the cookie as a backup
+    if (!$folder_id && isset($_COOKIE['media_folder_upload_id'])) {
+        $folder_id = intval($_COOKIE['media_folder_upload_id']);
+        $source = 'cookie';
+    }
+    
+    // 4. If we still have no folder, use the URL query parameter if present
+    if (!$folder_id && isset($_GET['media_folder'])) {
+        // Convert slug to ID
+        $term = get_term_by('slug', sanitize_text_field($_GET['media_folder']), 'media_folder');
+        if ($term && !is_wp_error($term)) {
+            $folder_id = $term->term_id;
+            $source = 'URL param';
+        }
+    }
+    
+    // If still no folder, use unassigned
+    if (!$folder_id) {
+        $folder_id = media_folders_get_unassigned_id();
+        $source = 'default (unassigned)';
+    }
+    
+    error_log("Folder ID $folder_id found from $source for attachment ID $attachment_id");
+    
+    // If we have a valid folder ID and it exists, assign the attachment to it
+    if ($folder_id > 0) {
+        // Verify the folder exists
+        $term = get_term($folder_id, 'media_folder');
+        if (!is_wp_error($term) && $term) {
+            // Assign to folder - use both methods for redundancy
+            wp_set_object_terms($attachment_id, array($folder_id), 'media_folder', false);
+            error_log("Assigned attachment ID $attachment_id to folder ID $folder_id ({$term->name})");
+            
+            // Also use direct database access as a backup approach
+            global $wpdb;
+            $tt_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
+                 WHERE term_id = %d AND taxonomy = 'media_folder'",
+                $folder_id
+            ));
+            
+            if ($tt_id) {
+                // Ensure there's no existing relationship
+                $wpdb->delete($wpdb->term_relationships, array(
+                    'object_id' => $attachment_id,
+                    'term_taxonomy_id' => $tt_id
+                ));
+                
+                // Insert direct relationship
+                $wpdb->insert($wpdb->term_relationships, array(
+                    'object_id' => $attachment_id,
+                    'term_taxonomy_id' => $tt_id,
+                    'term_order' => 0
+                ));
+                
+                error_log("Added direct database relationship between attachment $attachment_id and folder $folder_id");
+            }
+            
+            // Update term counts
+            theme_update_media_folder_counts();
+        } else {
+            // Folder doesn't exist, use Unassigned
+            $unassigned_id = media_folders_get_unassigned_id();
+            wp_set_object_terms($attachment_id, array($unassigned_id), 'media_folder', false);
+            error_log("Folder ID $folder_id doesn't exist, using Unassigned ($unassigned_id)");
+        }
+    }
     
     // Clean up the transient
     delete_transient('media_folder_for_' . sanitize_file_name($filename));
-   
 }
 add_action('add_attachment', 'media_folders_attachment_uploaded');
 
@@ -1413,8 +1515,35 @@ add_action('add_attachment', 'media_folders_attachment_uploaded');
 
 // Also add back-end selection directly to media uploader params
 function media_folders_plupload_init($plupload_init) {
+    // Get the folder ID from multiple possible sources
+    $folder_id = 0;
+    
+    // First try the direct POST/GET variables
+    if (isset($_REQUEST['media_folder_id'])) {
+        $folder_id = intval($_REQUEST['media_folder_id']);
+    }
+    // Second, try from the dropdown in the uploader
+    elseif (isset($_REQUEST['media-folder-select'])) {
+        $folder_id = intval($_REQUEST['media-folder-select']);
+    }
+    // Finally check cookie
+    elseif (isset($_COOKIE['media_folder_upload_id'])) {
+        $folder_id = intval($_COOKIE['media_folder_upload_id']);
+    }
+    
+    // If still no folder ID, use the unassigned folder
+    if (!$folder_id) {
+        $folder_id = media_folders_get_unassigned_id();
+    }
+    
     // Add our custom folder param
-    $plupload_init['multipart_params']['media_folder_id'] = isset($_REQUEST['media_folder_id']) ? $_REQUEST['media_folder_id'] : '';
+    $plupload_init['multipart_params']['media_folder_id'] = $folder_id;
+    
+    // Log what we're doing for debugging
+    error_log('Setting plupload media_folder_id to: ' . $folder_id . ' (Source: ' . 
+              (isset($_REQUEST['media_folder_id']) ? 'REQUEST' : 
+               (isset($_REQUEST['media-folder-select']) ? 'SELECT' : 
+                (isset($_COOKIE['media_folder_upload_id']) ? 'COOKIE' : 'DEFAULT'))) . ')');
     
     return $plupload_init;
 }
