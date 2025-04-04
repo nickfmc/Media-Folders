@@ -604,6 +604,9 @@ jQuery(document).ready(function($) {
                 resizable: false,
                 width: 400,
                 buttons: {
+                    'Cancel': function() {
+                        $(this).dialog('close');
+                    },
                     'Create Subfolder': function() {
                         var folderName = $('#new-subfolder-name').val();
                         
@@ -628,10 +631,8 @@ jQuery(document).ready(function($) {
                         }
                         
                         $(this).dialog('close');
-                    },
-                    'Cancel': function() {
-                        $(this).dialog('close');
                     }
+                    
                 },
                 open: function() {
                     $('#new-subfolder-name').focus();
@@ -670,6 +671,9 @@ jQuery(document).ready(function($) {
                 resizable: false,
                 width: 400,
                 buttons: {
+                    'Cancel': function() {
+                        $(this).dialog('close');
+                    },
                     'Create Folder': function() {
                         var folderName = $('#new-folder-name').val();
                         var parentId = $('#new-folder-parent').val();
@@ -695,10 +699,8 @@ jQuery(document).ready(function($) {
                         }
                         
                         $(this).dialog('close');
-                    },
-                    'Cancel': function() {
-                        $(this).dialog('close');
                     }
+                    
                 },
                 open: function() {
                     // Focus the folder name input
