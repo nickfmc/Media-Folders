@@ -23,6 +23,7 @@ define('MEDIA_FOLDERS_VERSION', '0.9.0');
  
 // Include the folder drag and drop class
 require_once MEDIA_FOLDERS_PLUGIN_DIR . 'class-folder-drag-drop.php';
+require_once MEDIA_FOLDERS_PLUGIN_DIR . 'includes/class-media-folders-unassigned.php';
 require_once MEDIA_FOLDERS_PLUGIN_DIR . 'includes/class-ajax-handler.php';
 
 // Register activation and deactivation hooks
@@ -37,7 +38,7 @@ function media_folders_admin_scripts() {
     // Only on media upload screen
     if ($screen->base === 'upload') {
         // Enqueue jQuery UI core and all required components for dialogs
-        wp_enqueue_script('jquery-ui-core');
+        wp_enqueue_script('jquery-ui-core'); 
         wp_enqueue_script('jquery-ui-dialog');
         wp_enqueue_script('jquery-ui-draggable');
         wp_enqueue_script('jquery-ui-resizable');
@@ -60,20 +61,10 @@ function media_folders_activate() {
     media_folders_register_taxonomy();
     
     // Create default "Unassigned" folder if it doesn't exist
-    $unassigned = term_exists('Unassigned', 'media_folder');
-    if (!$unassigned) {
-        wp_insert_term(
-            'Unassigned', 
-            'media_folder',
-            array(
-                'description' => 'Default folder for media items not assigned to any other folder',
-                'slug' => 'unassigned'
-            )
-        );
-    }
+    $unassigned_id = Media_Folders_Unassigned::get_id();
     
     // Migrate existing unassigned media immediately
-    media_folders_ensure_all_assigned();
+    Media_Folders_Unassigned::ensure_all_assigned();
     
     // Flush rewrite rules
     flush_rewrite_rules();
@@ -82,20 +73,7 @@ function media_folders_activate() {
  * Get the Unassigned folder ID
  */
 function media_folders_get_unassigned_id() {
-    $unassigned = term_exists('Unassigned', 'media_folder');
-    if (!$unassigned) {
-        // Create it if it doesn't exist
-        $unassigned = wp_insert_term(
-            'Unassigned', 
-            'media_folder',
-            array(
-                'description' => 'Default folder for media items not assigned to any other folder',
-                'slug' => 'unassigned'
-            )
-        );
-    }
-    
-    return is_array($unassigned) ? $unassigned['term_id'] : $unassigned;
+    return Media_Folders_Unassigned::get_id();
 }
 
 
@@ -1204,83 +1182,7 @@ function media_folders_force_rebuild_unassigned() {
  */
 
 function media_folders_ensure_all_assigned() {
-    global $wpdb;
-    
-    // Get the unassigned folder ID
-    $unassigned_id = media_folders_get_unassigned_id();
-    
-    // Get the term taxonomy ID
-    $tt_id = $wpdb->get_var($wpdb->prepare(
-        "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-         WHERE term_id = %d AND taxonomy = 'media_folder'",
-        $unassigned_id
-    ));
-    
-    if (!$tt_id) {
-        error_log("Error: Could not find term_taxonomy_id for Unassigned folder (ID: $unassigned_id)");
-        return 0;
-    }
-    
-    // Find all attachments that don't have ANY folder assignment
-    $unassigned_attachments = $wpdb->get_col(
-        "SELECT p.ID FROM $wpdb->posts p
-         WHERE p.post_type = 'attachment'
-         AND NOT EXISTS (
-             SELECT 1 FROM $wpdb->term_relationships tr
-             JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-             WHERE tt.taxonomy = 'media_folder' AND tr.object_id = p.ID
-         )"
-    );
-    
-    $count = 0;
-    
-    // Log what we found
-    error_log("Found " . count($unassigned_attachments) . " attachments with no folder assignment");
-    
-    // Process in batches to avoid timeouts
-    foreach ($unassigned_attachments as $attachment_id) {
-        // Direct SQL approach to ensure reliability
-        $exists = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $wpdb->term_relationships 
-             WHERE object_id = %d AND term_taxonomy_id = %d",
-            $attachment_id, $tt_id
-        ));
-        
-        if (!$exists) {
-            // Insert the relationship directly
-            $wpdb->insert(
-                $wpdb->term_relationships,
-                array(
-                    'object_id' => $attachment_id,
-                    'term_taxonomy_id' => $tt_id,
-                    'term_order' => 0
-                )
-            );
-            
-            if ($wpdb->insert_id || $wpdb->rows_affected) {
-                $count++;
-            }
-        }
-    }
-    
-    // Update term count
-    if ($count > 0) {
-        // Update the count in the database directly
-        $wpdb->query($wpdb->prepare(
-            "UPDATE $wpdb->term_taxonomy 
-             SET count = count + %d
-             WHERE term_taxonomy_id = %d",
-            $count, $tt_id
-        ));
-        
-        // Clear cache
-        clean_term_cache($unassigned_id, 'media_folder');
-    }
-    
-    // Force update all term counts to be sure
-    theme_update_media_folder_counts();
-    
-    return $count;
+    return Media_Folders_Unassigned::ensure_all_assigned();
 }
 
 
@@ -1575,21 +1477,11 @@ function media_folders_migrate_unassigned() {
 /**
  * Ensure all attachments have a folder assignment
  */
+
 function media_folders_ensure_folder_assignment($post_id) {
-    // Only proceed for attachments
-    if (get_post_type($post_id) !== 'attachment') {
-        return;
-    }
-    
-    // Check if the attachment already has a folder
-    $terms = wp_get_object_terms($post_id, 'media_folder');
-    
-    // If it doesn't have any folder, assign to Unassigned
-    if (empty($terms) || is_wp_error($terms)) {
-        $unassigned_id = media_folders_get_unassigned_id();
-        wp_set_object_terms($post_id, array($unassigned_id), 'media_folder', false);
-    }
+    Media_Folders_Unassigned::ensure_attachment_has_folder($post_id);
 }
+
 add_action('save_post', 'media_folders_ensure_folder_assignment');
 add_action('edit_attachment', 'media_folders_ensure_folder_assignment');
 
