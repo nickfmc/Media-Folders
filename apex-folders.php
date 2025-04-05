@@ -112,7 +112,7 @@ function APEX_FOLDERS_ensure_all_assigned() {
 /**
  * Force update term counts for media folders
  */
-function theme_update_apex_folder_counts() {
+function APEX_FOLDERS_update_counts() {
     APEX_FOLDERS_Utilities::update_folder_counts();
 }
 
@@ -121,6 +121,6 @@ function theme_update_apex_folder_counts() {
  */
 function APEX_FOLDERS_init() {
     // Migration is already handled during activation
-    update_option('APEX_FOLDERS_needs_migration', false);
+    update_option('apex_folders_needs_migration', false);
 }
 add_action('init', 'APEX_FOLDERS_init');

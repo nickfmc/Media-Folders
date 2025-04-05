@@ -230,7 +230,7 @@ class APEX_FOLDERS_AJAX_Handler {
         }
         
         // Force recount all terms
-        theme_update_apex_folder_counts();
+        APEX_FOLDERS_update_counts();
         
         // Get updated folder data
         $folders = get_terms(array(

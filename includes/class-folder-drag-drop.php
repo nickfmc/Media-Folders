@@ -150,7 +150,7 @@ class apex_folder_Drag_Drop {
         }
         
         // Update folder counts
-        theme_update_apex_folder_counts();
+        APEX_FOLDERS_update_counts();
         
         // Prepare the response
         if ($success_count > 0) {

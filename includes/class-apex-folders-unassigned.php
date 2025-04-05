@@ -141,8 +141,8 @@ class APEX_FOLDERS_Unassigned {
         }
         
         // Force update all term counts to be sure
-        if (function_exists('theme_update_apex_folder_counts')) {
-            theme_update_apex_folder_counts();
+        if (function_exists('APEX_FOLDERS_update_counts')) {
+            APEX_FOLDERS_update_counts();
         }
         
         return $count;

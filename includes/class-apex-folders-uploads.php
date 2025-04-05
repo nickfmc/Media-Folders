@@ -251,7 +251,7 @@ class APEX_FOLDERS_Upload {
                 }
                 
                 // Update term counts
-                theme_update_apex_folder_counts();
+                APEX_FOLDERS_update_counts();
             } else {
                 // Folder doesn't exist, use Unassigned
                 $unassigned_id = APEX_FOLDERS_get_unassigned_id();
