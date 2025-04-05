@@ -25,9 +25,7 @@ jQuery(document).ready(function($) {
                 newFolderId: selectedFolderId,
                 originalFolder: originalValue
             };
-            
-            console.log('Tracking attachment move:', attachmentEditTracking[attachmentId]);
-        }
+                    }
     });
     
     // Add data attribute to track original folder
@@ -47,11 +45,8 @@ jQuery(document).ready(function($) {
             // Extract attachment ID from the AJAX request
             var matches = settings.data.match(/attachment_id=(\d+)/i);
             var attachmentId = matches ? matches[1] : null;
-            
-            console.log('AJAX Complete - Attachment ID from URL:', attachmentId);
-            
+                        
             if (!attachmentId || !attachmentEditTracking[attachmentId]) {
-                console.log('No tracking data found');
                 return;
             }
             
@@ -67,19 +62,15 @@ jQuery(document).ready(function($) {
                     nonce: apexFolderData.slugNonce
                 },
                 success: function(response) {
-                    console.log('Folder slug response:', response);
                     
                     if (response.success && response.data && response.data.slug) {
                         var newFolderSlug = response.data.slug;
                         
-                        console.log('New folder slug:', newFolderSlug, 'Current folder:', currentFolder);
                         
                         // If we're viewing a specific folder
                         if (currentFolder) {
                             if (newFolderSlug !== currentFolder) {
                                 // CASE 1: File moved OUT OF current folder - remove it
-                                console.log('Removing attachment from view:', attachmentId);
-                                
                                 // APPROACH 1: Force immediate refresh of the current view
                                 if (wp.media && wp.media.frame) {
                                     try {
@@ -104,7 +95,6 @@ jQuery(document).ready(function($) {
                                                 'div.attachment[data-id="' + attachmentId + '"], ' +
                                                 'tr.attachment[data-id="' + attachmentId + '"]');
                                                 
-                                    console.log('Found ' + $items.length + ' DOM elements to remove');
                                     
                                     $items.fadeOut(300, function() {
                                         $(this).remove();
@@ -118,7 +108,6 @@ jQuery(document).ready(function($) {
                                                         'div.attachment[data-id="' + attachmentId + '"]').length > 0;
                                         
                                         if (stillExists) {
-                                            console.log('Item still in DOM, reloading page');
                                             window.location.reload();
                                         }
                                     }, 1000);

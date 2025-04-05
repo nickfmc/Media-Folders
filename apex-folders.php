@@ -91,13 +91,7 @@ function prevent_numeric_term_creation($term, $taxonomy) {
 }
 add_filter('pre_insert_term', 'prevent_numeric_term_creation', 10, 2);
 
-/**
- * Debug term assignments
- */
-function debug_apex_folder_assignment($post_id, $terms, $tt_ids, $taxonomy) {
-    APEX_FOLDERS_Utilities::debug_folder_assignment($post_id, $terms, $tt_ids, $taxonomy);
-}
-add_action('set_object_terms', 'debug_apex_folder_assignment', 999, 4);
+
 
 /**
  * Ensure all attachments have a folder assignment

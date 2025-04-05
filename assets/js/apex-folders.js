@@ -3,7 +3,7 @@
  */
 
 window.updateFolderCounts = function() {
-    console.log('Updating folder counts...');
+   
 
     // We'll make 3 attempts to update counts, with increasing delays
     // This helps when WordPress is slow to update term counts
@@ -18,9 +18,7 @@ window.updateFolderCounts = function() {
             action: 'theme_get_folder_counts'
         },
         success: function(response) {
-            if (response.success && response.data) {
-                console.log('Received updated folder counts after ' + delay + 'ms:', response.data);
-                
+            if (response.success && response.data) {                
                 // Update each folder count in the sidebar
                 jQuery('.apex-folder-list li[data-folder-id]').each(function() {
                     var $item = jQuery(this);
@@ -39,7 +37,6 @@ window.updateFolderCounts = function() {
                         
                         // Only update if count changed
                         if (currentCount !== newCount) {
-                            console.log('Updating count for ' + folderName + ' from ' + currentCount + ' to ' + newCount);
                             $link.text(folderName + ' (' + newCount + ')');
                             
                             // Add highlighting class
@@ -47,8 +44,6 @@ window.updateFolderCounts = function() {
                             setTimeout(function() {
                                 $item.removeClass('count-updated');
                             }, 2000);
-                        } else {
-                            console.log('Count unchanged for ' + folderName + ': ' + currentCount);
                         }
                     }
                 });
@@ -64,15 +59,11 @@ window.updateFolderCounts = function() {
     // Store the original wp.media.view.AttachmentsBrowser for later use
     var originalAttachmentsBrowser = wp.media.view.AttachmentsBrowser;
     
-    console.log('Media folders: Extending WordPress media framework');
-    
     // Extend AttachmentsBrowser to include our custom filter
     wp.media.view.AttachmentsBrowser = originalAttachmentsBrowser.extend({
         createToolbar: function() {
             // Call the original method to create the toolbar with default filters
             originalAttachmentsBrowser.prototype.createToolbar.apply(this, arguments);
-            
-            console.log('Creating media toolbar with folder filter');
             
             // Create our custom dropdown filter
             var folderFilter = this.createFolderFilter();
@@ -80,18 +71,15 @@ window.updateFolderCounts = function() {
             // Add it to the toolbar
             if (folderFilter) {
                 this.toolbar.set('folderFilter', folderFilter);
-                console.log('Folder filter added to toolbar');
             }
         },
         
         // Create our custom folder filter
         createFolderFilter: function() {
             if (!window.mediaFolders || !window.mediaFolders.length) {
-                console.warn('No media folders available');
                 return;
             }
             
-            console.log('Creating folder filter with folders:', window.mediaFolders);
             
             // Create filter dropdown
             var FolderFilter = wp.media.view.AttachmentFilters.extend({
@@ -156,7 +144,6 @@ window.updateFolderCounts = function() {
                         addFolderFilter: function() {
                 // Check if sidebar exists before trying to use it
                 if (!this.sidebar) {
-                    console.log('Media library sidebar not yet initialized');
                     
                     // Set up a retry mechanism with a limit to prevent infinite loops
                     if (!this._retryCount) {
@@ -289,11 +276,9 @@ window.updateFolderCounts = function() {
         // When the apex_folder property changes, reload the library
         mediaFolderChanged: function() {
             var folder = this.get('apex_folder');
-            console.log('Media folder changed to:', folder);
         }
     });
     
-    console.log('Media folders: WordPress media framework extended successfully');
 })();
 
 
@@ -305,27 +290,23 @@ function setupFolderCountUpdates() {
     // After file upload completes
     if (wp.Uploader && wp.Uploader.queue) {
         wp.Uploader.queue.on('reset', function() {
-            console.log('Upload queue reset, updating counts');
             setTimeout(updateFolderCounts, 1000);
         });
     }
     
     // When media folder is changed via dropdown
     jQuery(document).on('change', 'select[id^="attachments-"][id$="-apex_folder"]', function() {
-        console.log('Media folder changed via dropdown');
         setTimeout(updateFolderCounts, 1000);
     });
     
     // When media modal is saved
     jQuery(document).on('click', '.media-modal .button.media-button-select', function() {
-        console.log('Media modal saved');
         setTimeout(updateFolderCounts, 1000);
     });
     
     // When inline edit is saved
     jQuery(document).on('click', '.button.save', function() {
         if (jQuery(this).closest('.compat-item').length) {
-            console.log('Inline edit saved');
             setTimeout(updateFolderCounts, 1000);
         }
     });

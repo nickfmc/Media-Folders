@@ -203,48 +203,17 @@ class APEX_FOLDERS_Utilities {
             return $term;
         }
         
-        // If term is numeric, it's likely an ID being misinterpreted
-        if (is_numeric($term)) {
+       // If term is numeric, it's likely an ID being misinterpreted
+       if (is_numeric($term)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("Preventing creation of numeric term: " . $term);
-            
-            // Return an error to prevent term creation
-            return new WP_Error('invalid_term', "Can't create term with numeric name");
         }
         
-        return $term;
+        // Return an error to prevent term creation
+        return new WP_Error('invalid_term', "Can't create term with numeric name");
     }
     
-    /**
-     * Debug attachment folder assignment
-     * 
-     * @param int    $post_id  The post ID
-     * @param array  $terms    The terms being assigned
-     * @param array  $tt_ids   The term taxonomy IDs
-     * @param string $taxonomy The taxonomy name
-     * @return void
-     */
-    public static function debug_folder_assignment($post_id, $terms, $tt_ids, $taxonomy) {
-        if ($taxonomy !== 'apex_folder') {
-            return;
-        }
-        
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
-        $caller_info = array();
-        $ignore_functions = array('debug_apex_folder_assignment', 'apply_filters', 'do_action');
-        
-        foreach ($backtrace as $trace) {
-            if (isset($trace['function']) && !in_array($trace['function'], $ignore_functions)) {
-                $caller_info[] = $trace['function'];
-            }
-        }
-        
-        if (!empty($caller_info)) {
-            error_log(sprintf(
-                "[Media Folder Debug] Post: %d, Original Caller: %s, Terms: %s",
-                $post_id,
-                implode(' -> ', array_reverse($caller_info)),
-                json_encode($terms)
-            ));
-        }
+    return $term;
     }
+   
 }

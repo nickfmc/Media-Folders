@@ -13,15 +13,12 @@
         unassignedId: MediaFolderUploaderData.unassignedId || 0,
         
         init: function() {
-            console.log("Media folder uploader script loaded");
-            console.log("Unassigned folder ID: " + this.unassignedId);
             
             // Run on page load
             this.addFolderDropdownToUploader();
             
             // Handle dynamic uploader initialization
             $(document).on("click", ".media-modal .upload-files, .insert-media, .add_media", function() {
-                console.log("Media upload button clicked");
                 setTimeout(function() {
                     MediaFolderUploader.addFolderDropdownToUploader();
                 }, 200);
@@ -48,7 +45,6 @@
             // CRITICAL: Add global event listener to track dropdown changes
             $(document).on('change', '#apex-folder-select', function() {
                 var selectedFolderId = $(this).val();
-                console.log("Folder selection changed to: " + selectedFolderId);
                 // Store in session storage for immediate access
                 try {
                     window.sessionStorage.setItem('current_apex_folder', selectedFolderId);
@@ -62,7 +58,6 @@
         
         // Function to add folder dropdown to uploader
         addFolderDropdownToUploader: function() {
-            console.log("Attempting to add folder dropdown");
     
             // Guard against potential errors
             if (typeof $ === 'undefined') {
@@ -73,14 +68,12 @@
             // Simplify targeting - look for common upload interface elements
             var $uploadUI = $(".upload-ui");
             if ($uploadUI.length && !$uploadUI.next(".apex-folder-select-container").length) {
-                console.log("Found upload UI, adding dropdown");
                 $uploadUI.after(this.dropdownHtml);
             }
             
             // Also try for media modal uploader
             var $modalUploadUI = $(".media-modal .uploader-inline-content .upload-ui");
             if ($modalUploadUI.length && !$modalUploadUI.next(".apex-folder-select-container").length) {
-                console.log("Found modal upload UI, adding dropdown");
                 $modalUploadUI.after(this.dropdownHtml);
             }
             
@@ -102,10 +95,9 @@
                             var storedId = window.sessionStorage.getItem('current_apex_folder');
                             if (storedId) {
                                 folder_id = storedId;
-                                console.log("Using folder ID from sessionStorage: " + folder_id);
                             }
                         } catch(e) {
-                            console.warn("Could not access sessionStorage:", e);
+                            // Silent catch - sessionStorage access failed
                         }
                         
                         // 2. If no sessionStorage, check visible dropdown
@@ -113,7 +105,6 @@
                             var $visibleDropdown = $(".media-modal:visible, .wrap:visible").find("#apex-folder-select");
                             if ($visibleDropdown.length) {
                                 folder_id = $visibleDropdown.val();
-                                console.log("Found visible dropdown with value: " + folder_id);
                             }
                         }
                         
@@ -122,7 +113,6 @@
                             var $anyDropdown = $("#apex-folder-select");
                             if ($anyDropdown.length) {
                                 folder_id = $anyDropdown.val();
-                                console.log("Using any dropdown with value: " + folder_id);
                             }
                         }
                         
@@ -131,17 +121,14 @@
                             var cookieMatch = document.cookie.match(/apex_folder_upload_id=(\d+)/);
                             if (cookieMatch && cookieMatch[1]) {
                                 folder_id = cookieMatch[1];
-                                console.log("Using folder ID from cookie: " + folder_id);
                             }
                         }
                         
                         // Final fallback to unassigned
                         if (!folder_id) {
                             folder_id = MediaFolderUploader.unassignedId;
-                            console.log("No folder ID found, using unassigned: " + folder_id);
                         }
                         
-                        console.log("FINAL Setting upload folder to: " + folder_id);
                         
                         // Set in multiple places to ensure it's captured
                         up.settings.multipart_params = up.settings.multipart_params || {};
@@ -158,17 +145,13 @@
                         } else {
                             up.settings.url = uploadAction + '&apex_folder_id=' + folder_id;
                         }
-                        
                         // Set cookie again for redundancy
                         document.cookie = "apex_folder_upload_id=" + folder_id + "; path=/; max-age=3600";
                         
-                        console.log("Upload URL with params: " + up.settings.url);
-                        console.log("All params:", up.settings.multipart_params);
                     });
                 };
                 
                 window.mediaFolderHooked = true;
-                console.log("Successfully hooked into wp.Uploader");
             }
         }
     };

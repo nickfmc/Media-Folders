@@ -56,10 +56,6 @@
             }
         }
         
-        console.log('Current folder:', {
-            slug: MediaFolderDragDrop.currentFolderSlug,
-            id: MediaFolderDragDrop.currentFolderId
-        });
     }
 
     /**
@@ -164,7 +160,6 @@
         // Show all droppable folders
         $('.apex-folder-list li.droppable').addClass('active-drag');
         
-        console.log("Items being dragged:", MediaFolderDragDrop.draggedItems);
     }
 
     /**
@@ -392,11 +387,11 @@
                     e.preventDefault();
                     e.stopPropagation();
                     
-                    console.log("Selection button clicked");
+         
                     
                     if ($('body').hasClass('selecting-mode')) {
                         // Turn off selection mode
-                        console.log("Exiting selection mode");
+
                         $('body').removeClass('selecting-mode');
                         $(this).text('Bulk Drag and Drop');
                         MediaFolderDragDrop.bulkModeActive = false;
@@ -419,7 +414,6 @@
                         
                     } else {
                         // Turn on selection mode
-                        console.log("Entering selection mode");
                         $('body').addClass('selecting-mode');
                         // $(this).text('Exit Selection Mode');
                         MediaFolderDragDrop.bulkModeActive = true;
@@ -493,10 +487,6 @@
                     // Toggle the selected class
                     $attachment.toggleClass('selected');
                     
-                    // Store the ID for later use in dragging
-                    var attachmentId = $attachment.data('id');
-                    console.log("Attachment clicked:", attachmentId);
-                    
                     // Show visual feedback
                     if ($attachment.hasClass('selected')) {
                         $attachment.css('box-shadow', '0 0 0 3px #0073aa');
@@ -527,7 +517,6 @@
                     $(this).css('pointer-events', 'none').show();
                     
                     if ($attachment.length && $attachment.hasClass('selected')) {
-                        console.log("Starting drag on selected attachment:", $attachment.data('id'));
                         
                         // Create and dispatch a new mousedown event
                         var mouseEvent = new MouseEvent('mousedown', {

@@ -5,7 +5,6 @@
 jQuery(document).ready(function($) {
     // Global function to handle visual updates when folder assignments change
     window.updateFolderCounts = function() {
-        console.log('Updating folder counts...');
         
         // Make an AJAX request to get updated folder information
         jQuery.ajax({
@@ -17,8 +16,7 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success && response.data) {
-                    console.log('Got updated folder counts:', response.data);
-                    
+                  
                     // Create a mapping of parent folders to their children
                     var folderChildren = {};
                     
@@ -127,7 +125,7 @@ jQuery(document).ready(function($) {
                     // Remove the trigger call that's causing the error
                     // wp.media.frame.library.props.trigger('change');
                 } catch(e) {
-                    console.log('Media refresh error:', e);
+                   // Silently fail - media refresh is non-critical
                 }
             }
             
