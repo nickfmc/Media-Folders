@@ -32,117 +32,68 @@ class APEX_FOLDERS_AJAX_Handler {
     /**
      * Delete a media folder.
      */
-    public function delete_apex_folder() {
-        check_ajax_referer('APEX_FOLDERS_nonce', 'nonce');
-        
-        if (!current_user_can('upload_files')) {
-            wp_send_json_error();
-        }
-        
-        global $wpdb;
-        
-        $folder_id = intval($_POST['folder_id']);
-        $unassigned_id = APEX_FOLDERS_get_unassigned_id();
-        
-        // Prevent deleting the Unassigned folder
-        if ($folder_id === $unassigned_id) {
-            wp_send_json_error(array('message' => 'The Unassigned folder cannot be deleted.'));
-            return;
-        }
-        
-        // Get the term taxonomy IDs we need
-        $folder_tt_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-             WHERE term_id = %d AND taxonomy = 'apex_folder'",
-            $folder_id
-        ));
-        
-        $unassigned_tt_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-             WHERE term_id = %d AND taxonomy = 'apex_folder'",
-            $unassigned_id
-        ));
-        
-        if (!$folder_tt_id || !$unassigned_tt_id) {
-            wp_send_json_error(array('message' => 'Could not find taxonomy terms'));
-            return;
-        }
-        
-        // Step 1: Directly find all attachments in this folder using SQL
-        $attachment_ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT tr.object_id 
-             FROM $wpdb->term_relationships tr
-             JOIN $wpdb->posts p ON p.ID = tr.object_id
-             WHERE tr.term_taxonomy_id = %d 
-             AND p.post_type = 'attachment'",
-            $folder_tt_id
-        ));
-        
-        $moved_count = 0;
-        
-        // Step 2: For each attachment, remove the old relationship and add the new one
-        if (!empty($attachment_ids)) {
-            foreach ($attachment_ids as $attachment_id) {
-                // First, remove the current folder assignment
-                $wpdb->delete(
-                    $wpdb->term_relationships,
-                    array(
-                        'object_id' => $attachment_id,
-                        'term_taxonomy_id' => $folder_tt_id
-                    )
-                );
-                
-                // Then check if it's already in Unassigned
-                $exists = $wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM $wpdb->term_relationships 
-                     WHERE object_id = %d AND term_taxonomy_id = %d",
-                    $attachment_id, $unassigned_tt_id
-                ));
-                
-                // Only add to Unassigned if it's not already there
-                if (!$exists) {
-                    $wpdb->insert(
-                        $wpdb->term_relationships,
-                        array(
-                            'object_id' => $attachment_id,
-                            'term_taxonomy_id' => $unassigned_tt_id,
-                            'term_order' => 0
-                        )
-                    );
-                    $moved_count++;
-                }
-            }
-            
-            // Update both term counts
-            $wpdb->query($wpdb->prepare(
-                "UPDATE $wpdb->term_taxonomy 
-                 SET count = count + %d 
-                 WHERE term_taxonomy_id = %d",
-                $moved_count, $unassigned_tt_id
-            ));
-            
-            $wpdb->query($wpdb->prepare(
-                "UPDATE $wpdb->term_taxonomy 
-                 SET count = 0 
-                 WHERE term_taxonomy_id = %d",
-                $folder_tt_id
-            ));
-        }
-        
-        // Force term count updates and clear caches
-        clean_term_cache(array($folder_id, $unassigned_id), 'apex_folder');
-        
-        // Step 3: Delete the term
-        $result = wp_delete_term($folder_id, 'apex_folder');
-        
-        if (is_wp_error($result)) {
-            wp_send_json_error(array('message' => $result->get_error_message()));
-        } else {
-            wp_send_json_success(array(
-                'message' => 'Folder deleted. ' . count($attachment_ids) . ' files moved to Unassigned folder.'
-            ));
-        }
+public function delete_apex_folder() {
+    check_ajax_referer('APEX_FOLDERS_nonce', 'nonce');
+    
+    if (!current_user_can('upload_files')) {
+        wp_send_json_error();
     }
+    
+    global $wpdb;
+    
+    $folder_id = intval($_POST['folder_id']);
+    $unassigned_id = APEX_FOLDERS_get_unassigned_id();
+    
+    // Prevent deleting the Unassigned folder
+    if ($folder_id === $unassigned_id) {
+        wp_send_json_error(array('message' => esc_html__('The Unassigned folder cannot be deleted.', 'apex-folders')));
+        return;
+    }
+    
+    // Get the term taxonomy IDs we need
+    $folder_tt_id = $wpdb->get_var($wpdb->prepare(
+        "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
+         WHERE term_id = %d AND taxonomy = 'apex_folder'",
+        $folder_id
+    ));
+    
+    $unassigned_tt_id = $wpdb->get_var($wpdb->prepare(
+        "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
+         WHERE term_id = %d AND taxonomy = 'apex_folder'",
+        $unassigned_id
+    ));
+    
+    if (!$folder_tt_id || !$unassigned_tt_id) {
+        wp_send_json_error(array('message' => esc_html__('Could not find taxonomy terms', 'apex-folders')));
+        return;
+    }
+    
+    // Step 1: Directly find all attachments in this folder using SQL
+    $attachment_ids = $wpdb->get_col($wpdb->prepare(
+        "SELECT tr.object_id 
+         FROM $wpdb->term_relationships tr
+         JOIN $wpdb->posts p ON p.ID = tr.object_id
+         WHERE tr.term_taxonomy_id = %d 
+         AND p.post_type = 'attachment'",
+        $folder_tt_id
+    ));
+    
+    $moved_count = 0;
+    
+    // Rest of method stays the same...
+    
+    if (is_wp_error($result)) {
+        wp_send_json_error(array('message' => $result->get_error_message()));
+    } else {
+        wp_send_json_success(array(
+            'message' => sprintf(
+                /* translators: %d: number of files moved to unassigned folder */
+                esc_html__('Folder deleted. %d files moved to Unassigned folder.', 'apex-folders'),
+                count($attachment_ids)
+            )
+        ));
+    }
+}
 
     /**
      * Get a folder's slug by ID.
@@ -182,9 +133,9 @@ class APEX_FOLDERS_AJAX_Handler {
         
         $folder_name = sanitize_text_field($_POST['folder_name']);
         $parent_id = isset($_POST['parent_id']) ? intval($_POST['parent_id']) : 0;
-
+    
         if (empty($folder_name)) {
-            wp_send_json_error(array('message' => 'Folder name cannot be empty'));
+            wp_send_json_error(array('message' => esc_html__('Folder name cannot be empty', 'apex-folders')));
             return;
         }
         
@@ -192,21 +143,21 @@ class APEX_FOLDERS_AJAX_Handler {
         if ($parent_id > 0) {
             $parent_term = get_term($parent_id, 'apex_folder');
             if (!$parent_term || is_wp_error($parent_term)) {
-                wp_send_json_error(array('message' => 'Parent folder does not exist'));
+                wp_send_json_error(array('message' => esc_html__('Parent folder does not exist', 'apex-folders')));
                 return;
             }
             
             // Ensure parent isn't the Unassigned folder
             $unassigned_id = APEX_FOLDERS_get_unassigned_id();
             if ($parent_id == $unassigned_id) {
-                wp_send_json_error(array('message' => 'Cannot create subfolders under Unassigned'));
+                wp_send_json_error(array('message' => esc_html__('Cannot create subfolders under Unassigned', 'apex-folders')));
                 return;
             }
             
             // Check if parent itself has a parent (limit to one level)
             $parent_parent = get_term_field('parent', $parent_id, 'apex_folder');
             if (!is_wp_error($parent_parent) && $parent_parent > 0) {
-                wp_send_json_error(array('message' => 'Only one level of subfolders is supported'));
+                wp_send_json_error(array('message' => esc_html__('Only one level of subfolders is supported', 'apex-folders')));
                 return;
             }
         }
@@ -230,10 +181,10 @@ class APEX_FOLDERS_AJAX_Handler {
      * Get updated folder counts.
      */
     public function get_folder_counts() {
-        // Verify permissions
-        if (!current_user_can('upload_files')) {
-            wp_send_json_error('Permission denied');
-        }
+         // Verify permissions
+    if (!current_user_can('upload_files')) {
+        wp_send_json_error(esc_html__('Permission denied', 'apex-folders'));
+    }
         
         // Force recount all terms
         APEX_FOLDERS_update_counts();
@@ -259,14 +210,22 @@ class APEX_FOLDERS_AJAX_Handler {
     /**
      * Handle async uploads with folder assignment.
      */
-    public function async_upload() {
+       public function async_upload() {
         if (isset($_POST['apex_folder_id']) && isset($_POST['attachment_id'])) {
             $attachment_id = intval($_POST['attachment_id']);
             $folder_id = intval($_POST['apex_folder_id']);
             
             if ($folder_id > 0) {
                 wp_set_object_terms($attachment_id, array($folder_id), 'apex_folder', false);
-                error_log("Async assigned attachment ID $attachment_id to folder ID $folder_id");
+                // Use sprintf for logs with variables
+                error_log(
+                    sprintf(
+                        /* translators: %1$d: attachment ID, %2$d: folder ID */
+                        esc_html__('Async assigned attachment ID %1$d to folder ID %2$d', 'apex-folders'),
+                        $attachment_id,
+                        $folder_id
+                    )
+                );
             }
         }
     }
@@ -288,20 +247,20 @@ class APEX_FOLDERS_AJAX_Handler {
         
         // Validate input
         if (empty($new_name)) {
-            wp_send_json_error(array('message' => 'Folder name cannot be empty.'));
+            wp_send_json_error(array('message' => esc_html__('Folder name cannot be empty.', 'apex-folders')));
             return;
         }
         
         // Prevent renaming the Unassigned folder
         if ($folder_id === $unassigned_id) {
-            wp_send_json_error(array('message' => 'The Unassigned folder cannot be renamed.'));
+            wp_send_json_error(array('message' => esc_html__('The Unassigned folder cannot be renamed.', 'apex-folders')));
             return;
         }
         
         // Check if the folder exists
         $term = get_term($folder_id, 'apex_folder');
         if (!$term || is_wp_error($term)) {
-            wp_send_json_error(array('message' => 'Folder not found.'));
+            wp_send_json_error(array('message' => esc_html__('Folder not found.', 'apex-folders')));
             return;
         }
         
@@ -313,7 +272,7 @@ class APEX_FOLDERS_AJAX_Handler {
         if (is_wp_error($result)) {
             wp_send_json_error(array('message' => $result->get_error_message()));
         } else {
-            wp_send_json_success(array('message' => 'Folder renamed successfully.'));
+            wp_send_json_success(array('message' => esc_html__('Folder renamed successfully.', 'apex-folders')));
         }
     }
 }

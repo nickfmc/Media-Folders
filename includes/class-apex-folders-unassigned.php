@@ -23,14 +23,14 @@ class APEX_FOLDERS_Unassigned {
      * @return int Unassigned folder ID
      */
     public static function get_id() {
-        $unassigned = term_exists('Unassigned', 'apex_folder');
+        $unassigned = term_exists(esc_html__('Unassigned', 'apex-folders'), 'apex_folder');
         if (!$unassigned) {
             // Create it if it doesn't exist
             $unassigned = wp_insert_term(
-                'Unassigned', 
+                esc_html__('Unassigned', 'apex-folders'), 
                 'apex_folder',
                 array(
-                    'description' => 'Default folder for media items not assigned to any other folder',
+                    'description' => esc_html__('Default folder for media items not assigned to any other folder', 'apex-folders'),
                     'slug' => 'unassigned'
                 )
             );
@@ -80,7 +80,13 @@ class APEX_FOLDERS_Unassigned {
         ));
         
         if (!$tt_id) {
-            error_log("Error: Could not find term_taxonomy_id for Unassigned folder (ID: $unassigned_id)");
+            error_log(
+                sprintf(
+                    /* translators: %d: unassigned folder ID */
+                    esc_html__('Error: Could not find term_taxonomy_id for Unassigned folder (ID: %d)', 'apex-folders'),
+                    $unassigned_id
+                )
+            );
             return 0;
         }
         
@@ -98,7 +104,13 @@ class APEX_FOLDERS_Unassigned {
         $count = 0;
         
         // Log what we found
-        error_log("Found " . count($unassigned_attachments) . " attachments with no folder assignment");
+        error_log(
+            sprintf(
+                /* translators: %d: number of attachments with no folder */
+                esc_html__('Found %d attachments with no folder assignment', 'apex-folders'),
+                count($unassigned_attachments)
+            )
+        );
         
         // Process in batches to avoid timeouts
         foreach ($unassigned_attachments as $attachment_id) {

@@ -1,10 +1,119 @@
 /**
  * Apex Folders - Folder Counts Script
- * Handles updating folder counts and refreshing the media library
+ * Handles updating folder counts and preserving count formats in the media library
  */
 jQuery(document).ready(function($) {
-    // Global function to handle visual updates when folder assignments change
-    window.updateFolderCounts = function() {
+    // Flag to track first load to prevent unwanted highlighting
+    var isFirstLoad = true;
+    
+    // Storage for folder count formats to persist between page loads
+    var folderFormats = {};
+    
+    // Cache for folder counts to avoid unnecessary recounts
+    var folderCountsCache = {};
+    
+    // Track last update time to prevent too frequent updates
+    var lastFullCountUpdate = 0;
+    
+    // Try to load saved formats from localStorage if available
+    try {
+        var savedFormats = localStorage.getItem('apex_folder_formats');
+        if (savedFormats) {
+            folderFormats = JSON.parse(savedFormats);
+        }
+    } catch(e) {
+        // Silently fail if localStorage isn't available
+    }
+    
+    /**
+     * Restores folder formats without triggering highlighting
+     * Used when the DOM is rebuilt by WordPress
+     */
+    function restoreFormatsOnly() {
+        jQuery('.apex-folder-list li').each(function() {
+            var $this = jQuery(this);
+            var folderId = $this.data('folder-id');
+            
+            if (folderId && folderFormats[folderId] === 'total' && folderCountsCache[folderId]) {
+                var $link = $this.find('a');
+                var linkText = $link.text();
+                var countData = folderCountsCache[folderId];
+                
+                // Only update if format is missing - check for the new format
+                if (!linkText.includes(') - total (')) {
+                    // Extract base name without any count format
+                    var baseName = linkText.replace(/\s*\(\d+\)(?:\s*-\s*total\s*\(\d+\))?$|\s*\(\d+(?:\s*\/\s*\d+\s*total)?\)$/g, '');
+                    // Apply the new format WITHOUT adding count-updated class
+                    $link.text(baseName + ' (' + countData.own + ') - total (' + countData.total + ')');
+                    
+                    // Important: Remove any existing highlight that may have been applied
+                    $this.removeClass('count-updated');
+                }
+            }
+        });
+    }
+    
+    /**
+     * MutationObserver to detect DOM changes and restore formats
+     * This is critical for preserving format when WordPress rebuilds the folder list
+     */
+    var observer = new MutationObserver(function(mutations) {
+        var needsRestoration = false;
+        
+        mutations.forEach(function(mutation) {
+            // Check if the mutation is in the folder list area
+            if (mutation.target.classList && 
+                (mutation.target.classList.contains('apex-folder-list') || 
+                 mutation.target.closest('.apex-folder-list'))) {
+                needsRestoration = true;
+            }
+            
+            // Check added nodes for folder items
+            if (mutation.addedNodes && mutation.addedNodes.length) {
+                for (var i = 0; i < mutation.addedNodes.length; i++) {
+                    var node = mutation.addedNodes[i];
+                    if (node.nodeType === 1) { // Element node
+                        if (node.classList && 
+                            (node.classList.contains('apex-folder-list') || 
+                             node.querySelector('.apex-folder-list'))) {
+                            needsRestoration = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+        
+        if (needsRestoration) {
+            // Always restore without highlighting
+            restoreFormatsOnly();
+            
+            // Multiple attempts to ensure format persistence
+            setTimeout(restoreFormatsOnly, 50);
+            setTimeout(restoreFormatsOnly, 100);
+        }
+    });
+    
+    // Configure observer to watch for relevant DOM changes
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true, // Also watch for text content changes
+        attributes: true     // Watch for attribute changes
+    });
+    
+    /**
+     * Main function to update folder counts
+     * Uses AJAX to get the latest counts and updates the UI
+     * 
+     * @param {boolean} skipHighlight - Whether to skip highlighting counts that changed
+     */
+    window.updateFolderCounts = function(skipHighlight) {
+        // Always skip highlighting on first load
+        if (isFirstLoad) {
+            skipHighlight = true;
+            isFirstLoad = false;
+        }
         
         // Make an AJAX request to get updated folder information
         jQuery.ajax({
@@ -16,7 +125,6 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success && response.data) {
-                  
                     // Create a mapping of parent folders to their children
                     var folderChildren = {};
                     
@@ -34,6 +142,14 @@ jQuery(document).ready(function($) {
                         }
                     });
                     
+                    // Record which folders should use total format
+                    jQuery('.apex-folder-list li.parent-folder').each(function() {
+                        var folderId = jQuery(this).data('folder-id');
+                        if (folderId && folderChildren[folderId] && folderChildren[folderId].length > 0) {
+                            folderFormats[folderId] = 'total';
+                        }
+                    });
+                    
                     // Update all folder counts in the sidebar
                     jQuery('.apex-folder-list li').each(function() {
                         var $this = jQuery(this);
@@ -43,124 +159,174 @@ jQuery(document).ready(function($) {
                             var folderData = response.data[folderId];
                             var $link = $this.find('a');
                             var linkText = $link.text();
-                            var isParentWithChildren = $this.hasClass('parent-folder') && 
-                                                    folderChildren[folderId] && 
-                                                    folderChildren[folderId].length > 0;
                             
-                            // Calculate total count for parent folders with children
-                            if (isParentWithChildren) {
+                            // Extract current count from link text
+                            var currentOwnCount = 0;
+                            var currentTotalCount = 0;
+                            var countMatch = linkText.match(/\((\d+)( \/ (\d+) total)?\)$/);
+                            if (countMatch) {
+                                currentOwnCount = parseInt(countMatch[1], 10);
+                                currentTotalCount = countMatch[3] ? parseInt(countMatch[3], 10) : currentOwnCount;
+                            }
+                            
+                            // Check if this folder should use total format
+                            var useTotalFormat = folderFormats[folderId] === 'total' || 
+                                                ($this.hasClass('parent-folder') && 
+                                                 folderChildren[folderId] && 
+                                                 folderChildren[folderId].length > 0);
+                            
+                            if (useTotalFormat) {
+                                // Calculate total count
                                 var totalCount = folderData.count;
-                                // Add counts from all children
-                                jQuery.each(folderChildren[folderId], function(_, childId) {
+                                jQuery.each(folderChildren[folderId] || [], function(_, childId) {
                                     if (response.data[childId]) {
                                         totalCount += response.data[childId].count;
                                     }
                                 });
+
+                                    // Extract current count from link text - update regex to handle both old and new formats
+                                    var currentOwnCount = 0;
+                                    var currentTotalCount = 0;
+                                    var countMatch = linkText.match(/\((\d+)\)(?:\s*-\s*total\s*\((\d+)\))?$/) || 
+                                                    linkText.match(/\((\d+)(?:\s*\/\s*(\d+)\s*total)?\)$/);
+                                    
+                                    if (countMatch) {
+                                        currentOwnCount = parseInt(countMatch[1], 10);
+                                        currentTotalCount = countMatch[2] ? parseInt(countMatch[2], 10) : currentOwnCount;
+                                    }
                                 
-                                // Replace the count portion with both counts
-                                var newText = linkText.replace(/\(\d+( \/ \d+ total)?\)$/, '(' + folderData.count + ' / ' + totalCount + ' total)');
-                                $link.text(newText);
-                            } else {
-                                // Regular folders - just update the count
-                                var newText = linkText.replace(/\(\d+\)$/, '(' + folderData.count + ')');
-                                $link.text(newText);
-                            }
-                            
-                            // Briefly highlight updated counts
-                            if (linkText !== $link.text()) {
-                                $this.addClass('count-updated');
-                                setTimeout(function() {
+                                // Stricter check for count changes
+                                var countsChanged = (
+                                    // Only consider it changed if we have previous values AND they're different
+                                    (countMatch && currentOwnCount !== folderData.count) || 
+                                    (countMatch && currentTotalCount !== totalCount)
+                                );
+                                
+                                // Update with total format
+                                var newText = linkText.replace(/\s*\(\d+\)(?:\s*-\s*total\s*\(\d+\))?$|\s*\(\d+(?:\s*\/\s*\d+\s*total)?\)$/g, '') + 
+                                ' (' + folderData.count + ') - total (' + totalCount + ')';
+                  $link.text(newText);
+                                
+                                // Store format for persistence
+                                folderFormats[folderId] = 'total';
+                                
+                                // Cache the counts for quick restoration
+                                folderCountsCache[folderId] = {
+                                    own: folderData.count,
+                                    total: totalCount
+                                };
+                                
+                                // Only highlight if counts changed AND we're not skipping highlights
+                                if (!skipHighlight && countsChanged && countMatch) {
+                                    $this.addClass('count-updated');
+                                    setTimeout(function() {
+                                        $this.removeClass('count-updated');
+                                    }, 2000);
+                                } else {
+                                    // Ensure no highlighting occurs when skipping
                                     $this.removeClass('count-updated');
-                                }, 2000);
+                                }
+                            } else {
+                                // Regular format
+                                var countsChanged = (countMatch && currentOwnCount !== folderData.count);
+                                
+                                // Update with regular format
+                                var newText = linkText.replace(/\s*\(\d+(?:\s*\/\s*\d+\s*total)?\)$/, '') + 
+                                              ' (' + folderData.count + ')';
+                                $link.text(newText);
+                                
+                                // Only highlight if count changed and we're not skipping highlights
+                                if (!skipHighlight && countsChanged && countMatch) {
+                                    $this.addClass('count-updated');
+                                    setTimeout(function() {
+                                        $this.removeClass('count-updated');
+                                    }, 2000);
+                                } else {
+                                    // Ensure no highlighting occurs when skipping
+                                    $this.removeClass('count-updated');
+                                }
                             }
                         }
                     });
                     
-                    // Check if we need to update the current view
-                    // If we're in the "All Files" view, we should refresh the page after a delay
-                    if (!apexFolderData.currentFolder) {
-                        // Only show the refresh notification if we're actually viewing the media library grid
-                        if (jQuery('.wp-list-table.media').length) {
-                            // Create visual notification
-                            var $notice = jQuery('<div class="notice notice-info is-dismissible" style="position:fixed; top:32px; right:20px; z-index:9999; width:300px;">' +
-                                '<p>Media has been reorganized. <a href="#" class="reload-page">Refresh</a> to update the view.</p>' +
-                                '<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button>' +
-                                '</div>');
-                            
-                            jQuery('body').append($notice);
-                            
-                            // Handle refresh link click
-                            $notice.find('.reload-page').on('click', function(e) {
-                                e.preventDefault();
-                                location.reload();
-                            });
-                            
-                            // Handle dismiss button
-                            $notice.find('.notice-dismiss').on('click', function() {
-                                $notice.fadeOut(300, function() { jQuery(this).remove(); });
-                            });
-                            
-                            // Auto-dismiss after 10 seconds
-                            setTimeout(function() {
-                                $notice.fadeOut(300, function() { jQuery(this).remove(); });
-                            }, 10000);
-                        }
+                    // Save formats to localStorage
+                    try {
+                        localStorage.setItem('apex_folder_formats', JSON.stringify(folderFormats));
+                    } catch(e) {
+                        // Silently fail if localStorage isn't available
                     }
                 }
             }
         });
     };
 
-    // Handle media library refreshes
-    function refreshMediaLibrary() {
-        // Refresh grid view
-        if ($('.wp-list-table.media').length) {
-            // List view
-            location.reload();
-        } else {
-            // Grid view
-            if (wp.media.frame && wp.media.frame.library && wp.media.frame.library.props) {
-                try {
-                    wp.media.frame.library.props.set({ignore: (+ new Date())});
-                    // Remove the trigger call that's causing the error
-                    // wp.media.frame.library.props.trigger('change');
-                } catch(e) {
-                   // Silently fail - media refresh is non-critical
-                }
-            }
-            
-            // Trigger scroll to refresh lazy-loaded images
-            $('.attachments-browser .attachments').trigger('scroll');
-        }
-    }
-
-    // Listen for attachment updates
-    $(document).on('change', 'select[name^="attachments"][name$="[apex_folder]"]', function() {
-        var $select = $(this);
-        var newValue = $select.val();
-        var originalValue = $select.find('option:selected').data('original-value');
+    /**
+     * Handle filter clicks in the media library
+     * Prevents highlighting when filters are clicked
+     */
+    $(document).on('click', '.media-frame .attachments-browser .media-toolbar .filter-items a', function() {
+        // Remove any highlights when filters are clicked
+        $('.apex-folder-list li').removeClass('count-updated');
         
-        if (newValue !== originalValue) {
-            // Schedule a refresh after the save completes
-            setTimeout(function() {
-                refreshMediaLibrary();
-            }, 500);
-        }
-    });
-
-    // Hook into the media frame to catch saves
-    if (wp.media && wp.media.frame) {
-        wp.media.frame.on('edit:attachment', function() {
-            setTimeout(function() {
-                refreshMediaLibrary();
-            }, 500);
-        });
-    }
-    
-    // Also refresh when closing the edit modal
-    $(document).on('click', '.media-modal-close, .media-modal-backdrop', function() {
+        // Force skip highlighting on filter clicks
         setTimeout(function() {
-            refreshMediaLibrary();
+            window.updateFolderCounts(true);
         }, 500);
     });
+    
+    /**
+     * Handle folder clicks to preserve count formats
+     * Prevents highlighting when navigating between folders
+     */
+    $(document).on('click', '.apex-folder-list li a', function() {
+        // Always remove any existing highlight class before proceeding
+        $('.apex-folder-list li').removeClass('count-updated');
+        
+        // Store which folder was clicked
+        var clickedFolderId = $(this).closest('li').data('folder-id');
+        
+        // Create a rapid sequence of restoration attempts
+        var restoreTimes = [10, 50, 100, 200, 400, 800];
+        restoreTimes.forEach(function(delay) {
+            setTimeout(restoreFormatsOnly, delay);
+        });
+        
+        // For the clicked folder specifically, ensure format stays visible
+        if (clickedFolderId && folderFormats[clickedFolderId] === 'total') {
+            var highlightRestoration = function() {
+                var $clickedFolder = $('.apex-folder-list li[data-folder-id="' + clickedFolderId + '"]');
+                if ($clickedFolder.length) {
+                    var $link = $clickedFolder.find('a');
+                    var linkText = $link.text();
+                    var countData = folderCountsCache[clickedFolderId];
+                    
+                    if (countData && !linkText.includes(' / ' + countData.total + ' total)')) {
+                        var baseName = linkText.replace(/\s*\(\d+(?:\s*\/\s*\d+\s*total)?\)$/, '');
+                        $link.text(baseName + ' (' + countData.own + ' / ' + countData.total + ' total)');
+                        
+                        // Remove highlight to ensure no flash occurs during restoration
+                        $clickedFolder.removeClass('count-updated');
+                    }
+                }
+            };
+            
+            // Target the clicked folder specifically with more restoration attempts
+            setTimeout(highlightRestoration, 50);
+            setTimeout(highlightRestoration, 150);
+            setTimeout(highlightRestoration, 300);
+        }
+        
+        // Less frequent full updates for performance
+        var now = new Date().getTime();
+        if (!lastFullCountUpdate || now - lastFullCountUpdate > 5000) {
+            setTimeout(function() {
+                // Important: Use true to skip highlighting during these maintenance updates
+                window.updateFolderCounts(true);
+                lastFullCountUpdate = now;
+            }, 500);
+        }
+    });
+    
+    // Initialize folder counts on page load - explicitly skip highlighting
+    window.updateFolderCounts(true);
 });

@@ -51,11 +51,11 @@ class APEX_FOLDERS_Admin {
             ?>
             <div class="notice notice-info is-dismissible">
                 <p>
-                    <strong>Media Folders Tools:</strong>
-                    <a href="<?php echo wp_nonce_url(admin_url('upload.php?rebuild_unassigned=1'), 'rebuild_unassigned'); ?>" class="button">Rebuild Unassigned Folder</a>
-                    <a href="<?php echo admin_url('upload.php?debug_folders=1'); ?>" class="button">Show Folder Debug Info</a>
-                    <a href="<?php echo wp_nonce_url(admin_url('upload.php?flush_term_cache=1'), 'flush_term_cache'); ?>" class="button">Flush Term Cache</a>
-                    <a href="<?php echo admin_url('upload.php?debug_unassigned=1'); ?>" class="button">Debug Unassigned (ID: <?php echo $unassigned_id; ?>)</a>
+                    <strong><?php esc_html_e('Media Folders Tools:', 'apex-folders'); ?></strong>
+                    <a href="<?php echo wp_nonce_url(admin_url('upload.php?rebuild_unassigned=1'), 'rebuild_unassigned'); ?>" class="button"><?php esc_html_e('Rebuild Unassigned Folder', 'apex-folders'); ?></a>
+                    <a href="<?php echo admin_url('upload.php?debug_folders=1'); ?>" class="button"><?php esc_html_e('Show Folder Debug Info', 'apex-folders'); ?></a>
+                    <a href="<?php echo wp_nonce_url(admin_url('upload.php?flush_term_cache=1'), 'flush_term_cache'); ?>" class="button"><?php esc_html_e('Flush Term Cache', 'apex-folders'); ?></a>
+                    <a href="<?php echo admin_url('upload.php?debug_unassigned=1'); ?>" class="button"><?php esc_html_e('Debug Unassigned', 'apex-folders'); ?> (ID: <?php echo $unassigned_id; ?>)</a>
                 </p>
             </div>
             <?php
@@ -118,7 +118,7 @@ public function debug_folder_content() {
     /**
      * Debug unassigned folder
      */
-    public function debug_unassigned_folder() {
+     public function debug_unassigned_folder() {
         if (!isset($_GET['debug_unassigned']) || !current_user_can('manage_options')) {
             return;
         }
@@ -127,13 +127,13 @@ public function debug_folder_content() {
         $unassigned_id = APEX_FOLDERS_get_unassigned_id();
         
         echo '<div class="notice notice-info">';
-        echo '<h3>Unassigned Folder Debug</h3>';
+        echo '<h3>' . esc_html__('Unassigned Folder Debug', 'apex-folders') . '</h3>';
         
         // 1. Check term exists
         $term = get_term($unassigned_id, 'apex_folder');
-        echo '<p>Term check: ' . ($term ? 'Found' : 'Not found') . '</p>';
+        echo '<p>' . esc_html__('Term check:', 'apex-folders') . ' ' . ($term ? esc_html__('Found', 'apex-folders') : esc_html__('Not found', 'apex-folders')) . '</p>';
         if ($term) {
-            echo '<p>Term details: ID=' . $term->term_id . ', Name=' . $term->name . ', Slug=' . $term->slug . ', Count=' . $term->count . '</p>';
+            echo '<p>' . esc_html__('Term details:', 'apex-folders') . ' ID=' . $term->term_id . ', ' . esc_html__('Name=', 'apex-folders') . $term->name . ', ' . esc_html__('Slug=', 'apex-folders') . $term->slug . ', ' . esc_html__('Count=', 'apex-folders') . $term->count . '</p>';
         }
         
         // 2. Check term_taxonomy record
@@ -142,7 +142,7 @@ public function debug_folder_content() {
              WHERE term_id = %d AND taxonomy = 'apex_folder'",
             $unassigned_id
         ));
-        echo '<p>Term taxonomy ID: ' . ($tt_id ?: 'Not found') . '</p>';
+        echo '<p>' . esc_html__('Term taxonomy ID:', 'apex-folders') . ' ' . ($tt_id ?: esc_html__('Not found', 'apex-folders')) . '</p>';
         
         // 3. Count direct from database
         $count = $wpdb->get_var($wpdb->prepare(
@@ -151,7 +151,7 @@ public function debug_folder_content() {
              WHERE tt.term_id = %d AND tt.taxonomy = 'apex_folder'",
             $unassigned_id
         ));
-        echo '<p>Actual count in database: ' . $count . '</p>';
+        echo '<p>' . esc_html__('Actual count in database:', 'apex-folders') . ' ' . $count . '</p>';
         
         // 4. List some items in the unassigned folder
         $items = $wpdb->get_col($wpdb->prepare(
@@ -162,9 +162,9 @@ public function debug_folder_content() {
             $unassigned_id
         ));
         if ($items) {
-            echo '<p>Sample items: ' . implode(', ', $items) . '</p>';
+            echo '<p>' . esc_html__('Sample items:', 'apex-folders') . ' ' . implode(', ', $items) . '</p>';
         } else {
-            echo '<p>No items found in Unassigned folder</p>';
+            echo '<p>' . esc_html__('No items found in Unassigned folder', 'apex-folders') . '</p>';
         }
         
         // 5. Check for media with no folder
@@ -177,7 +177,7 @@ public function debug_folder_content() {
                  WHERE tt.taxonomy = 'apex_folder' AND tr.object_id = p.ID
              )"
         );
-        echo '<p>Media items with no folder at all: ' . $no_folder . '</p>';
+        echo '<p>' . esc_html__('Media items with no folder at all:', 'apex-folders') . ' ' . $no_folder . '</p>';
         
         echo '</div>';
     }
@@ -185,7 +185,7 @@ public function debug_folder_content() {
     /**
      * Handle flush term cache request
      */
-    public function handle_term_cache_flush() {
+       public function handle_term_cache_flush() {
         if (isset($_GET['flush_term_cache']) && current_user_can('manage_options')) {
             check_admin_referer('flush_term_cache');
             
@@ -209,7 +209,7 @@ public function debug_folder_content() {
             add_action('admin_notices', function() {
                 ?>
                 <div class="notice notice-success is-dismissible">
-                    <p>Term caches have been flushed.</p>
+                    <p><?php esc_html_e('Term caches have been flushed.', 'apex-folders'); ?></p>
                 </div>
                 <?php
             });
@@ -219,7 +219,7 @@ public function debug_folder_content() {
     /**
      * Handle rebuild unassigned folder request
      */
-    public function handle_rebuild_unassigned() {
+       public function handle_rebuild_unassigned() {
         if (isset($_GET['rebuild_unassigned']) && current_user_can('manage_options')) {
             check_admin_referer('rebuild_unassigned');
             
@@ -237,8 +237,15 @@ public function debug_folder_content() {
                 $count = intval($_GET['rebuild_complete']);
                 ?>
                 <div class="notice notice-success is-dismissible">
-                    <p>Unassigned folder rebuilt. <?php echo $count; ?> items were assigned to the Unassigned folder.</p>
-                    <p><a href="<?php echo admin_url('upload.php?apex_folder=unassigned'); ?>">View Unassigned folder</a> | <a href="<?php echo admin_url('upload.php?debug_folders=1'); ?>">View folder debug info</a></p>
+                    <p><?php echo sprintf(
+                        /* translators: %d: number of items assigned to unassigned folder */
+                        esc_html__('Unassigned folder rebuilt. %d items were assigned to the Unassigned folder.', 'apex-folders'), 
+                        $count
+                    ); ?></p>
+                    <p>
+                        <a href="<?php echo admin_url('upload.php?apex_folder=unassigned'); ?>"><?php esc_html_e('View Unassigned folder', 'apex-folders'); ?></a> | 
+                        <a href="<?php echo admin_url('upload.php?debug_folders=1'); ?>"><?php esc_html_e('View folder debug info', 'apex-folders'); ?></a>
+                    </p>
                 </div>
                 <?php
             });

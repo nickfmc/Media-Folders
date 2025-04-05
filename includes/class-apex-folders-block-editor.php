@@ -5,6 +5,7 @@
  * Integrates folder filtering with the block editor.
  *
  * @package apex-folders
+ * @since 0.9.9
  */
 
 // Exit if accessed directly
@@ -72,6 +73,25 @@ class APEX_FOLDERS_Editor {
             array('jquery', 'wp-blocks', 'media-editor', 'apex-folder-data'), 
             filemtime(APEX_FOLDERS_PLUGIN_DIR . 'assets/js/apex-folders.js'),
             false // Load in header, not footer
+        );
+        
+        // Add translatable strings for JavaScript
+        wp_localize_script(
+            'apex-folder-filters',
+            'apexFoldersL10n',
+            array(
+                'allMedia'       => esc_html__('All Media', 'apex-folders'),
+                'unassigned'     => esc_html__('Unassigned', 'apex-folders'),
+                'folders'        => esc_html__('Folders', 'apex-folders'),
+                'filterByFolder' => esc_html__('Filter by folder', 'apex-folders'),
+                'selectFolder'   => esc_html__('Select folder', 'apex-folders'),
+                'createFolder'   => esc_html__('Create folder', 'apex-folders'),
+                'deleteFolder'   => esc_html__('Delete folder', 'apex-folders'),
+                'renameFolder'   => esc_html__('Rename folder', 'apex-folders'),
+                'moveTo'         => esc_html__('Move to', 'apex-folders'),
+                'loading'        => esc_html__('Loading folders...', 'apex-folders'),
+                'error'          => esc_html__('Error loading folders', 'apex-folders')
+            )
         );
     }
 }

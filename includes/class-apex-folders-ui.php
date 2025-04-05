@@ -39,10 +39,10 @@ class APEX_FOLDERS_UI {
         if ($screen->base !== 'upload') return;
         
         // Check if we're in list view - if so, don't show the folders
-    $mode = isset($_GET['mode']) ? sanitize_text_field($_GET['mode']) : '';
-    if ($mode === 'list') {
-        return; // Exit early if in list view
-    }
+        $mode = isset($_GET['mode']) ? sanitize_text_field($_GET['mode']) : '';
+        if ($mode === 'list') {
+            return; // Exit early if in list view
+        }
 
         // Get organized folders using the utility class
         $organized = APEX_FOLDERS_Utilities::get_organized_folders();
@@ -55,8 +55,8 @@ class APEX_FOLDERS_UI {
         echo '<ul class="apex-folder-list">';
         
         // Add "All Files" option
-    $class = !isset($_GET['apex_folder']) ? 'current' : '';
-    echo '<li class="' . esc_attr($class) . ' all-files"><a href="' . esc_url(admin_url('upload.php')) . '">' . esc_html__('All Files', 'apex-folders') . '</a></li>';
+        $class = !isset($_GET['apex_folder']) ? 'current' : '';
+        echo '<li class="' . esc_attr($class) . ' all-files"><a href="' . esc_url(admin_url('upload.php')) . '">' . esc_html__('All Files', 'apex-folders') . '</a></li>';
         
         // Add Unassigned folder immediately after All Files
         if ($unassigned_folder) {
@@ -76,11 +76,11 @@ class APEX_FOLDERS_UI {
             
             echo '<li class="' . $class . ' custom-folder parent-folder' . ($has_children ? ' has-children' : '') . '" data-folder-id="' . $folder->term_id . '">';
             echo '<a href="' . admin_url('upload.php?apex_folder=' . $folder->slug) . '">' . $folder->name . ' (' . $folder->count . ')</a>';
-            echo '<span class="edit-folder dashicons dashicons-edit" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '" title="Edit folder"></span>';
-            echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '"></span>';
+            echo '<span class="edit-folder dashicons dashicons-edit" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '" title="' . esc_attr__('Edit folder', 'apex-folders') . '"></span>';
+            echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '" title="' . esc_attr__('Delete folder', 'apex-folders') . '"></span>';
             
             // Add "Create Subfolder" button for parent folders
-            echo '<span class="add-subfolder dashicons dashicons-plus-alt2" data-parent-id="' . $folder->term_id . '" data-parent-name="' . esc_attr($folder->name) . '" title="Add subfolder"></span>';
+            echo '<span class="add-subfolder dashicons dashicons-plus-alt2" data-parent-id="' . $folder->term_id . '" data-parent-name="' . esc_attr($folder->name) . '" title="' . esc_attr__('Add subfolder', 'apex-folders') . '"></span>';
             
             echo '</li>';
             
@@ -92,15 +92,15 @@ class APEX_FOLDERS_UI {
                     echo '<li class="' . $child_class . ' custom-folder child-folder" data-folder-id="' . $child->term_id . '" data-parent-id="' . $folder->term_id . '">';
                     echo '<span class="child-indicator">└─</span>';
                     echo '<a href="' . admin_url('upload.php?apex_folder=' . $child->slug) . '">' . $child->name . ' (' . $child->count . ')</a>';
-                    echo '<span class="edit-folder dashicons dashicons-edit" data-folder-id="' . $child->term_id . '" data-folder-name="' . esc_attr($child->name) . '" title="Edit folder"></span>';
-                    echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $child->term_id . '" data-folder-name="' . esc_attr($child->name) . '"></span>';
+                    echo '<span class="edit-folder dashicons dashicons-edit" data-folder-id="' . $child->term_id . '" data-folder-name="' . esc_attr($child->name) . '" title="' . esc_attr__('Edit folder', 'apex-folders') . '"></span>';
+                    echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $child->term_id . '" data-folder-name="' . esc_attr($child->name) . '" title="' . esc_attr__('Delete folder', 'apex-folders') . '"></span>';
                     echo '</li>';
                 }
             }
         }
         
         echo '</ul>';
-        echo '<a href="#" class="button button-primary add-new-folder">Add New Folder</a>';
+        echo '<a href="#" class="button button-primary add-new-folder">' . esc_html__('Add New Folder', 'apex-folders') . '</a>';
         echo '</div>';
         
         $this->enqueue_scripts_and_styles($parent_folders);
@@ -139,6 +139,25 @@ class APEX_FOLDERS_UI {
         wp_localize_script('apex-folder-management', 'apexFolderData', $folders_data);
         wp_localize_script('apex-attachment-tracking', 'apexFolderData', $folders_data);
         wp_localize_script('apex-folder-counts', 'apexFolderData', $folders_data);
+        
+        // Add translatable strings for JavaScript
+        wp_localize_script('apex-folder-management', 'apexFoldersL10n', array(
+            'addFolder'        => esc_html__('Add Folder', 'apex-folders'),
+            'addSubfolder'     => esc_html__('Add Subfolder', 'apex-folders'),
+            'renameFolder'     => esc_html__('Rename Folder', 'apex-folders'),
+            'deleteFolder'     => esc_html__('Delete Folder', 'apex-folders'),
+            'folderName'       => esc_html__('Folder Name', 'apex-folders'),
+            'cancel'           => esc_html__('Cancel', 'apex-folders'),
+            'save'             => esc_html__('Save', 'apex-folders'),
+            'delete'           => esc_html__('Delete', 'apex-folders'),
+            'confirmDelete'    => esc_html__('Are you sure you want to delete this folder? Files will be moved to the Unassigned folder.', 'apex-folders'),
+            'creatingFolder'   => esc_html__('Creating folder...', 'apex-folders'),
+            'renamingFolder'   => esc_html__('Renaming folder...', 'apex-folders'),
+            'deletingFolder'   => esc_html__('Deleting folder...', 'apex-folders'),
+            'updatingCounts'   => esc_html__('Updating folder counts...', 'apex-folders'),
+            'error'            => esc_html__('An error occurred', 'apex-folders'),
+            'success'          => esc_html__('Success', 'apex-folders')
+        ));
     }
     
     /**
@@ -199,12 +218,16 @@ class APEX_FOLDERS_UI {
                     $total_count += $child->count;
                 }
                 $dropdown .= sprintf(
-                    '<option value="%s"%s>%s (%d / %d total)</option>',
+                    '<option value="%s"%s>%s (%s)</option>',
                     esc_attr($folder->term_id),
                     $selected,
                     esc_html($folder->name),
-                    $folder->count,
-                    $total_count
+                    sprintf(
+                        /* translators: %1$d: folder's own file count, %2$d: total file count including subfolders */
+                        esc_html__('%1$d / %2$d total', 'apex-folders'),
+                        $folder->count,
+                        $total_count
+                    )
                 );
             } else {
                 $dropdown .= sprintf(
@@ -234,10 +257,10 @@ class APEX_FOLDERS_UI {
         $dropdown .= '</select>';
         
         $form_fields['apex_folder'] = array(
-            'label' => 'Folder',
+            'label' => esc_html__('Folder', 'apex-folders'),
             'input' => 'html',
             'html' => $dropdown,
-            'helps' => 'Select a folder for this media item'
+            'helps' => esc_html__('Select a folder for this media item', 'apex-folders')
         );
         
         return $form_fields;
