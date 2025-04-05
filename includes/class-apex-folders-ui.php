@@ -4,7 +4,7 @@
  *
  * Handles UI rendering for the Media Folders plugin.
  *
- * @package Media-Folders
+ * @package apex-folders
  */
 
 // Exit if accessed directly
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 /**
  * Class for UI functions
  */
-class Media_Folders_UI {
+class APEX_FOLDERS_UI {
     
     /**
      * Constructor
@@ -45,7 +45,7 @@ class Media_Folders_UI {
         }
 
         // Get organized folders using the utility class
-        $organized = Media_Folders_Utilities::get_organized_folders();
+        $organized = APEX_FOLDERS_Utilities::get_organized_folders();
         $unassigned_folder = $organized['unassigned'];
         $parent_folders = $organized['parents'];
         $child_folders = $organized['children'];
@@ -113,7 +113,7 @@ class Media_Folders_UI {
      */
     private function enqueue_scripts_and_styles($parent_folders) {
         // Enqueue scripts and styles
-        wp_enqueue_style('apex-folders-css', MEDIA_FOLDERS_PLUGIN_URL . 'assets/css/apex-main.css', array(), MEDIA_FOLDERS_VERSION);
+        wp_enqueue_style('apex-folders-css', APEX_FOLDERS_PLUGIN_URL . 'assets/css/apex-main.css', array(), APEX_FOLDERS_VERSION);
         
         // Add jQuery UI for dialogs
         wp_enqueue_style('wp-jquery-ui-dialog');
@@ -122,8 +122,8 @@ class Media_Folders_UI {
         // Pass data to our scripts
         $folders_data = array(
             'currentFolder' => isset($_GET['media_folder']) ? sanitize_text_field($_GET['media_folder']) : null,
-            'nonce' => wp_create_nonce('media_folders_nonce'),
-            'slugNonce' => wp_create_nonce('media_folders_get_slug'),
+            'nonce' => wp_create_nonce('APEX_FOLDERS_nonce'),
+            'slugNonce' => wp_create_nonce('APEX_FOLDERS_get_slug'),
             'parentFolders' => array_map(function($folder) {
                 return array(
                     'term_id' => $folder->term_id,
@@ -132,9 +132,9 @@ class Media_Folders_UI {
             }, $parent_folders)
         );
         
-        wp_enqueue_script('apex-folder-management', MEDIA_FOLDERS_PLUGIN_URL . 'assets/js/folder-management.js', array('jquery', 'jquery-ui-dialog'), MEDIA_FOLDERS_VERSION, true);
-        wp_enqueue_script('apex-attachment-tracking', MEDIA_FOLDERS_PLUGIN_URL . 'assets/js/attachment-tracking.js', array('jquery'), MEDIA_FOLDERS_VERSION, true);
-        wp_enqueue_script('apex-folder-counts', MEDIA_FOLDERS_PLUGIN_URL . 'assets/js/folder-counts.js', array('jquery'), MEDIA_FOLDERS_VERSION, true);
+        wp_enqueue_script('apex-folder-management', APEX_FOLDERS_PLUGIN_URL . 'assets/js/folder-management.js', array('jquery', 'jquery-ui-dialog'), APEX_FOLDERS_VERSION, true);
+        wp_enqueue_script('apex-attachment-tracking', APEX_FOLDERS_PLUGIN_URL . 'assets/js/attachment-tracking.js', array('jquery'), APEX_FOLDERS_VERSION, true);
+        wp_enqueue_script('apex-folder-counts', APEX_FOLDERS_PLUGIN_URL . 'assets/js/folder-counts.js', array('jquery'), APEX_FOLDERS_VERSION, true);
         
         wp_localize_script('apex-folder-management', 'apexFolderData', $folders_data);
         wp_localize_script('apex-attachment-tracking', 'apexFolderData', $folders_data);
@@ -156,7 +156,7 @@ class Media_Folders_UI {
         
         // Get the current folder term
         $current_folders = wp_get_object_terms($post->ID, 'media_folder');
-        $current_folder_id = (!empty($current_folders) && !is_wp_error($current_folders)) ? $current_folders[0]->term_id : media_folders_get_unassigned_id();
+        $current_folder_id = (!empty($current_folders) && !is_wp_error($current_folders)) ? $current_folders[0]->term_id : APEX_FOLDERS_get_unassigned_id();
         
         // Organize folders by hierarchy
         $unassigned_folder = null;
@@ -164,7 +164,7 @@ class Media_Folders_UI {
         $child_folders = array();
         
         foreach ($folders as $folder) {
-            if ($folder->term_id == media_folders_get_unassigned_id()) {
+            if ($folder->term_id == APEX_FOLDERS_get_unassigned_id()) {
                 $unassigned_folder = $folder;
             } else if ($folder->parent == 0) {
                 $parent_folders[] = $folder;
@@ -272,7 +272,7 @@ class Media_Folders_UI {
                 wp_set_object_terms($post_id, array($folder_id), 'media_folder', false);
             } else {
                 // If no folder or "0" selected, assign to Unassigned folder
-                $unassigned_id = media_folders_get_unassigned_id();
+                $unassigned_id = APEX_FOLDERS_get_unassigned_id();
                 wp_set_object_terms($post_id, array($unassigned_id), 'media_folder', false);
             }
 
@@ -310,4 +310,4 @@ class Media_Folders_UI {
 }
 
 // Initialize the class
-new Media_Folders_UI();
+new APEX_FOLDERS_UI();

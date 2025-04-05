@@ -4,7 +4,7 @@
  *
  * Handles the server-side operations for drag and drop functionality.
  *
- * @package Media-Folders
+ * @package apex-folders
  */
 
 // Exit if accessed directly.
@@ -42,18 +42,18 @@ class Media_Folder_Drag_Drop {
         // Register and enqueue CSS
         wp_register_style(
             'media-folder-drag-drop',
-            MEDIA_FOLDERS_PLUGIN_URL . 'assets/css/folder-drag-drop.css',
+            APEX_FOLDERS_PLUGIN_URL . 'assets/css/folder-drag-drop.css',
             array(),
-            MEDIA_FOLDERS_VERSION
+            APEX_FOLDERS_VERSION
         );
         wp_enqueue_style('media-folder-drag-drop');
 
         // Register and enqueue JS - with dependencies on jQuery UI
         wp_register_script(
             'media-folder-drag-drop',
-            MEDIA_FOLDERS_PLUGIN_URL . 'assets/js/folder-drag-drop.js',
+            APEX_FOLDERS_PLUGIN_URL . 'assets/js/folder-drag-drop.js',
             array('jquery', 'jquery-ui-draggable', 'jquery-ui-droppable'),
-            MEDIA_FOLDERS_VERSION,
+            APEX_FOLDERS_VERSION,
             true
         );
         
@@ -62,15 +62,15 @@ class Media_Folder_Drag_Drop {
             'media-folder-drag-drop',
             'mediaFolderSettings',
             array(
-                'nonce' => wp_create_nonce('media_folders_drag_drop_nonce'),
+                'nonce' => wp_create_nonce('APEX_FOLDERS_drag_drop_nonce'),
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'moveItemsAction' => 'media_folder_move_items',
-                'unassignedFolderId' => media_folders_get_unassigned_id(),
+                'unassignedFolderId' => APEX_FOLDERS_get_unassigned_id(),
                 'i18n' => array(
-                    'movingItem' => __('Moving item', 'media-folders'),
-                    'movingItems' => __('Moving items', 'media-folders'),
-                    'successMove' => __('Successfully moved', 'media-folders'),
-                    'errorMove' => __('Error moving items', 'media-folders'),
+                    'movingItem' => __('Moving item', 'apex-folders'),
+                    'movingItems' => __('Moving items', 'apex-folders'),
+                    'successMove' => __('Successfully moved', 'apex-folders'),
+                    'errorMove' => __('Error moving items', 'apex-folders'),
                 )
             )
         );
@@ -83,12 +83,12 @@ class Media_Folder_Drag_Drop {
      */
     public function handle_move_items() {
         // Verify nonce
-        check_ajax_referer('media_folders_drag_drop_nonce', 'nonce');
+        check_ajax_referer('APEX_FOLDERS_drag_drop_nonce', 'nonce');
         
         // Check permissions
         if (!current_user_can('upload_files')) {
             wp_send_json_error(array(
-                'message' => __('You do not have permission to move files.', 'media-folders')
+                'message' => __('You do not have permission to move files.', 'apex-folders')
             ));
             return;
         }
@@ -100,14 +100,14 @@ class Media_Folder_Drag_Drop {
         // Validate data
         if (empty($attachment_ids) || !is_array($attachment_ids)) {
             wp_send_json_error(array(
-                'message' => __('No files selected to move.', 'media-folders')
+                'message' => __('No files selected to move.', 'apex-folders')
             ));
             return;
         }
         
         if (!$folder_id) {
             wp_send_json_error(array(
-                'message' => __('Invalid folder selected.', 'media-folders')
+                'message' => __('Invalid folder selected.', 'apex-folders')
             ));
             return;
         }
@@ -116,7 +116,7 @@ class Media_Folder_Drag_Drop {
         $folder_term = get_term($folder_id, 'media_folder');
         if (!$folder_term || is_wp_error($folder_term)) {
             wp_send_json_error(array(
-                'message' => __('The selected folder does not exist.', 'media-folders')
+                'message' => __('The selected folder does not exist.', 'apex-folders')
             ));
             return;
         }
@@ -160,7 +160,7 @@ class Media_Folder_Drag_Drop {
                         '%d file moved successfully to "%s".',
                         '%d files moved successfully to "%s".',
                         $success_count,
-                        'media-folders'
+                        'apex-folders'
                     ),
                     $success_count,
                     $folder_term->name
@@ -171,7 +171,7 @@ class Media_Folder_Drag_Drop {
             ));
         } else {
             wp_send_json_error(array(
-                'message' => __('Failed to move files. Please try again.', 'media-folders')
+                'message' => __('Failed to move files. Please try again.', 'apex-folders')
             ));
         }
     }

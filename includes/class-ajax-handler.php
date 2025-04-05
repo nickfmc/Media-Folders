@@ -2,7 +2,7 @@
 /**
  * AJAX Handler Class
  *
- * @package Media-Folders
+ * @package apex-folders
  */
 
 // Exit if accessed directly.
@@ -11,10 +11,10 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Media_Folders_AJAX_Handler class.
+ * APEX_FOLDERS_AJAX_Handler class.
  * Handles all AJAX interactions for the Media Folders plugin.
  */
-class Media_Folders_AJAX_Handler {
+class APEX_FOLDERS_AJAX_Handler {
 
     /**
      * Constructor.
@@ -33,7 +33,7 @@ class Media_Folders_AJAX_Handler {
      * Delete a media folder.
      */
     public function delete_media_folder() {
-        check_ajax_referer('media_folders_nonce', 'nonce');
+        check_ajax_referer('APEX_FOLDERS_nonce', 'nonce');
         
         if (!current_user_can('upload_files')) {
             wp_send_json_error();
@@ -42,7 +42,7 @@ class Media_Folders_AJAX_Handler {
         global $wpdb;
         
         $folder_id = intval($_POST['folder_id']);
-        $unassigned_id = media_folders_get_unassigned_id();
+        $unassigned_id = APEX_FOLDERS_get_unassigned_id();
         
         // Prevent deleting the Unassigned folder
         if ($folder_id === $unassigned_id) {
@@ -148,7 +148,7 @@ class Media_Folders_AJAX_Handler {
      * Get a folder's slug by ID.
      */
     public function get_folder_slug() {
-        check_ajax_referer('media_folders_get_slug', 'nonce');
+        check_ajax_referer('APEX_FOLDERS_get_slug', 'nonce');
         
         if (!current_user_can('upload_files')) {
             wp_send_json_error();
@@ -173,7 +173,7 @@ class Media_Folders_AJAX_Handler {
      * Add a new media folder.
      */
     public function add_media_folder() {
-        check_ajax_referer('media_folders_nonce', 'nonce');
+        check_ajax_referer('APEX_FOLDERS_nonce', 'nonce');
         
         if (!current_user_can('upload_files')) {
             wp_send_json_error();
@@ -191,7 +191,7 @@ class Media_Folders_AJAX_Handler {
             }
             
             // Ensure parent isn't the Unassigned folder
-            $unassigned_id = media_folders_get_unassigned_id();
+            $unassigned_id = APEX_FOLDERS_get_unassigned_id();
             if ($parent_id == $unassigned_id) {
                 wp_send_json_error(array('message' => 'Cannot create subfolders under Unassigned'));
                 return;
@@ -270,7 +270,7 @@ class Media_Folders_AJAX_Handler {
      * Rename a media folder.
      */
     public function rename_media_folder() {
-        check_ajax_referer('media_folders_nonce', 'nonce');
+        check_ajax_referer('APEX_FOLDERS_nonce', 'nonce');
         
         if (!current_user_can('upload_files')) {
             wp_send_json_error();
@@ -278,7 +278,7 @@ class Media_Folders_AJAX_Handler {
         
         $folder_id = intval($_POST['folder_id']);
         $new_name = sanitize_text_field($_POST['new_name']);
-        $unassigned_id = media_folders_get_unassigned_id();
+        $unassigned_id = APEX_FOLDERS_get_unassigned_id();
         
         // Validate input
         if (empty($new_name)) {
@@ -313,4 +313,4 @@ class Media_Folders_AJAX_Handler {
 }
 
 // Initialize the class
-new Media_Folders_AJAX_Handler();
+new APEX_FOLDERS_AJAX_Handler();

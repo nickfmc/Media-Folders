@@ -4,7 +4,7 @@
  *
  * Handles folder assignment during upload process.
  *
- * @package Media-Folders
+ * @package apex-folders
  */
 
 // Exit if accessed directly
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 /**
  * Class for upload integration
  */
-class Media_Folders_Upload {
+class APEX_FOLDERS_Upload {
     
     /**
      * Constructor
@@ -54,7 +54,7 @@ class Media_Folders_Upload {
             return;
         }
 
-        $unassigned_id = media_folders_get_unassigned_id();
+        $unassigned_id = APEX_FOLDERS_get_unassigned_id();
         
         // Build the dropdown HTML
         $dropdown_html = '<div class="media-folder-select-container upload-filter-section">';
@@ -78,21 +78,21 @@ class Media_Folders_Upload {
         
         // Enqueue the script
         wp_enqueue_script(
-            'media-folders-uploader',
-            MEDIA_FOLDERS_PLUGIN_URL . 'assets/js/media-uploader.js',
+            'apex-folders-uploader',
+            APEX_FOLDERS_PLUGIN_URL . 'assets/js/media-uploader.js',
             array('jquery'),
-            MEDIA_FOLDERS_VERSION,
+            APEX_FOLDERS_VERSION,
             true
         );
         
         // Pass data to the script
         wp_localize_script(
-            'media-folders-uploader',
+            'apex-folders-uploader',
             'MediaFolderUploaderData',
             array(
                 'currentFolder' => isset($_GET['media_folder']) ? sanitize_text_field($_GET['media_folder']) : null,
                 'dropdownHtml' => $dropdown_html,
-                'folderNonce' => wp_create_nonce('media_folders_nonce'),
+                'folderNonce' => wp_create_nonce('APEX_FOLDERS_nonce'),
                 'unassignedId' => $unassigned_id
             )
         );
@@ -142,7 +142,7 @@ class Media_Folders_Upload {
         
         // If we still don't have a folder ID, use unassigned
         if (!$folder_id) {
-            $folder_id = media_folders_get_unassigned_id();
+            $folder_id = APEX_FOLDERS_get_unassigned_id();
             $source = 'DEFAULT (unassigned)';
         }
         
@@ -210,7 +210,7 @@ class Media_Folders_Upload {
         
         // If still no folder, use unassigned
         if (!$folder_id) {
-            $folder_id = media_folders_get_unassigned_id();
+            $folder_id = APEX_FOLDERS_get_unassigned_id();
             $source = 'default (unassigned)';
         }
         
@@ -254,7 +254,7 @@ class Media_Folders_Upload {
                 theme_update_media_folder_counts();
             } else {
                 // Folder doesn't exist, use Unassigned
-                $unassigned_id = media_folders_get_unassigned_id();
+                $unassigned_id = APEX_FOLDERS_get_unassigned_id();
                 wp_set_object_terms($attachment_id, array($unassigned_id), 'media_folder', false);
                 error_log("Folder ID $folder_id doesn't exist, using Unassigned ($unassigned_id)");
             }
@@ -289,7 +289,7 @@ class Media_Folders_Upload {
         
         // If still no folder ID, use the unassigned folder
         if (!$folder_id) {
-            $folder_id = media_folders_get_unassigned_id();
+            $folder_id = APEX_FOLDERS_get_unassigned_id();
         }
         
         // Add our custom folder param
@@ -306,4 +306,4 @@ class Media_Folders_Upload {
 }
 
 // Initialize the class
-new Media_Folders_Upload();
+new APEX_FOLDERS_Upload();

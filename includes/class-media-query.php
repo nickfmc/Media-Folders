@@ -4,7 +4,7 @@
  *
  * Handles filtering media queries by folder.
  *
- * @package Media-Folders
+ * @package apex-folders
  */
 
 // Exit if accessed directly
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 /**
  * Class for query functions
  */
-class Media_Folders_Query {
+class APEX_FOLDERS_Query {
     
     /**
      * Constructor
@@ -172,4 +172,4 @@ class Media_Folders_Query {
 }
 
 // Initialize the class
-new Media_Folders_Query();
+new APEX_FOLDERS_Query();

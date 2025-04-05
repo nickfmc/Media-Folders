@@ -111,7 +111,7 @@
         MediaFolderDragDrop.isDragging = true;
         
          // Add dragging class to body to prevent text selection
-    $('body').addClass('media-folders-dragging');
+    $('body').addClass('apex-folders-dragging');
         // Add dragging class to the original element
         $attachment.addClass('is-dragging');
         
@@ -173,7 +173,7 @@
     function handleDragStop(event, ui, $attachment) {
         MediaFolderDragDrop.isDragging = false;
         // Remove the dragging class from body
-    $('body').removeClass('media-folders-dragging');
+    $('body').removeClass('apex-folders-dragging');
         // Remove dragging class
         $attachment.removeClass('is-dragging');
         
@@ -402,10 +402,10 @@
                         MediaFolderDragDrop.bulkModeActive = false;
                         
                         // Remove our overlay that prevents clicks
-                        $('.media-folders-selection-overlay').remove();
+                        $('.apex-folders-selection-overlay').remove();
                         
                         // Remove the floating exit button 
-                        $('.media-folders-exit-selection').remove();
+                        $('.apex-folders-exit-selection').remove();
                         
                         // Deselect all items
                         $('.attachment.selected').removeClass('selected');
@@ -425,7 +425,7 @@
                         MediaFolderDragDrop.bulkModeActive = true;
                         
                         // Create overlay FIRST before adding buttons
-                        $('<div class="media-folders-selection-overlay"></div>')
+                        $('<div class="apex-folders-selection-overlay"></div>')
                             .css({
                                 'position': 'absolute',
                                 'top': 0,
@@ -439,7 +439,7 @@
                             .appendTo('.attachments-browser .attachments');
                         
                         // Add a floating Exit button that's always accessible
-                        $('<button type="button" class="media-folders-exit-selection button button-primary">Exit Selection Mode</button>')
+                        $('<button type="button" class="apex-folders-exit-selection button button-primary">Exit Selection Mode</button>')
                             .css({
                                 'position': 'fixed',
                                 'bottom': '60px',           
@@ -472,7 +472,7 @@
                 });
         
                  // Handle clicks on the selection overlay
-            $(document).on('click', '.media-folders-selection-overlay', function(e) {
+            $(document).on('click', '.apex-folders-selection-overlay', function(e) {
                 // Prevent the default WordPress behavior
                 e.preventDefault();
                 e.stopPropagation();
@@ -513,7 +513,7 @@
             });
 
                        // Allow dragging to start through the overlay
-                $(document).on('mousedown', '.media-folders-selection-overlay', function(e) {
+                $(document).on('mousedown', '.apex-folders-selection-overlay', function(e) {
                     // Temporarily hide the overlay
                     $(this).hide();
                     
@@ -542,7 +542,7 @@
                         
                         // Set a timeout to restore pointer events
                         setTimeout(function() {
-                            $('.media-folders-selection-overlay').css('pointer-events', 'auto');
+                            $('.apex-folders-selection-overlay').css('pointer-events', 'auto');
                         }, 500); // Longer timeout to ensure drag starts
                     } else {
                         // If not a selected attachment, restore pointer events immediately
@@ -569,10 +569,10 @@
         
                $('<style>')
             .text(
-                                '.media-folders-exit-selection { font-weight: bold !important; box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important; }' +
-                '.media-folders-selection-overlay { pointer-events: auto !important; }' +
-                                '.media-folders-dragging { cursor: grabbing !important; }' +
-                '.media-folders-dragging * { user-select: none !important; -webkit-user-select: none !important; }' +
+                                '.apex-folders-exit-selection { font-weight: bold !important; box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important; }' +
+                '.apex-folders-selection-overlay { pointer-events: auto !important; }' +
+                                '.apex-folders-dragging { cursor: grabbing !important; }' +
+                '.apex-folders-dragging * { user-select: none !important; -webkit-user-select: none !important; }' +
                 '.media-folder-list { z-index: 101 !important; }' + // Make sure folders are above the overlay
                 '.selecting-mode .attachment:hover { cursor: pointer !important; }' +
                 '.selecting-mode .attachment .check { display: none !important; }' +
@@ -581,7 +581,7 @@
                 '.selecting-mode .attachment.selected .selection-indicator { background: #0073aa !important; }' +
                 '.selecting-mode .attachments-browser .attachment .thumbnail::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.1); opacity: 0; }' +
                 '.selecting-mode .attachments-browser .attachment:hover .thumbnail::after { opacity: 1; }' +
-                '.media-folders-selection-overlay { position: absolute !important; top: 0; left: 0; right: 0; bottom: 0; z-index: 100 !important; background: transparent; cursor: pointer; border: 2px dashed #ccc;}' +
+                '.apex-folders-selection-overlay { position: absolute !important; top: 0; left: 0; right: 0; bottom: 0; z-index: 100 !important; background: transparent; cursor: pointer; border: 2px dashed #ccc;}' +
                 '.media-folder-bulk-select { position: relative; z-index: 100001 !important; }' // Ensure button is above overlay
             )
             .appendTo('head');

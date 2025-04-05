@@ -4,7 +4,7 @@
  *
  * Integrates folder filtering with the block editor.
  *
- * @package Media-Folders
+ * @package apex-folders
  */
 
 // Exit if accessed directly
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 /**
  * Class for block editor integration
  */
-class Media_Folders_Editor {
+class APEX_FOLDERS_Editor {
     
     /**
      * Constructor
@@ -68,13 +68,13 @@ class Media_Folders_Editor {
         // Then, enqueue our filtering script - IMPORTANT: set in_footer to FALSE
         wp_enqueue_script(
             'media-folder-filters',
-            MEDIA_FOLDERS_PLUGIN_URL . 'assets/js/apex-folders.js', 
+            APEX_FOLDERS_PLUGIN_URL . 'assets/js/apex-folders.js', 
             array('jquery', 'wp-blocks', 'media-editor', 'media-folder-data'), 
-            filemtime(MEDIA_FOLDERS_PLUGIN_DIR . 'assets/js/apex-folders.js'),
+            filemtime(APEX_FOLDERS_PLUGIN_DIR . 'assets/js/apex-folders.js'),
             false // Load in header, not footer
         );
     }
 }
 
 // Initialize the class
-new Media_Folders_Editor();
+new APEX_FOLDERS_Editor();

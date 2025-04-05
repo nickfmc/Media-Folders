@@ -4,7 +4,7 @@
  *
  * Helper functions for the Media Folders plugin.
  *
- * @package Media-Folders
+ * @package apex-folders
  */
 
 // Exit if accessed directly
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 /**
  * Class for utility functions
  */ 
-class Media_Folders_Utilities {
+class APEX_FOLDERS_Utilities {
     
     /**
      * Register the media folder taxonomy
@@ -83,10 +83,10 @@ class Media_Folders_Utilities {
         $screen = get_current_screen();
         if ($screen->base === 'upload') {
             wp_enqueue_style(
-                'media-folders-css',
-                MEDIA_FOLDERS_PLUGIN_URL . 'assets/css/apex-main.css',
+                'apex-folders-css',
+                APEX_FOLDERS_PLUGIN_URL . 'assets/css/apex-main.css',
                 array(),
-                MEDIA_FOLDERS_VERSION
+                APEX_FOLDERS_VERSION
             );
         }
     }
@@ -165,7 +165,7 @@ class Media_Folders_Utilities {
         ));
         
         // Get the unassigned ID
-        $unassigned_id = Media_Folders_Unassigned::get_id();
+        $unassigned_id = APEX_FOLDERS_Unassigned::get_id();
         
         // Find and categorize folders
         $unassigned_folder = null;

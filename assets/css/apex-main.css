@@ -18,12 +18,12 @@
     width: auto;
 }
 
-.media-folders-admin-notices-spacer {
+.apex-folders-admin-notices-spacer {
     clear: both;
     height: 1px;
 }
 
-.media-folders-tools {
+.apex-folders-tools {
     margin-left: calc(20% + 40px);
     width: calc(80% - 40px);
 }

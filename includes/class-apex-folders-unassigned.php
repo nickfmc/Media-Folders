@@ -4,7 +4,7 @@
  *
  * Handles the Unassigned folder functionality.
  *
- * @package Media-Folders
+ * @package apex-folders
  */
 
 // Exit if accessed directly
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 /**
  * Class for handling the Unassigned folder
  */
-class Media_Folders_Unassigned {
+class APEX_FOLDERS_Unassigned {
     
     /**
      * Get the Unassigned folder ID
