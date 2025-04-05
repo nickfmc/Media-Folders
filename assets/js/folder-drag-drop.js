@@ -46,11 +46,11 @@
     function getCurrentFolderInfo() {
         // Get the current folder from URL or data attributes
         var urlParams = new URLSearchParams(window.location.search);
-        MediaFolderDragDrop.currentFolderSlug = urlParams.get('media_folder') || '';
+        MediaFolderDragDrop.currentFolderSlug = urlParams.get('apex_folder') || '';
         
         // Find the current folder ID from the active folder item
         if (MediaFolderDragDrop.currentFolderSlug) {
-            var $currentFolder = $('.media-folder-list li.current');
+            var $currentFolder = $('.apex-folder-list li.current');
             if ($currentFolder.length) {
                 MediaFolderDragDrop.currentFolderId = $currentFolder.data('folder-id');
             }
@@ -162,7 +162,7 @@
         }
         
         // Show all droppable folders
-        $('.media-folder-list li.droppable').addClass('active-drag');
+        $('.apex-folder-list li.droppable').addClass('active-drag');
         
         console.log("Items being dragged:", MediaFolderDragDrop.draggedItems);
     }
@@ -181,7 +181,7 @@
         hideDragHelper();
         
         // Reset droppable folders
-        $('.media-folder-list li.droppable').removeClass('active-drag drag-over');
+        $('.apex-folder-list li.droppable').removeClass('active-drag drag-over');
     }
 
     /**
@@ -189,12 +189,12 @@
      */
     function createDragHelper() {
         // Create the helper if it doesn't exist
-        if (!$('.media-folder-drag-helper').length) {
-            $('body').append('<div class="media-folder-drag-helper" style="display:none;"></div>');
+        if (!$('.apex-folder-drag-helper').length) {
+            $('body').append('<div class="apex-folder-drag-helper" style="display:none;"></div>');
         }
         
         // Store reference to the helper
-        MediaFolderDragDrop.dragHelper = $('.media-folder-drag-helper');
+        MediaFolderDragDrop.dragHelper = $('.apex-folder-drag-helper');
     }
 
     /**
@@ -244,7 +244,7 @@
      */
     function initDroppableFolders() {
         // Add droppable class to all folders except the current folder
-        $('.media-folder-list li').each(function() {
+        $('.apex-folder-list li').each(function() {
             var $folder = $(this);
             var folderId = $folder.data('folder-id');
             
@@ -308,7 +308,7 @@
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'media_folder_move_items',
+                action: 'apex_folder_move_items',
                 attachment_ids: MediaFolderDragDrop.draggedItems,
                 folder_id: targetFolderId,
                 nonce: mediaFolderSettings.nonce
@@ -371,9 +371,9 @@
      */
     function addBulkSelectionSupport() {
         // Add a custom selection mode toggle button if it doesn't exist
-        if (!$('.media-folder-bulk-select').length) {
+        if (!$('.apex-folder-bulk-select').length) {
             $('.media-toolbar-secondary').prepend(
-                '<button type="button" class="button select-mode-toggle-button media-folder-bulk-select">' +
+                '<button type="button" class="button select-mode-toggle-button apex-folder-bulk-select">' +
                 '<span class="screen-reader-text">Select multiple files for organization</span>' +
                 'Bulk Drag and Drop</button>'
             );
@@ -388,7 +388,7 @@
         
         
                    // Handle bulk selection button click
-                $(document).on('click', '.media-folder-bulk-select', function(e) {
+                $(document).on('click', '.apex-folder-bulk-select', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     
@@ -453,7 +453,7 @@
                             .appendTo('body')
                             .on('click', function(e) {
                                 e.stopPropagation(); 
-                                $('.media-folder-bulk-select').trigger('click');
+                                $('.apex-folder-bulk-select').trigger('click');
                                 return false;
                             });
                         
@@ -562,7 +562,7 @@
         // Listen for escape key to exit selection mode
         $(document).on('keydown', function(e) {
             if (e.keyCode === 27 && MediaFolderDragDrop.bulkModeActive) {
-                $('.media-folder-bulk-select').trigger('click');
+                $('.apex-folder-bulk-select').trigger('click');
             }
         });
         
@@ -573,7 +573,7 @@
                 '.apex-folders-selection-overlay { pointer-events: auto !important; }' +
                                 '.apex-folders-dragging { cursor: grabbing !important; }' +
                 '.apex-folders-dragging * { user-select: none !important; -webkit-user-select: none !important; }' +
-                '.media-folder-list { z-index: 101 !important; }' + // Make sure folders are above the overlay
+                '.apex-folder-list { z-index: 101 !important; }' + // Make sure folders are above the overlay
                 '.selecting-mode .attachment:hover { cursor: pointer !important; }' +
                 '.selecting-mode .attachment .check { display: none !important; }' +
                 '.selecting-mode .attachment.selected { outline: 3px solid #0073aa !important; background-color: rgba(0, 115, 170, 0.1) !important; }' +
@@ -582,7 +582,7 @@
                 '.selecting-mode .attachments-browser .attachment .thumbnail::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.1); opacity: 0; }' +
                 '.selecting-mode .attachments-browser .attachment:hover .thumbnail::after { opacity: 1; }' +
                 '.apex-folders-selection-overlay { position: absolute !important; top: 0; left: 0; right: 0; bottom: 0; z-index: 100 !important; background: transparent; cursor: pointer; border: 2px dashed #ccc;}' +
-                '.media-folder-bulk-select { position: relative; z-index: 100001 !important; }' // Ensure button is above overlay
+                '.apex-folder-bulk-select { position: relative; z-index: 100001 !important; }' // Ensure button is above overlay
             )
             .appendTo('head');
         } 

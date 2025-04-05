@@ -23,12 +23,12 @@ class APEX_FOLDERS_Unassigned {
      * @return int Unassigned folder ID
      */
     public static function get_id() {
-        $unassigned = term_exists('Unassigned', 'media_folder');
+        $unassigned = term_exists('Unassigned', 'apex_folder');
         if (!$unassigned) {
             // Create it if it doesn't exist
             $unassigned = wp_insert_term(
                 'Unassigned', 
-                'media_folder',
+                'apex_folder',
                 array(
                     'description' => 'Default folder for media items not assigned to any other folder',
                     'slug' => 'unassigned'
@@ -52,12 +52,12 @@ class APEX_FOLDERS_Unassigned {
         }
         
         // Check if the attachment already has a folder
-        $terms = wp_get_object_terms($post_id, 'media_folder');
+        $terms = wp_get_object_terms($post_id, 'apex_folder');
         
         // If it doesn't have any folder, assign to Unassigned
         if (empty($terms) || is_wp_error($terms)) {
             $unassigned_id = self::get_id();
-            wp_set_object_terms($post_id, array($unassigned_id), 'media_folder', false);
+            wp_set_object_terms($post_id, array($unassigned_id), 'apex_folder', false);
         }
     }
     
@@ -75,7 +75,7 @@ class APEX_FOLDERS_Unassigned {
         // Get the term taxonomy ID
         $tt_id = $wpdb->get_var($wpdb->prepare(
             "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-             WHERE term_id = %d AND taxonomy = 'media_folder'",
+             WHERE term_id = %d AND taxonomy = 'apex_folder'",
             $unassigned_id
         ));
         
@@ -91,7 +91,7 @@ class APEX_FOLDERS_Unassigned {
              AND NOT EXISTS (
                  SELECT 1 FROM $wpdb->term_relationships tr
                  JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                 WHERE tt.taxonomy = 'media_folder' AND tr.object_id = p.ID
+                 WHERE tt.taxonomy = 'apex_folder' AND tr.object_id = p.ID
              )"
         );
         
@@ -137,12 +137,12 @@ class APEX_FOLDERS_Unassigned {
             ));
             
             // Clear cache
-            clean_term_cache($unassigned_id, 'media_folder');
+            clean_term_cache($unassigned_id, 'apex_folder');
         }
         
         // Force update all term counts to be sure
-        if (function_exists('theme_update_media_folder_counts')) {
-            theme_update_media_folder_counts();
+        if (function_exists('theme_update_apex_folder_counts')) {
+            theme_update_apex_folder_counts();
         }
         
         return $count;

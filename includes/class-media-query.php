@@ -41,11 +41,11 @@ class APEX_FOLDERS_Query {
      */
     public function filter_media_by_folder($query) {
         if (is_admin() && $query->is_main_query() && isset($query->query['post_type']) && $query->query['post_type'] === 'attachment') {
-            if (isset($_GET['media_folder']) && !empty($_GET['media_folder'])) {
-                $folder_slug = sanitize_text_field($_GET['media_folder']);
+            if (isset($_GET['apex_folder']) && !empty($_GET['apex_folder'])) {
+                $folder_slug = sanitize_text_field($_GET['apex_folder']);
                 
                 // Get the term ID to make sure we're using the right one
-                $term = get_term_by('slug', $folder_slug, 'media_folder');
+                $term = get_term_by('slug', $folder_slug, 'apex_folder');
                 
                 if ($term) {
                     // Add debug information
@@ -54,7 +54,7 @@ class APEX_FOLDERS_Query {
                     // Add explicit tax query
                     $query->set('tax_query', array(
                         array(
-                            'taxonomy' => 'media_folder',
+                            'taxonomy' => 'apex_folder',
                             'field' => 'term_id',
                             'terms' => $term->term_id,
                             'include_children' => false,
@@ -79,15 +79,15 @@ class APEX_FOLDERS_Query {
      * @return array Modified query arguments
      */
     public function filter_attachments_query($query) {
-        if (isset($query['media_folder'])) {
-            // If empty string or 0, remove any existing tax_query for media_folder
-            if ($query['media_folder'] === '' || $query['media_folder'] === '0' || $query['media_folder'] === 0) {
-                // User selected "All Folders" - remove the media_folder filter
-                unset($query['media_folder']);
-                // Also remove any tax_query that might be for media_folder
+        if (isset($query['apex_folder'])) {
+            // If empty string or 0, remove any existing tax_query for apex_folder
+            if ($query['apex_folder'] === '' || $query['apex_folder'] === '0' || $query['apex_folder'] === 0) {
+                // User selected "All Folders" - remove the apex_folder filter
+                unset($query['apex_folder']);
+                // Also remove any tax_query that might be for apex_folder
                 if (isset($query['tax_query']) && is_array($query['tax_query'])) {
                     foreach ($query['tax_query'] as $key => $tax_query) {
-                        if (isset($tax_query['taxonomy']) && $tax_query['taxonomy'] === 'media_folder') {
+                        if (isset($tax_query['taxonomy']) && $tax_query['taxonomy'] === 'apex_folder') {
                             unset($query['tax_query'][$key]);
                         }
                     }
@@ -100,7 +100,7 @@ class APEX_FOLDERS_Query {
             }
             
             // Get the folder ID, ensuring it's an integer
-            $folder_id = $query['media_folder'];
+            $folder_id = $query['apex_folder'];
             
             // Handle various data formats
             if (is_array($folder_id)) {
@@ -119,7 +119,7 @@ class APEX_FOLDERS_Query {
             }
             
             // Confirm folder exists
-            $term = get_term($folder_id, 'media_folder');
+            $term = get_term($folder_id, 'apex_folder');
             if (!is_wp_error($term) && $term) {
                 error_log('Found folder: ' . $term->name . ' (ID: ' . $term->term_id . ')');
                 
@@ -127,7 +127,7 @@ class APEX_FOLDERS_Query {
                 $query['tax_query'] = array(
                     'relation' => 'AND',
                     array(
-                        'taxonomy' => 'media_folder',
+                        'taxonomy' => 'apex_folder',
                         'field' => 'term_id',
                         'terms' => array($folder_id),
                         'operator' => 'IN'
@@ -135,7 +135,7 @@ class APEX_FOLDERS_Query {
                 );
                 
                 // Remove any conflicting query params
-                unset($query['media_folder']);
+                unset($query['apex_folder']);
                 
                 error_log('Modified query: ' . print_r($query, true));
             } else {
@@ -157,9 +157,9 @@ class APEX_FOLDERS_Query {
      * @param array $old_tt_ids Old term taxonomy IDs
      */
     public function set_object_terms_callback($object_id, $terms, $tt_ids, $taxonomy, $append, $old_tt_ids) {
-        if ($taxonomy === 'media_folder') {
+        if ($taxonomy === 'apex_folder') {
             // Schedule a deferred count update to ensure it happens after WordPress completes its operations
-            wp_schedule_single_event(time() + 2, 'theme_update_media_folder_counts_event');
+            wp_schedule_single_event(time() + 2, 'theme_update_apex_folder_counts_event');
         }
     }
     
@@ -167,7 +167,7 @@ class APEX_FOLDERS_Query {
      * Register folder count event
      */
     public function register_folder_count_event() {
-        add_action('theme_update_media_folder_counts_event', 'theme_update_media_folder_counts');
+        add_action('theme_update_apex_folder_counts_event', 'theme_update_apex_folder_counts');
     }
 }
 

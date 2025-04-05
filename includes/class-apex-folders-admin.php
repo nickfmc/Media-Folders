@@ -72,7 +72,7 @@ class APEX_FOLDERS_Admin {
             
             // Check all folder terms
             $folders = get_terms(array(
-                'taxonomy' => 'media_folder',
+                'taxonomy' => 'apex_folder',
                 'hide_empty' => false,
             ));
             
@@ -127,7 +127,7 @@ class APEX_FOLDERS_Admin {
         echo '<h3>Unassigned Folder Debug</h3>';
         
         // 1. Check term exists
-        $term = get_term($unassigned_id, 'media_folder');
+        $term = get_term($unassigned_id, 'apex_folder');
         echo '<p>Term check: ' . ($term ? 'Found' : 'Not found') . '</p>';
         if ($term) {
             echo '<p>Term details: ID=' . $term->term_id . ', Name=' . $term->name . ', Slug=' . $term->slug . ', Count=' . $term->count . '</p>';
@@ -136,7 +136,7 @@ class APEX_FOLDERS_Admin {
         // 2. Check term_taxonomy record
         $tt_id = $wpdb->get_var($wpdb->prepare(
             "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-             WHERE term_id = %d AND taxonomy = 'media_folder'",
+             WHERE term_id = %d AND taxonomy = 'apex_folder'",
             $unassigned_id
         ));
         echo '<p>Term taxonomy ID: ' . ($tt_id ?: 'Not found') . '</p>';
@@ -145,7 +145,7 @@ class APEX_FOLDERS_Admin {
         $count = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $wpdb->term_relationships tr
              JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-             WHERE tt.term_id = %d AND tt.taxonomy = 'media_folder'",
+             WHERE tt.term_id = %d AND tt.taxonomy = 'apex_folder'",
             $unassigned_id
         ));
         echo '<p>Actual count in database: ' . $count . '</p>';
@@ -154,7 +154,7 @@ class APEX_FOLDERS_Admin {
         $items = $wpdb->get_col($wpdb->prepare(
             "SELECT tr.object_id FROM $wpdb->term_relationships tr
              JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-             WHERE tt.term_id = %d AND tt.taxonomy = 'media_folder'
+             WHERE tt.term_id = %d AND tt.taxonomy = 'apex_folder'
              LIMIT 10",
             $unassigned_id
         ));
@@ -171,7 +171,7 @@ class APEX_FOLDERS_Admin {
              AND NOT EXISTS (
                  SELECT 1 FROM $wpdb->term_relationships tr
                  JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                 WHERE tt.taxonomy = 'media_folder' AND tr.object_id = p.ID
+                 WHERE tt.taxonomy = 'apex_folder' AND tr.object_id = p.ID
              )"
         );
         echo '<p>Media items with no folder at all: ' . $no_folder . '</p>';
@@ -191,11 +191,11 @@ class APEX_FOLDERS_Admin {
             // Get all media folder terms
             $terms = $wpdb->get_col("
                 SELECT term_id FROM $wpdb->term_taxonomy
-                WHERE taxonomy = 'media_folder'
+                WHERE taxonomy = 'apex_folder'
             ");
             
             // Clear caches
-            clean_term_cache($terms, 'media_folder');
+            clean_term_cache($terms, 'apex_folder');
             
             // Redirect back
             wp_redirect(add_query_arg('cache_flushed', '1', admin_url('upload.php')));
@@ -235,7 +235,7 @@ class APEX_FOLDERS_Admin {
                 ?>
                 <div class="notice notice-success is-dismissible">
                     <p>Unassigned folder rebuilt. <?php echo $count; ?> items were assigned to the Unassigned folder.</p>
-                    <p><a href="<?php echo admin_url('upload.php?media_folder=unassigned'); ?>">View Unassigned folder</a> | <a href="<?php echo admin_url('upload.php?debug_folders=1'); ?>">View folder debug info</a></p>
+                    <p><a href="<?php echo admin_url('upload.php?apex_folder=unassigned'); ?>">View Unassigned folder</a> | <a href="<?php echo admin_url('upload.php?debug_folders=1'); ?>">View folder debug info</a></p>
                 </div>
                 <?php
             });

@@ -37,7 +37,7 @@
             // Final fallback - periodically check for upload UI that might appear later
             var checkCount = 0;
             var checkInterval = setInterval(function() {
-                if ($(".upload-ui").length && !$(".upload-ui").next(".media-folder-select-container").length) {
+                if ($(".upload-ui").length && !$(".upload-ui").next(".apex-folder-select-container").length) {
                     MediaFolderUploader.addFolderDropdownToUploader();
                 }
                 
@@ -46,17 +46,17 @@
             }, 1000);
             
             // CRITICAL: Add global event listener to track dropdown changes
-            $(document).on('change', '#media-folder-select', function() {
+            $(document).on('change', '#apex-folder-select', function() {
                 var selectedFolderId = $(this).val();
                 console.log("Folder selection changed to: " + selectedFolderId);
                 // Store in session storage for immediate access
                 try {
-                    window.sessionStorage.setItem('current_media_folder', selectedFolderId);
+                    window.sessionStorage.setItem('current_apex_folder', selectedFolderId);
                 } catch(e) {
                     console.error("Could not store in sessionStorage:", e);
                 }
                 // Also set cookie with longer lifespan
-                document.cookie = "media_folder_upload_id=" + selectedFolderId + "; path=/; max-age=3600";
+                document.cookie = "apex_folder_upload_id=" + selectedFolderId + "; path=/; max-age=3600";
             });
         },
         
@@ -72,14 +72,14 @@
             
             // Simplify targeting - look for common upload interface elements
             var $uploadUI = $(".upload-ui");
-            if ($uploadUI.length && !$uploadUI.next(".media-folder-select-container").length) {
+            if ($uploadUI.length && !$uploadUI.next(".apex-folder-select-container").length) {
                 console.log("Found upload UI, adding dropdown");
                 $uploadUI.after(this.dropdownHtml);
             }
             
             // Also try for media modal uploader
             var $modalUploadUI = $(".media-modal .uploader-inline-content .upload-ui");
-            if ($modalUploadUI.length && !$modalUploadUI.next(".media-folder-select-container").length) {
+            if ($modalUploadUI.length && !$modalUploadUI.next(".apex-folder-select-container").length) {
                 console.log("Found modal upload UI, adding dropdown");
                 $modalUploadUI.after(this.dropdownHtml);
             }
@@ -99,7 +99,7 @@
                         
                         // 1. First check sessionStorage (most reliable, set by dropdown change event)
                         try {
-                            var storedId = window.sessionStorage.getItem('current_media_folder');
+                            var storedId = window.sessionStorage.getItem('current_apex_folder');
                             if (storedId) {
                                 folder_id = storedId;
                                 console.log("Using folder ID from sessionStorage: " + folder_id);
@@ -110,7 +110,7 @@
                         
                         // 2. If no sessionStorage, check visible dropdown
                         if (!folder_id) {
-                            var $visibleDropdown = $(".media-modal:visible, .wrap:visible").find("#media-folder-select");
+                            var $visibleDropdown = $(".media-modal:visible, .wrap:visible").find("#apex-folder-select");
                             if ($visibleDropdown.length) {
                                 folder_id = $visibleDropdown.val();
                                 console.log("Found visible dropdown with value: " + folder_id);
@@ -119,7 +119,7 @@
                         
                         // 3. Try any dropdown as fallback
                         if (!folder_id) {
-                            var $anyDropdown = $("#media-folder-select");
+                            var $anyDropdown = $("#apex-folder-select");
                             if ($anyDropdown.length) {
                                 folder_id = $anyDropdown.val();
                                 console.log("Using any dropdown with value: " + folder_id);
@@ -128,7 +128,7 @@
                         
                         // 4. Try cookie as another fallback
                         if (!folder_id) {
-                            var cookieMatch = document.cookie.match(/media_folder_upload_id=(\d+)/);
+                            var cookieMatch = document.cookie.match(/apex_folder_upload_id=(\d+)/);
                             if (cookieMatch && cookieMatch[1]) {
                                 folder_id = cookieMatch[1];
                                 console.log("Using folder ID from cookie: " + folder_id);
@@ -145,8 +145,8 @@
                         
                         // Set in multiple places to ensure it's captured
                         up.settings.multipart_params = up.settings.multipart_params || {};
-                        up.settings.multipart_params.media_folder_id = folder_id;
-                        up.settings.multipart_params['media-folder-select'] = folder_id;
+                        up.settings.multipart_params.apex_folder_id = folder_id;
+                        up.settings.multipart_params['apex-folder-select'] = folder_id;
                         
                         // Set global vars that WordPress might check
                         window.wpMediaFolderId = folder_id;
@@ -154,13 +154,13 @@
                         // Also set as a URL parameter that will be included 
                         var uploadAction = up.settings.url || '';
                         if (uploadAction.indexOf('?') === -1) {
-                            up.settings.url = uploadAction + '?media_folder_id=' + folder_id;
+                            up.settings.url = uploadAction + '?apex_folder_id=' + folder_id;
                         } else {
-                            up.settings.url = uploadAction + '&media_folder_id=' + folder_id;
+                            up.settings.url = uploadAction + '&apex_folder_id=' + folder_id;
                         }
                         
                         // Set cookie again for redundancy
-                        document.cookie = "media_folder_upload_id=" + folder_id + "; path=/; max-age=3600";
+                        document.cookie = "apex_folder_upload_id=" + folder_id + "; path=/; max-age=3600";
                         
                         console.log("Upload URL with params: " + up.settings.url);
                         console.log("All params:", up.settings.multipart_params);

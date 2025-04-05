@@ -14,7 +14,7 @@ jQuery(document).ready(function($) {
         var $this = $(this);
         var $form = $this.closest('form');
         var attachmentId = $form.find('input[name="attachment_id"]').val();
-        var $folderSelect = $form.find('select[name^="attachments"][name$="[media_folder]"]');
+        var $folderSelect = $form.find('select[name^="attachments"][name$="[apex_folder]"]');
         var selectedFolderId = $folderSelect.val();
         var originalValue = $folderSelect.find('option:selected').data('original-value');
         
@@ -31,7 +31,7 @@ jQuery(document).ready(function($) {
     });
     
     // Add data attribute to track original folder
-    $(document).on('focus', 'select[name^="attachments"][name$="[media_folder]"]', function() {
+    $(document).on('focus', 'select[name^="attachments"][name$="[apex_folder]"]', function() {
         var $select = $(this);
         // Only set original value once when first focused
         if (!$select.data('original-tracked')) {

@@ -24,7 +24,7 @@ class APEX_FOLDERS_Utilities {
      */
     public static function register_taxonomy() {
         register_taxonomy(
-            'media_folder',
+            'apex_folder',
             'attachment',
             array(
                 'labels' => array(
@@ -48,7 +48,7 @@ class APEX_FOLDERS_Utilities {
                 'show_in_rest' => true,
                 'show_admin_column' => true,
                 'query_var' => true,
-                'rewrite' => array('slug' => 'media-folder'),
+                'rewrite' => array('slug' => 'apex-folder'),
             )
         );
     }
@@ -119,7 +119,7 @@ class APEX_FOLDERS_Utilities {
         
         // Get all media folder terms
         $folders = get_terms(array(
-            'taxonomy' => 'media_folder',
+            'taxonomy' => 'apex_folder',
             'hide_empty' => false,
         ));
         
@@ -146,8 +146,8 @@ class APEX_FOLDERS_Utilities {
         }
         
         // Clear caches
-        clean_term_cache(wp_list_pluck($folders, 'term_id'), 'media_folder');
-        delete_transient('media_folder_counts');
+        clean_term_cache(wp_list_pluck($folders, 'term_id'), 'apex_folder');
+        delete_transient('apex_folder_counts');
     }
     
     /**
@@ -160,7 +160,7 @@ class APEX_FOLDERS_Utilities {
      */
     public static function get_organized_folders() {
         $folders = get_terms(array(
-            'taxonomy' => 'media_folder',
+            'taxonomy' => 'apex_folder',
             'hide_empty' => false,
         ));
         
@@ -198,8 +198,8 @@ class APEX_FOLDERS_Utilities {
      * @return string|WP_Error The term name or error
      */
     public static function prevent_numeric_term_creation($term, $taxonomy) {
-        // Only check media_folder taxonomy
-        if ($taxonomy !== 'media_folder') {
+        // Only check apex_folder taxonomy
+        if ($taxonomy !== 'apex_folder') {
             return $term;
         }
         
@@ -224,13 +224,13 @@ class APEX_FOLDERS_Utilities {
      * @return void
      */
     public static function debug_folder_assignment($post_id, $terms, $tt_ids, $taxonomy) {
-        if ($taxonomy !== 'media_folder') {
+        if ($taxonomy !== 'apex_folder') {
             return;
         }
         
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
         $caller_info = array();
-        $ignore_functions = array('debug_media_folder_assignment', 'apply_filters', 'do_action');
+        $ignore_functions = array('debug_apex_folder_assignment', 'apply_filters', 'do_action');
         
         foreach ($backtrace as $trace) {
             if (isset($trace['function']) && !in_array($trace['function'], $ignore_functions)) {

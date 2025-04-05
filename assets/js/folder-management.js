@@ -36,7 +36,7 @@ jQuery(document).ready(function($) {
                             url: ajaxurl,
                             type: 'POST',
                             data: {
-                                action: 'theme_add_media_folder',
+                                action: 'theme_add_apex_folder',
                                 folder_name: folderName,
                                 parent_id: parentId,
                                 nonce: apexFolderData.nonce
@@ -104,7 +104,7 @@ jQuery(document).ready(function($) {
                             url: ajaxurl,
                             type: 'POST',
                             data: {
-                                action: 'theme_add_media_folder',
+                                action: 'theme_add_apex_folder',
                                 folder_name: folderName,
                                 parent_id: parentId,
                                 nonce: apexFolderData.nonce
@@ -165,7 +165,7 @@ jQuery(document).ready(function($) {
                             url: ajaxurl,
                             type: 'POST',
                             data: {
-                                action: 'theme_rename_media_folder',
+                                action: 'theme_rename_apex_folder',
                                 folder_id: folderId,
                                 new_name: newName,
                                 nonce: apexFolderData.nonce
@@ -205,7 +205,7 @@ jQuery(document).ready(function($) {
                 url: ajaxurl,
                 type: 'POST',
                 data: {
-                    action: 'theme_delete_media_folder',
+                    action: 'theme_delete_apex_folder',
                     folder_id: folderId,
                     nonce: apexFolderData.nonce
                 },

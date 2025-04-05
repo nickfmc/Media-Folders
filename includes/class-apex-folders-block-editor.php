@@ -32,7 +32,7 @@ class APEX_FOLDERS_Editor {
     public function enqueue_block_editor_assets() {
         // Get media folders data
         $folders = get_terms(array(
-            'taxonomy' => 'media_folder',
+            'taxonomy' => 'apex_folder',
             'hide_empty' => false,
         ));
         
@@ -50,7 +50,7 @@ class APEX_FOLDERS_Editor {
 
         // First, register and enqueue the folder data
         wp_register_script(
-            'media-folder-data',
+            'apex-folder-data',
             '',
             array('media-editor'),
             '1.0',
@@ -59,17 +59,17 @@ class APEX_FOLDERS_Editor {
         
         // Add media folders data to the page
         wp_add_inline_script(
-            'media-folder-data',
+            'apex-folder-data',
             'window.mediaFolders = ' . json_encode($folders_data) . ';',
             'before'
         );
-        wp_enqueue_script('media-folder-data');
+        wp_enqueue_script('apex-folder-data');
         
         // Then, enqueue our filtering script - IMPORTANT: set in_footer to FALSE
         wp_enqueue_script(
-            'media-folder-filters',
+            'apex-folder-filters',
             APEX_FOLDERS_PLUGIN_URL . 'assets/js/apex-folders.js', 
-            array('jquery', 'wp-blocks', 'media-editor', 'media-folder-data'), 
+            array('jquery', 'wp-blocks', 'media-editor', 'apex-folder-data'), 
             filemtime(APEX_FOLDERS_PLUGIN_DIR . 'assets/js/apex-folders.js'),
             false // Load in header, not footer
         );

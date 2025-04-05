@@ -1,5 +1,5 @@
 /* --- Core Container --- */
-.media-folder-filter {
+.apex-folder-filter {
     float: left;
     width: 20%;
     margin: 65px 20px 0 0;
@@ -29,7 +29,7 @@
 }
 
 /* --- Folder List Container --- */
-.media-folder-list {
+.apex-folder-list {
     margin: 0 0 20px 0;
     padding: 0;
     background: #fff;
@@ -39,7 +39,7 @@
 }
 
 /* --- Folder Section Title --- */
-.media-folder-filter h3 {
+.apex-folder-filter h3 {
     margin: 0 0 8px 0;
     padding: 12px 15px;
     background: #f0f0f1;
@@ -50,7 +50,7 @@
 }
 
 /* --- Folder Items (Common Styles) --- */
-.media-folder-list li {
+.apex-folder-list li {
     margin: 0;
     padding: 0;
     position: relative;
@@ -58,12 +58,12 @@
     transition: all 0.15s ease;
 }
 
-.media-folder-list li:last-child {
+.apex-folder-list li:last-child {
     border-bottom: none;
 }
 
 /* Folder links */
-.media-folder-list li a {
+.apex-folder-list li a {
     display: block;
     padding: 10px 15px;
     text-decoration: none;
@@ -78,28 +78,28 @@
 
 /* --- System Folders --- */
 /* All Files styling */
-.media-folder-list li.all-files {
+.apex-folder-list li.all-files {
     background: #f6f7f7;
 }
 
-.media-folder-list li.all-files a {
+.apex-folder-list li.all-files a {
     font-weight: 600;
     color: #2271b1;
 }
 
 /* Unassigned folder styling */
-.media-folder-list li.unassigned-folder {
+.apex-folder-list li.unassigned-folder {
     background: #f9f9f9;
     border-bottom: 1px solid #eee;
 }
 
-.media-folder-list li.unassigned-folder a {
+.apex-folder-list li.unassigned-folder a {
     color: #50575e;
     font-style: italic;
 }
 
 /* Folder separator */
-.media-folder-list .folder-separator {
+.apex-folder-list .folder-separator {
     height: 27px;
     background: #f0f0f1;
     padding: 0;
@@ -108,33 +108,33 @@
 
 /* --- Custom Folders --- */
 /* Parent folders */
-.media-folder-list li.custom-folder {
+.apex-folder-list li.custom-folder {
     background: #fff;
 }
 
-.media-folder-list li.custom-folder:hover {
+.apex-folder-list li.custom-folder:hover {
     background: #f6f7f7;
 }
 
 /* Parent folders with children */
-.media-folder-list li.parent-folder.has-children {
+.apex-folder-list li.parent-folder.has-children {
     border-left: 3px solid #2271b1;
 }
 
 /* Child folders - refined and compact */
-.media-folder-list li.child-folder {
+.apex-folder-list li.child-folder {
     background: #fcfcfc;
     padding-left: 0;
     margin-left: 0;
     border-left: 3px solid #dcdcde;
 }
 
-.media-folder-list li.child-folder a {
+.apex-folder-list li.child-folder a {
     padding-left: 48px;
     font-size: 12.5px;
 }
 
-.media-folder-list li.child-folder .child-indicator {
+.apex-folder-list li.child-folder .child-indicator {
     position: absolute;
     left: 16px;
     top: 50%;
@@ -144,17 +144,17 @@
 }
 
 /* --- Active/Current Folder --- */
-.media-folder-list li.current {
+.apex-folder-list li.current {
     background: #f0f6fc;
 }
 
-.media-folder-list li.current a {
+.apex-folder-list li.current a {
     color: #0a4b78;
     font-weight: 600;
 }
 
 /* --- Hover Effects --- */
-.media-folder-list li:not(.folder-separator):hover {
+.apex-folder-list li:not(.folder-separator):hover {
     background: #f0f6fc;
 }
 
@@ -174,11 +174,11 @@
     z-index: 5;
 }
 
-.media-folder-list li:hover .delete-folder {
+.apex-folder-list li:hover .delete-folder {
     opacity: 0.7;
 }
 
-.media-folder-list li .delete-folder:hover {
+.apex-folder-list li .delete-folder:hover {
     opacity: 1;
     background: rgba(204, 24, 24, 0.1);
 }
@@ -198,11 +198,11 @@
     z-index: 5;
 }
 
-.media-folder-list li:hover .add-subfolder {
+.apex-folder-list li:hover .add-subfolder {
     opacity: 0.7;
 }
 
-.media-folder-list li .add-subfolder:hover {
+.apex-folder-list li .add-subfolder:hover {
     opacity: 1;
     background: rgba(34, 113, 177, 0.1);
 }
@@ -243,7 +243,7 @@
 }
 
 /* --- Count Updates --- */
-.media-folder-list li.count-updated {
+.apex-folder-list li.count-updated {
     background-color: #fcf9e8;
     transition: background-color 2s;
 }
@@ -276,7 +276,7 @@
 
 /* --- Responsive Design --- */
 @media (max-width: 1280px) {
-    .media-folder-filter {
+    .apex-folder-filter {
         width: 25%;
     }
     
@@ -296,7 +296,7 @@
 }
 
 @media (max-width: 960px) {
-    .media-folder-filter {
+    .apex-folder-filter {
         width: 30%;
     }
     
@@ -316,7 +316,7 @@
 }
 
 @media (max-width: 782px) {
-    .media-folder-filter {
+    .apex-folder-filter {
         width: 100%;
         float: none;
         margin: 20px 0;
@@ -340,22 +340,22 @@
 }
 
 
-.media-folder-select-container {
+.apex-folder-select-container {
     margin: 10px 0;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-.media-folder-select-container label {
+.apex-folder-select-container label {
     margin-right: 8px;
     font-weight: bold;
 }
-.media-folder-select-container select {
+.apex-folder-select-container select {
     flex-grow: 1;
     max-width: 300px;
 }
 /* Fixes for WordPress media modal */
-.media-modal .uploader-inline .media-folder-select-container {
+.media-modal .uploader-inline .apex-folder-select-container {
     padding: 0 16px;
 }
 
@@ -374,11 +374,11 @@
     z-index: 5;
 }
 
-.media-folder-list li:hover .edit-folder {
+.apex-folder-list li:hover .edit-folder {
     opacity: 0.7;
 }
 
-.media-folder-list li .edit-folder:hover {
+.apex-folder-list li .edit-folder:hover {
     opacity: 1;
     background: rgba(80, 87, 94, 0.1);
 }
@@ -400,7 +400,7 @@
     100% { background-color: #fcf9e8; }
 }
 
-.media-folder-list li.count-updated {
+.apex-folder-list li.count-updated {
     animation: highlight-count 2s ease;
 }
 
@@ -430,13 +430,13 @@
 }
 
 /* Improve visual feedback for folder operations */
-.media-folder-list li.is-dragging {
+.apex-folder-list li.is-dragging {
     opacity: 0.7;
     border: 2px dashed #2271b1;
     background: #f0f6fc;
 }
 
-.media-folder-list li.drag-target {
+.apex-folder-list li.drag-target {
     background: #e6f0fa;
     border: 2px dashed #2271b1;
 }

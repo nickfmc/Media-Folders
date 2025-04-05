@@ -21,10 +21,10 @@ class APEX_FOLDERS_AJAX_Handler {
      */
     public function __construct() {
         // Register AJAX handlers
-        add_action('wp_ajax_theme_rename_media_folder', array($this, 'rename_media_folder'));
-        add_action('wp_ajax_theme_delete_media_folder', array($this, 'delete_media_folder'));
+        add_action('wp_ajax_theme_rename_apex_folder', array($this, 'rename_apex_folder'));
+        add_action('wp_ajax_theme_delete_apex_folder', array($this, 'delete_apex_folder'));
         add_action('wp_ajax_get_folder_slug', array($this, 'get_folder_slug'));
-        add_action('wp_ajax_theme_add_media_folder', array($this, 'add_media_folder'));
+        add_action('wp_ajax_theme_add_apex_folder', array($this, 'add_apex_folder'));
         add_action('wp_ajax_theme_get_folder_counts', array($this, 'get_folder_counts'));
         add_action('wp_ajax_upload-attachment', array($this, 'async_upload'), 1);
     }
@@ -32,7 +32,7 @@ class APEX_FOLDERS_AJAX_Handler {
     /**
      * Delete a media folder.
      */
-    public function delete_media_folder() {
+    public function delete_apex_folder() {
         check_ajax_referer('APEX_FOLDERS_nonce', 'nonce');
         
         if (!current_user_can('upload_files')) {
@@ -53,13 +53,13 @@ class APEX_FOLDERS_AJAX_Handler {
         // Get the term taxonomy IDs we need
         $folder_tt_id = $wpdb->get_var($wpdb->prepare(
             "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-             WHERE term_id = %d AND taxonomy = 'media_folder'",
+             WHERE term_id = %d AND taxonomy = 'apex_folder'",
             $folder_id
         ));
         
         $unassigned_tt_id = $wpdb->get_var($wpdb->prepare(
             "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-             WHERE term_id = %d AND taxonomy = 'media_folder'",
+             WHERE term_id = %d AND taxonomy = 'apex_folder'",
             $unassigned_id
         ));
         
@@ -130,10 +130,10 @@ class APEX_FOLDERS_AJAX_Handler {
         }
         
         // Force term count updates and clear caches
-        clean_term_cache(array($folder_id, $unassigned_id), 'media_folder');
+        clean_term_cache(array($folder_id, $unassigned_id), 'apex_folder');
         
         // Step 3: Delete the term
-        $result = wp_delete_term($folder_id, 'media_folder');
+        $result = wp_delete_term($folder_id, 'apex_folder');
         
         if (is_wp_error($result)) {
             wp_send_json_error(array('message' => $result->get_error_message()));
@@ -157,7 +157,7 @@ class APEX_FOLDERS_AJAX_Handler {
         $folder_id = isset($_POST['folder_id']) ? intval($_POST['folder_id']) : 0;
         
         if ($folder_id) {
-            $term = get_term($folder_id, 'media_folder');
+            $term = get_term($folder_id, 'apex_folder');
             if ($term && !is_wp_error($term)) {
                 wp_send_json_success(array(
                     'slug' => $term->slug,
@@ -172,7 +172,7 @@ class APEX_FOLDERS_AJAX_Handler {
     /**
      * Add a new media folder.
      */
-    public function add_media_folder() {
+    public function add_apex_folder() {
         check_ajax_referer('APEX_FOLDERS_nonce', 'nonce');
         
         if (!current_user_can('upload_files')) {
@@ -184,7 +184,7 @@ class APEX_FOLDERS_AJAX_Handler {
         
         // Ensure parent folder exists if specified
         if ($parent_id > 0) {
-            $parent_term = get_term($parent_id, 'media_folder');
+            $parent_term = get_term($parent_id, 'apex_folder');
             if (!$parent_term || is_wp_error($parent_term)) {
                 wp_send_json_error(array('message' => 'Parent folder does not exist'));
                 return;
@@ -198,7 +198,7 @@ class APEX_FOLDERS_AJAX_Handler {
             }
             
             // Check if parent itself has a parent (limit to one level)
-            $parent_parent = get_term_field('parent', $parent_id, 'media_folder');
+            $parent_parent = get_term_field('parent', $parent_id, 'apex_folder');
             if (!is_wp_error($parent_parent) && $parent_parent > 0) {
                 wp_send_json_error(array('message' => 'Only one level of subfolders is supported'));
                 return;
@@ -207,7 +207,7 @@ class APEX_FOLDERS_AJAX_Handler {
         
         $result = wp_insert_term(
             $folder_name, 
-            'media_folder',
+            'apex_folder',
             array(
                 'parent' => $parent_id
             )
@@ -230,11 +230,11 @@ class APEX_FOLDERS_AJAX_Handler {
         }
         
         // Force recount all terms
-        theme_update_media_folder_counts();
+        theme_update_apex_folder_counts();
         
         // Get updated folder data
         $folders = get_terms(array(
-            'taxonomy' => 'media_folder',
+            'taxonomy' => 'apex_folder',
             'hide_empty' => false,
         ));
         
@@ -254,12 +254,12 @@ class APEX_FOLDERS_AJAX_Handler {
      * Handle async uploads with folder assignment.
      */
     public function async_upload() {
-        if (isset($_POST['media_folder_id']) && isset($_POST['attachment_id'])) {
+        if (isset($_POST['apex_folder_id']) && isset($_POST['attachment_id'])) {
             $attachment_id = intval($_POST['attachment_id']);
-            $folder_id = intval($_POST['media_folder_id']);
+            $folder_id = intval($_POST['apex_folder_id']);
             
             if ($folder_id > 0) {
-                wp_set_object_terms($attachment_id, array($folder_id), 'media_folder', false);
+                wp_set_object_terms($attachment_id, array($folder_id), 'apex_folder', false);
                 error_log("Async assigned attachment ID $attachment_id to folder ID $folder_id");
             }
         }
@@ -269,7 +269,7 @@ class APEX_FOLDERS_AJAX_Handler {
     /**
      * Rename a media folder.
      */
-    public function rename_media_folder() {
+    public function rename_apex_folder() {
         check_ajax_referer('APEX_FOLDERS_nonce', 'nonce');
         
         if (!current_user_can('upload_files')) {
@@ -293,14 +293,14 @@ class APEX_FOLDERS_AJAX_Handler {
         }
         
         // Check if the folder exists
-        $term = get_term($folder_id, 'media_folder');
+        $term = get_term($folder_id, 'apex_folder');
         if (!$term || is_wp_error($term)) {
             wp_send_json_error(array('message' => 'Folder not found.'));
             return;
         }
         
         // Update the term
-        $result = wp_update_term($folder_id, 'media_folder', array(
+        $result = wp_update_term($folder_id, 'apex_folder', array(
             'name' => $new_name
         ));
         

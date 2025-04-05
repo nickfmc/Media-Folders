@@ -22,7 +22,7 @@ window.updateFolderCounts = function() {
                 console.log('Received updated folder counts after ' + delay + 'ms:', response.data);
                 
                 // Update each folder count in the sidebar
-                jQuery('.media-folder-list li[data-folder-id]').each(function() {
+                jQuery('.apex-folder-list li[data-folder-id]').each(function() {
                     var $item = jQuery(this);
                     var folderId = $item.data('folder-id');
                     
@@ -105,7 +105,7 @@ window.updateFolderCounts = function() {
                     filters.all = {
                         text: 'All Folders',
                         props: {
-                            media_folder: ''
+                            apex_folder: ''
                         },
                         priority: 10
                     };
@@ -116,7 +116,7 @@ window.updateFolderCounts = function() {
                         filters[filterName] = {
                             text: folder.name + ' (' + folder.count + ')',
                             props: {
-                                media_folder: folder.id
+                                apex_folder: folder.id
                             },
                             priority: 20
                         };
@@ -205,7 +205,7 @@ window.updateFolderCounts = function() {
                     filters.all = {
                         text: 'All Folders',
                         props: {
-                            media_folder: ''
+                            apex_folder: ''
                         },
                         priority: 10
                     };
@@ -237,7 +237,7 @@ window.updateFolderCounts = function() {
                             filters['folder_' + unassigned.id] = {
                                 text: unassigned.name,
                                 props: {
-                                    media_folder: unassigned.id
+                                    apex_folder: unassigned.id
                                 },
                                 priority: 20
                             };
@@ -249,7 +249,7 @@ window.updateFolderCounts = function() {
                             filters['folder_' + folder.id] = {
                                 text: folder.name,
                                 props: {
-                                    media_folder: folder.id
+                                    apex_folder: folder.id
                                 },
                                 priority: priority++
                             };
@@ -260,7 +260,7 @@ window.updateFolderCounts = function() {
                                     filters['folder_' + child.id] = {
                                         text: '-- ' + child.name,
                                         props: {
-                                            media_folder: child.id
+                                            apex_folder: child.id
                                         },
                                         priority: priority++
                                     };
@@ -276,19 +276,19 @@ window.updateFolderCounts = function() {
     }
     
     
-    // Listen for changes to the media_folder property
+    // Listen for changes to the apex_folder property
     var originalMediaQuery = wp.media.model.Query;
     wp.media.model.Query = originalMediaQuery.extend({
         initialize: function() {
             originalMediaQuery.prototype.initialize.apply(this, arguments);
             
-            // Listen for changes to the media_folder property
-            this.on('change:media_folder', this.mediaFolderChanged);
+            // Listen for changes to the apex_folder property
+            this.on('change:apex_folder', this.mediaFolderChanged);
         },
         
-        // When the media_folder property changes, reload the library
+        // When the apex_folder property changes, reload the library
         mediaFolderChanged: function() {
-            var folder = this.get('media_folder');
+            var folder = this.get('apex_folder');
             console.log('Media folder changed to:', folder);
         }
     });
@@ -311,7 +311,7 @@ function setupFolderCountUpdates() {
     }
     
     // When media folder is changed via dropdown
-    jQuery(document).on('change', 'select[id^="attachments-"][id$="-media_folder"]', function() {
+    jQuery(document).on('change', 'select[id^="attachments-"][id$="-apex_folder"]', function() {
         console.log('Media folder changed via dropdown');
         setTimeout(updateFolderCounts, 1000);
     });

@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 /**
  * Class for handling drag and drop operations in Media Folders
  */
-class Media_Folder_Drag_Drop {
+class apex_folder_Drag_Drop {
 
     /**
      * Constructor
@@ -25,7 +25,7 @@ class Media_Folder_Drag_Drop {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_assets'));
         
         // Add AJAX handlers for drag and drop operations
-        add_action('wp_ajax_media_folder_move_items', array($this, 'handle_move_items'));
+        add_action('wp_ajax_apex_folder_move_items', array($this, 'handle_move_items'));
     }
 
     /**
@@ -41,16 +41,16 @@ class Media_Folder_Drag_Drop {
 
         // Register and enqueue CSS
         wp_register_style(
-            'media-folder-drag-drop',
+            'apex-folder-drag-drop',
             APEX_FOLDERS_PLUGIN_URL . 'assets/css/folder-drag-drop.css',
             array(),
             APEX_FOLDERS_VERSION
         );
-        wp_enqueue_style('media-folder-drag-drop');
+        wp_enqueue_style('apex-folder-drag-drop');
 
         // Register and enqueue JS - with dependencies on jQuery UI
         wp_register_script(
-            'media-folder-drag-drop',
+            'apex-folder-drag-drop',
             APEX_FOLDERS_PLUGIN_URL . 'assets/js/folder-drag-drop.js',
             array('jquery', 'jquery-ui-draggable', 'jquery-ui-droppable'),
             APEX_FOLDERS_VERSION,
@@ -59,12 +59,12 @@ class Media_Folder_Drag_Drop {
         
         // Localize script with nonce and settings
         wp_localize_script(
-            'media-folder-drag-drop',
+            'apex-folder-drag-drop',
             'mediaFolderSettings',
             array(
                 'nonce' => wp_create_nonce('APEX_FOLDERS_drag_drop_nonce'),
                 'ajaxUrl' => admin_url('admin-ajax.php'),
-                'moveItemsAction' => 'media_folder_move_items',
+                'moveItemsAction' => 'apex_folder_move_items',
                 'unassignedFolderId' => APEX_FOLDERS_get_unassigned_id(),
                 'i18n' => array(
                     'movingItem' => __('Moving item', 'apex-folders'),
@@ -75,7 +75,7 @@ class Media_Folder_Drag_Drop {
             )
         );
         
-        wp_enqueue_script('media-folder-drag-drop');
+        wp_enqueue_script('apex-folder-drag-drop');
     }
 
     /**
@@ -113,7 +113,7 @@ class Media_Folder_Drag_Drop {
         }
         
         // Verify the target folder exists
-        $folder_term = get_term($folder_id, 'media_folder');
+        $folder_term = get_term($folder_id, 'apex_folder');
         if (!$folder_term || is_wp_error($folder_term)) {
             wp_send_json_error(array(
                 'message' => __('The selected folder does not exist.', 'apex-folders')
@@ -136,10 +136,10 @@ class Media_Folder_Drag_Drop {
             }
             
             // Remove current folder assignments
-            wp_delete_object_term_relationships($id, 'media_folder');
+            wp_delete_object_term_relationships($id, 'apex_folder');
             
             // Assign to new folder
-            $result = wp_set_object_terms($id, array($folder_id), 'media_folder', false);
+            $result = wp_set_object_terms($id, array($folder_id), 'apex_folder', false);
             
             if (is_wp_error($result)) {
                 $error_count++;
@@ -150,7 +150,7 @@ class Media_Folder_Drag_Drop {
         }
         
         // Update folder counts
-        theme_update_media_folder_counts();
+        theme_update_apex_folder_counts();
         
         // Prepare the response
         if ($success_count > 0) {
@@ -178,4 +178,4 @@ class Media_Folder_Drag_Drop {
 }
 
 // Initialize the class
-new Media_Folder_Drag_Drop();
+new apex_folder_Drag_Drop();

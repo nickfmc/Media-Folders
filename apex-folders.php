@@ -4,7 +4,8 @@
  * Plugin URI: https://mountainairweb.com
  * Description: Reach the apex of media library organization.
  * Version: 0.9.9
- * Author: 
+ * Author: Nick Murray
+ * Author URI: https://mountainairweb.com
  * Text Domain: apex-folders
  * Domain Path: /languages
  * License: GPL-2.0+
@@ -19,11 +20,11 @@ if (!defined('ABSPATH')) {
 // Define plugin constants
 define('APEX_FOLDERS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('APEX_FOLDERS_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('APEX_FOLDERS_VERSION', '0.9.3');
+define('APEX_FOLDERS_VERSION', '0.9.9');
 
 // Global variable for tracking folder processing
-global $is_processing_media_folder;
-$is_processing_media_folder = false;
+global $is_processing_apex_folder;
+$is_processing_apex_folder = false;
 
 // Core includes
 require_once APEX_FOLDERS_PLUGIN_DIR . 'includes/class-folder-drag-drop.php';
@@ -75,7 +76,7 @@ function APEX_FOLDERS_get_unassigned_id() {
 }
 
 /**
- * Register 'media_folder' taxonomy
+ * Register 'apex_folder' taxonomy
  */
 function APEX_FOLDERS_register_taxonomy() {
     APEX_FOLDERS_Utilities::register_taxonomy();
@@ -93,10 +94,10 @@ add_filter('pre_insert_term', 'prevent_numeric_term_creation', 10, 2);
 /**
  * Debug term assignments
  */
-function debug_media_folder_assignment($post_id, $terms, $tt_ids, $taxonomy) {
+function debug_apex_folder_assignment($post_id, $terms, $tt_ids, $taxonomy) {
     APEX_FOLDERS_Utilities::debug_folder_assignment($post_id, $terms, $tt_ids, $taxonomy);
 }
-add_action('set_object_terms', 'debug_media_folder_assignment', 999, 4);
+add_action('set_object_terms', 'debug_apex_folder_assignment', 999, 4);
 
 /**
  * Ensure all attachments have a folder assignment
@@ -117,7 +118,7 @@ function APEX_FOLDERS_ensure_all_assigned() {
 /**
  * Force update term counts for media folders
  */
-function theme_update_media_folder_counts() {
+function theme_update_apex_folder_counts() {
     APEX_FOLDERS_Utilities::update_folder_counts();
 }
 

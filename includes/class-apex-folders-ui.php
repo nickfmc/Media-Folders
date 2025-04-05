@@ -50,19 +50,19 @@ class APEX_FOLDERS_UI {
         $parent_folders = $organized['parents'];
         $child_folders = $organized['children'];
         
-        echo '<div class="media-folder-filter">';
+        echo '<div class="apex-folder-filter">';
         echo '<h3>Apex Folders</h3>';
-        echo '<ul class="media-folder-list">';
+        echo '<ul class="apex-folder-list">';
         
         // Add "All Files" option
-        $class = !isset($_GET['media_folder']) ? 'current' : '';
+        $class = !isset($_GET['apex_folder']) ? 'current' : '';
         echo '<li class="' . $class . ' all-files"><a href="' . admin_url('upload.php') . '">All Files</a></li>';
         
         // Add Unassigned folder immediately after All Files
         if ($unassigned_folder) {
-            $class = isset($_GET['media_folder']) && $_GET['media_folder'] === $unassigned_folder->slug ? 'current' : '';
+            $class = isset($_GET['apex_folder']) && $_GET['apex_folder'] === $unassigned_folder->slug ? 'current' : '';
             echo '<li class="' . $class . ' unassigned-folder" data-folder-id="' . $unassigned_folder->term_id . '">';
-            echo '<a href="' . admin_url('upload.php?media_folder=' . $unassigned_folder->slug) . '">' . $unassigned_folder->name . ' (' . $unassigned_folder->count . ')</a>';
+            echo '<a href="' . admin_url('upload.php?apex_folder=' . $unassigned_folder->slug) . '">' . $unassigned_folder->name . ' (' . $unassigned_folder->count . ')</a>';
             echo '</li>';
         }
         
@@ -71,11 +71,11 @@ class APEX_FOLDERS_UI {
         
         // Add parent folders and their children
         foreach ($parent_folders as $folder) {
-            $class = isset($_GET['media_folder']) && $_GET['media_folder'] === $folder->slug ? 'current' : '';
+            $class = isset($_GET['apex_folder']) && $_GET['apex_folder'] === $folder->slug ? 'current' : '';
             $has_children = isset($child_folders[$folder->term_id]) && !empty($child_folders[$folder->term_id]);
             
             echo '<li class="' . $class . ' custom-folder parent-folder' . ($has_children ? ' has-children' : '') . '" data-folder-id="' . $folder->term_id . '">';
-            echo '<a href="' . admin_url('upload.php?media_folder=' . $folder->slug) . '">' . $folder->name . ' (' . $folder->count . ')</a>';
+            echo '<a href="' . admin_url('upload.php?apex_folder=' . $folder->slug) . '">' . $folder->name . ' (' . $folder->count . ')</a>';
             echo '<span class="edit-folder dashicons dashicons-edit" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '" title="Edit folder"></span>';
             echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $folder->term_id . '" data-folder-name="' . esc_attr($folder->name) . '"></span>';
             
@@ -87,11 +87,11 @@ class APEX_FOLDERS_UI {
             // Display children if any
             if ($has_children) {
                 foreach ($child_folders[$folder->term_id] as $child) {
-                    $child_class = isset($_GET['media_folder']) && $_GET['media_folder'] === $child->slug ? 'current' : '';
+                    $child_class = isset($_GET['apex_folder']) && $_GET['apex_folder'] === $child->slug ? 'current' : '';
                     
                     echo '<li class="' . $child_class . ' custom-folder child-folder" data-folder-id="' . $child->term_id . '" data-parent-id="' . $folder->term_id . '">';
                     echo '<span class="child-indicator">└─</span>';
-                    echo '<a href="' . admin_url('upload.php?media_folder=' . $child->slug) . '">' . $child->name . ' (' . $child->count . ')</a>';
+                    echo '<a href="' . admin_url('upload.php?apex_folder=' . $child->slug) . '">' . $child->name . ' (' . $child->count . ')</a>';
                     echo '<span class="edit-folder dashicons dashicons-edit" data-folder-id="' . $child->term_id . '" data-folder-name="' . esc_attr($child->name) . '" title="Edit folder"></span>';
                     echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . $child->term_id . '" data-folder-name="' . esc_attr($child->name) . '"></span>';
                     echo '</li>';
@@ -121,7 +121,7 @@ class APEX_FOLDERS_UI {
         
         // Pass data to our scripts
         $folders_data = array(
-            'currentFolder' => isset($_GET['media_folder']) ? sanitize_text_field($_GET['media_folder']) : null,
+            'currentFolder' => isset($_GET['apex_folder']) ? sanitize_text_field($_GET['apex_folder']) : null,
             'nonce' => wp_create_nonce('APEX_FOLDERS_nonce'),
             'slugNonce' => wp_create_nonce('APEX_FOLDERS_get_slug'),
             'parentFolders' => array_map(function($folder) {
@@ -150,12 +150,12 @@ class APEX_FOLDERS_UI {
      */
     public function add_folder_fields($form_fields, $post) {
         $folders = get_terms(array(
-            'taxonomy' => 'media_folder',
+            'taxonomy' => 'apex_folder',
             'hide_empty' => false,
         ));
         
         // Get the current folder term
-        $current_folders = wp_get_object_terms($post->ID, 'media_folder');
+        $current_folders = wp_get_object_terms($post->ID, 'apex_folder');
         $current_folder_id = (!empty($current_folders) && !is_wp_error($current_folders)) ? $current_folders[0]->term_id : APEX_FOLDERS_get_unassigned_id();
         
         // Organize folders by hierarchy
@@ -173,7 +173,7 @@ class APEX_FOLDERS_UI {
             }
         }
         
-        $dropdown = '<select name="attachments[' . $post->ID . '][media_folder]" id="attachments-' . $post->ID . '-media_folder">';
+        $dropdown = '<select name="attachments[' . $post->ID . '][apex_folder]" id="attachments-' . $post->ID . '-apex_folder">';
         
         // Add unassigned folder first
         if ($unassigned_folder) {
@@ -233,7 +233,7 @@ class APEX_FOLDERS_UI {
         
         $dropdown .= '</select>';
         
-        $form_fields['media_folder'] = array(
+        $form_fields['apex_folder'] = array(
             'label' => 'Folder',
             'input' => 'html',
             'html' => $dropdown,
@@ -251,29 +251,29 @@ class APEX_FOLDERS_UI {
      * @return array Modified post data
      */
     public function save_folder_assignment($post, $attachment) {
-        global $is_processing_media_folder;
+        global $is_processing_apex_folder;
         
         // If already processing or no folder specified, return
-        if ($is_processing_media_folder || !isset($attachment['media_folder'])) {
+        if ($is_processing_apex_folder || !isset($attachment['apex_folder'])) {
             return $post;
         }
         
-        $is_processing_media_folder = true;
+        $is_processing_apex_folder = true;
         
         try {
-            $folder_id = intval($attachment['media_folder']);
+            $folder_id = intval($attachment['apex_folder']);
             $post_id = $post['ID'];
             
             // Remove existing terms
-            wp_delete_object_term_relationships($post_id, 'media_folder');
+            wp_delete_object_term_relationships($post_id, 'apex_folder');
             
             if ($folder_id > 0) {
                 // Set the term to the selected folder
-                wp_set_object_terms($post_id, array($folder_id), 'media_folder', false);
+                wp_set_object_terms($post_id, array($folder_id), 'apex_folder', false);
             } else {
                 // If no folder or "0" selected, assign to Unassigned folder
                 $unassigned_id = APEX_FOLDERS_get_unassigned_id();
-                wp_set_object_terms($post_id, array($unassigned_id), 'media_folder', false);
+                wp_set_object_terms($post_id, array($unassigned_id), 'apex_folder', false);
             }
 
             // Add JavaScript to force refresh
@@ -302,7 +302,7 @@ class APEX_FOLDERS_UI {
             });
 
         } finally {
-            $is_processing_media_folder = false;
+            $is_processing_apex_folder = false;
         }
         
         return $post;

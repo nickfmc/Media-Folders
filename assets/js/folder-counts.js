@@ -23,7 +23,7 @@ jQuery(document).ready(function($) {
                     var folderChildren = {};
                     
                     // First pass - identify parent-child relationships
-                    jQuery('.media-folder-list li.child-folder').each(function() {
+                    jQuery('.apex-folder-list li.child-folder').each(function() {
                         var $child = jQuery(this);
                         var childId = $child.data('folder-id');
                         var parentId = $child.data('parent-id');
@@ -37,7 +37,7 @@ jQuery(document).ready(function($) {
                     });
                     
                     // Update all folder counts in the sidebar
-                    jQuery('.media-folder-list li').each(function() {
+                    jQuery('.apex-folder-list li').each(function() {
                         var $this = jQuery(this);
                         var folderId = $this.data('folder-id');
                         
@@ -137,7 +137,7 @@ jQuery(document).ready(function($) {
     }
 
     // Listen for attachment updates
-    $(document).on('change', 'select[name^="attachments"][name$="[media_folder]"]', function() {
+    $(document).on('change', 'select[name^="attachments"][name$="[apex_folder]"]', function() {
         var $select = $(this);
         var newValue = $select.val();
         var originalValue = $select.find('option:selected').data('original-value');

@@ -45,7 +45,7 @@ class APEX_FOLDERS_Upload {
         
         // Get folders for the dropdown
         $folders = get_terms(array(
-            'taxonomy' => 'media_folder',
+            'taxonomy' => 'apex_folder',
             'hide_empty' => false,
         ));
         
@@ -57,9 +57,9 @@ class APEX_FOLDERS_Upload {
         $unassigned_id = APEX_FOLDERS_get_unassigned_id();
         
         // Build the dropdown HTML
-        $dropdown_html = '<div class="media-folder-select-container upload-filter-section">';
-        $dropdown_html .= '<label for="media-folder-select">Folder:</label>';
-        $dropdown_html .= '<select id="media-folder-select" name="media-folder-select">';
+        $dropdown_html = '<div class="apex-folder-select-container upload-filter-section">';
+        $dropdown_html .= '<label for="apex-folder-select">Folder:</label>';
+        $dropdown_html .= '<select id="apex-folder-select" name="apex-folder-select">';
         $dropdown_html .= '<option value="' . esc_attr($unassigned_id) . '">Unassigned</option>';
         
         foreach ($folders as $folder) {
@@ -90,7 +90,7 @@ class APEX_FOLDERS_Upload {
             'apex-folders-uploader',
             'MediaFolderUploaderData',
             array(
-                'currentFolder' => isset($_GET['media_folder']) ? sanitize_text_field($_GET['media_folder']) : null,
+                'currentFolder' => isset($_GET['apex_folder']) ? sanitize_text_field($_GET['apex_folder']) : null,
                 'dropdownHtml' => $dropdown_html,
                 'folderNonce' => wp_create_nonce('APEX_FOLDERS_nonce'),
                 'unassignedId' => $unassigned_id
@@ -113,30 +113,30 @@ class APEX_FOLDERS_Upload {
         $source = 'unknown';
         
         // Check various parameter names
-        if (isset($_POST['media_folder_id'])) {
-            $folder_id = intval($_POST['media_folder_id']);
-            $source = 'POST media_folder_id';
+        if (isset($_POST['apex_folder_id'])) {
+            $folder_id = intval($_POST['apex_folder_id']);
+            $source = 'POST apex_folder_id';
         } 
-        elseif (isset($_POST['media-folder-select'])) {
-            $folder_id = intval($_POST['media-folder-select']);
-            $source = 'POST media-folder-select';
+        elseif (isset($_POST['apex-folder-select'])) {
+            $folder_id = intval($_POST['apex-folder-select']);
+            $source = 'POST apex-folder-select';
         }
         
         // If not in POST, try REQUEST (which combines GET, POST, COOKIE)
         if (!$folder_id) {
-            if (isset($_REQUEST['media_folder_id'])) {
-                $folder_id = intval($_REQUEST['media_folder_id']);
-                $source = 'REQUEST media_folder_id';
+            if (isset($_REQUEST['apex_folder_id'])) {
+                $folder_id = intval($_REQUEST['apex_folder_id']);
+                $source = 'REQUEST apex_folder_id';
             }
-            elseif (isset($_REQUEST['media-folder-select'])) {
-                $folder_id = intval($_REQUEST['media-folder-select']);
-                $source = 'REQUEST media-folder-select';
+            elseif (isset($_REQUEST['apex-folder-select'])) {
+                $folder_id = intval($_REQUEST['apex-folder-select']);
+                $source = 'REQUEST apex-folder-select';
             }
         }
         
         // Cookie fallback
-        if (!$folder_id && isset($_COOKIE['media_folder_upload_id'])) {
-            $folder_id = intval($_COOKIE['media_folder_upload_id']);
+        if (!$folder_id && isset($_COOKIE['apex_folder_upload_id'])) {
+            $folder_id = intval($_COOKIE['apex_folder_upload_id']);
             $source = 'COOKIE';
         }
         
@@ -149,10 +149,10 @@ class APEX_FOLDERS_Upload {
         error_log("Found folder ID {$folder_id} from {$source} for file: {$file['name']}");
         
         // Store this in a transient for later retrieval
-        set_transient('media_folder_for_' . sanitize_file_name($file['name']), $folder_id, 5 * MINUTE_IN_SECONDS);
+        set_transient('apex_folder_for_' . sanitize_file_name($file['name']), $folder_id, 5 * MINUTE_IN_SECONDS);
         
         // Also store in a global request variable to ensure it's available elsewhere
-        $_REQUEST['media_folder_id'] = $folder_id;
+        $_REQUEST['apex_folder_id'] = $folder_id;
         
         return $file;
     }
@@ -177,31 +177,31 @@ class APEX_FOLDERS_Upload {
         $source = 'unknown';
         
         // 1. Check POST data directly with additional fallbacks
-        if (isset($_POST['media_folder_id'])) {
-            $folder_id = intval($_POST['media_folder_id']);
-            $source = 'POST media_folder_id';
+        if (isset($_POST['apex_folder_id'])) {
+            $folder_id = intval($_POST['apex_folder_id']);
+            $source = 'POST apex_folder_id';
         } 
-        elseif (isset($_POST['media-folder-select'])) {
-            $folder_id = intval($_POST['media-folder-select']);
+        elseif (isset($_POST['apex-folder-select'])) {
+            $folder_id = intval($_POST['apex-folder-select']);
             $source = 'POST select dropdown';
         }
         
         // 2. If that failed, try the transient
         if (!$folder_id) {
-            $folder_id = get_transient('media_folder_for_' . sanitize_file_name($filename));
+            $folder_id = get_transient('apex_folder_for_' . sanitize_file_name($filename));
             if ($folder_id) $source = 'transient';
         }
         
         // 3. Try the cookie as a backup
-        if (!$folder_id && isset($_COOKIE['media_folder_upload_id'])) {
-            $folder_id = intval($_COOKIE['media_folder_upload_id']);
+        if (!$folder_id && isset($_COOKIE['apex_folder_upload_id'])) {
+            $folder_id = intval($_COOKIE['apex_folder_upload_id']);
             $source = 'cookie';
         }
         
         // 4. If we still have no folder, use the URL query parameter if present
-        if (!$folder_id && isset($_GET['media_folder'])) {
+        if (!$folder_id && isset($_GET['apex_folder'])) {
             // Convert slug to ID
-            $term = get_term_by('slug', sanitize_text_field($_GET['media_folder']), 'media_folder');
+            $term = get_term_by('slug', sanitize_text_field($_GET['apex_folder']), 'apex_folder');
             if ($term && !is_wp_error($term)) {
                 $folder_id = $term->term_id;
                 $source = 'URL param';
@@ -219,17 +219,17 @@ class APEX_FOLDERS_Upload {
         // If we have a valid folder ID and it exists, assign the attachment to it
         if ($folder_id > 0) {
             // Verify the folder exists
-            $term = get_term($folder_id, 'media_folder');
+            $term = get_term($folder_id, 'apex_folder');
             if (!is_wp_error($term) && $term) {
                 // Assign to folder - use both methods for redundancy
-                wp_set_object_terms($attachment_id, array($folder_id), 'media_folder', false);
+                wp_set_object_terms($attachment_id, array($folder_id), 'apex_folder', false);
                 error_log("Assigned attachment ID $attachment_id to folder ID $folder_id ({$term->name})");
                 
                 // Also use direct database access as a backup approach
                 global $wpdb;
                 $tt_id = $wpdb->get_var($wpdb->prepare(
                     "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-                     WHERE term_id = %d AND taxonomy = 'media_folder'",
+                     WHERE term_id = %d AND taxonomy = 'apex_folder'",
                     $folder_id
                 ));
                 
@@ -251,17 +251,17 @@ class APEX_FOLDERS_Upload {
                 }
                 
                 // Update term counts
-                theme_update_media_folder_counts();
+                theme_update_apex_folder_counts();
             } else {
                 // Folder doesn't exist, use Unassigned
                 $unassigned_id = APEX_FOLDERS_get_unassigned_id();
-                wp_set_object_terms($attachment_id, array($unassigned_id), 'media_folder', false);
+                wp_set_object_terms($attachment_id, array($unassigned_id), 'apex_folder', false);
                 error_log("Folder ID $folder_id doesn't exist, using Unassigned ($unassigned_id)");
             }
         }
         
         // Clean up the transient
-        delete_transient('media_folder_for_' . sanitize_file_name($filename));
+        delete_transient('apex_folder_for_' . sanitize_file_name($filename));
     }
     
     /**
@@ -275,16 +275,16 @@ class APEX_FOLDERS_Upload {
         $folder_id = 0;
         
         // First try the direct POST/GET variables
-        if (isset($_REQUEST['media_folder_id'])) {
-            $folder_id = intval($_REQUEST['media_folder_id']);
+        if (isset($_REQUEST['apex_folder_id'])) {
+            $folder_id = intval($_REQUEST['apex_folder_id']);
         }
         // Second, try from the dropdown in the uploader
-        elseif (isset($_REQUEST['media-folder-select'])) {
-            $folder_id = intval($_REQUEST['media-folder-select']);
+        elseif (isset($_REQUEST['apex-folder-select'])) {
+            $folder_id = intval($_REQUEST['apex-folder-select']);
         }
         // Finally check cookie
-        elseif (isset($_COOKIE['media_folder_upload_id'])) {
-            $folder_id = intval($_COOKIE['media_folder_upload_id']);
+        elseif (isset($_COOKIE['apex_folder_upload_id'])) {
+            $folder_id = intval($_COOKIE['apex_folder_upload_id']);
         }
         
         // If still no folder ID, use the unassigned folder
@@ -293,13 +293,13 @@ class APEX_FOLDERS_Upload {
         }
         
         // Add our custom folder param
-        $plupload_init['multipart_params']['media_folder_id'] = $folder_id;
+        $plupload_init['multipart_params']['apex_folder_id'] = $folder_id;
         
         // Log what we're doing for debugging
-        error_log('Setting plupload media_folder_id to: ' . $folder_id . ' (Source: ' . 
-                (isset($_REQUEST['media_folder_id']) ? 'REQUEST' : 
-                 (isset($_REQUEST['media-folder-select']) ? 'SELECT' : 
-                  (isset($_COOKIE['media_folder_upload_id']) ? 'COOKIE' : 'DEFAULT'))) . ')');
+        error_log('Setting plupload apex_folder_id to: ' . $folder_id . ' (Source: ' . 
+                (isset($_REQUEST['apex_folder_id']) ? 'REQUEST' : 
+                 (isset($_REQUEST['apex-folder-select']) ? 'SELECT' : 
+                  (isset($_COOKIE['apex_folder_upload_id']) ? 'COOKIE' : 'DEFAULT'))) . ')');
         
         return $plupload_init;
     }
