@@ -88,7 +88,7 @@ class apex_folder_Drag_Drop {
         // Check permissions
         if (!current_user_can('upload_files')) {
             wp_send_json_error(array(
-                'message' => __('You do not have permission to move files.', 'apex-folders')
+                'message' => esc_html__('You do not have permission to move files.', 'apex-folders')
             ));
             return;
         }
@@ -97,10 +97,17 @@ class apex_folder_Drag_Drop {
         $attachment_ids = isset($_POST['attachment_ids']) ? $_POST['attachment_ids'] : array();
         $folder_id = isset($_POST['folder_id']) ? intval($_POST['folder_id']) : 0;
         
+        // Sanitize attachment IDs array 
+        if (is_array($attachment_ids)) {
+            $attachment_ids = array_map('intval', $attachment_ids);
+        } else {
+            $attachment_ids = array();
+        }
+        
         // Validate data
-        if (empty($attachment_ids) || !is_array($attachment_ids)) {
+        if (empty($attachment_ids)) {
             wp_send_json_error(array(
-                'message' => __('No files selected to move.', 'apex-folders')
+                'message' => esc_html__('No files selected to move.', 'apex-folders')
             ));
             return;
         }

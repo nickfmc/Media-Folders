@@ -33,6 +33,10 @@ class APEX_FOLDERS_Admin {
         
         // Handle rebuilding unassigned folder
         add_action('admin_init', array($this, 'handle_rebuild_unassigned'));
+
+        // Register settings for plugin cleanup
+        add_action('admin_init', array($this, 'register_settings'));
+
     }
     
     /**
@@ -61,56 +65,55 @@ class APEX_FOLDERS_Admin {
     /**
      * Debug folder content
      */
-    public function debug_folder_content() {
-        $screen = get_current_screen();
-        if ($screen->base !== 'upload') return;
+
+public function debug_folder_content() {
+    $screen = get_current_screen();
+    if ($screen->base !== 'upload') return;
+    
+    if (isset($_GET['debug_folders']) && current_user_can('manage_options')) {
+        global $wpdb;
         
-        if (isset($_GET['debug_folders']) && current_user_can('manage_options')) {
-            global $wpdb;
-            
-            $output = '<div class="notice notice-info"><p><strong>Media Folders Debug:</strong></p><ul>';
-            
-            // Check all folder terms
-            $folders = get_terms(array(
-                'taxonomy' => 'apex_folder',
-                'hide_empty' => false,
+        // IMPROVED: Use wp_kses for HTML in admin notices
+        $output = '<div class="notice notice-info"><p><strong>' . esc_html__('Media Folders Debug:', 'apex-folders') . '</strong></p><ul>';
+        
+        // Check all folder terms
+        $folders = get_terms(array(
+            'taxonomy' => 'apex_folder',
+            'hide_empty' => false,
+        ));
+        
+        foreach ($folders as $folder) {
+            // Count using SQL to avoid caching issues
+            $count = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->term_relationships} tr
+                JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                JOIN {$wpdb->posts} p ON p.ID = tr.object_id
+                WHERE tt.term_id = %d AND p.post_type = 'attachment'",
+                $folder->term_id
             ));
             
-            foreach ($folders as $folder) {
-                // Count using SQL to avoid caching issues
-                $count = $wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$wpdb->term_relationships} tr
-                    JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                    JOIN {$wpdb->posts} p ON p.ID = tr.object_id
-                    WHERE tt.term_id = %d AND p.post_type = 'attachment'",
-                    $folder->term_id
-                ));
-                
-                // Get a sample of attachments
-                $attachments = $wpdb->get_col($wpdb->prepare(
-                    "SELECT p.ID FROM {$wpdb->posts} p
-                    JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
-                    JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                    WHERE tt.term_id = %d AND p.post_type = 'attachment'
-                    LIMIT 5",
-                    $folder->term_id
-                ));
-                
-                $output .= sprintf(
-                    '<li><strong>%s</strong> (ID: %d, Slug: %s): %d items. Sample IDs: %s</li>',
-                    esc_html($folder->name),
-                    $folder->term_id,
-                    $folder->slug,
-                    $count,
-                    implode(', ', $attachments)
-                );
-            }
-            
-            $output .= '</ul></div>';
-            
-            echo $output;
+            // IMPROVED: Escape all data before output
+            $output .= sprintf(
+                '<li><strong>%s</strong> (ID: %d, Slug: %s): %d items</li>',
+                esc_html($folder->name),
+                intval($folder->term_id),
+                esc_html($folder->slug),
+                intval($count)
+            );
         }
+        
+        $output .= '</ul></div>';
+        
+        // IMPROVED: Use wp_kses to allow only specific HTML
+        echo wp_kses($output, array(
+            'div' => array('class' => array()),
+            'p' => array(),
+            'strong' => array(),
+            'ul' => array(),
+            'li' => array(),
+        ));
     }
+}
     
     /**
      * Debug unassigned folder
@@ -241,6 +244,64 @@ class APEX_FOLDERS_Admin {
             });
         }
     }
+
+
+/**
+ * Register plugin settings
+ */
+public function register_settings() {
+    // Register a new settings section
+    add_settings_section(
+        'apex_folders_settings',
+        __('Apex Folders Settings', 'apex-folders'),
+        array($this, 'render_settings_section'),
+        'media'
+    );
+    
+    // Register the uninstall setting
+    register_setting(
+        'media',
+        'apex_folders_remove_all_data',
+        array(
+            'type' => 'boolean',
+            'sanitize_callback' => 'rest_sanitize_boolean',
+            'default' => false,
+        )
+    );
+    
+    // Add the field
+    add_settings_field(
+        'apex_folders_remove_all_data',
+        __('Plugin Cleanup', 'apex-folders'),
+        array($this, 'render_remove_data_field'),
+        'media',
+        'apex_folders_settings'
+    );
+}
+
+/**
+ * Render the settings section description
+ */
+public function render_settings_section() {
+    echo '<p>' . esc_html__('Configure settings for the Apex Folders plugin.', 'apex-folders') . '</p>';
+}
+
+/**
+ * Render the field for remove data option
+ */
+public function render_remove_data_field() {
+    $value = get_option('apex_folders_remove_all_data', false);
+    ?>
+    <label for="apex_folders_remove_all_data">
+        <input type="checkbox" id="apex_folders_remove_all_data" name="apex_folders_remove_all_data" value="1" <?php checked($value, true); ?>>
+        <?php esc_html_e('Remove all folder data when plugin is uninstalled', 'apex-folders'); ?>
+    </label>
+    <p class="description" style="color: #d63638;">
+        <?php esc_html_e('Warning: When enabled, all your media folders and organization structure will be permanently deleted if you uninstall this plugin.', 'apex-folders'); ?>
+    </p>
+    <?php
+}
+
 }
 
 // Initialize the class

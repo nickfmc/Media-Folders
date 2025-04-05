@@ -39,10 +39,10 @@ class APEX_FOLDERS_UI {
         if ($screen->base !== 'upload') return;
         
         // Check if we're in list view - if so, don't show the folders
-        $mode = isset($_GET['mode']) ? $_GET['mode'] : '';
-        if ($mode === 'list') {
-            return; // Exit early if in list view
-        }
+    $mode = isset($_GET['mode']) ? sanitize_text_field($_GET['mode']) : '';
+    if ($mode === 'list') {
+        return; // Exit early if in list view
+    }
 
         // Get organized folders using the utility class
         $organized = APEX_FOLDERS_Utilities::get_organized_folders();
@@ -51,18 +51,18 @@ class APEX_FOLDERS_UI {
         $child_folders = $organized['children'];
         
         echo '<div class="apex-folder-filter">';
-        echo '<h3>Apex Folders</h3>';
+        echo '<h3>' . esc_html__('Apex Folders', 'apex-folders') . '</h3>';
         echo '<ul class="apex-folder-list">';
         
         // Add "All Files" option
-        $class = !isset($_GET['apex_folder']) ? 'current' : '';
-        echo '<li class="' . $class . ' all-files"><a href="' . admin_url('upload.php') . '">All Files</a></li>';
+    $class = !isset($_GET['apex_folder']) ? 'current' : '';
+    echo '<li class="' . esc_attr($class) . ' all-files"><a href="' . esc_url(admin_url('upload.php')) . '">' . esc_html__('All Files', 'apex-folders') . '</a></li>';
         
         // Add Unassigned folder immediately after All Files
         if ($unassigned_folder) {
-            $class = isset($_GET['apex_folder']) && $_GET['apex_folder'] === $unassigned_folder->slug ? 'current' : '';
-            echo '<li class="' . $class . ' unassigned-folder" data-folder-id="' . $unassigned_folder->term_id . '">';
-            echo '<a href="' . admin_url('upload.php?apex_folder=' . $unassigned_folder->slug) . '">' . $unassigned_folder->name . ' (' . $unassigned_folder->count . ')</a>';
+            $class = isset($_GET['apex_folder']) && sanitize_text_field($_GET['apex_folder']) === $unassigned_folder->slug ? 'current' : '';
+            echo '<li class="' . esc_attr($class) . ' unassigned-folder" data-folder-id="' . intval($unassigned_folder->term_id) . '">';
+            echo '<a href="' . esc_url(admin_url('upload.php?apex_folder=' . $unassigned_folder->slug)) . '">' . esc_html($unassigned_folder->name) . ' (' . intval($unassigned_folder->count) . ')</a>';
             echo '</li>';
         }
         

@@ -48,8 +48,9 @@ class APEX_FOLDERS_Query {
                 $term = get_term_by('slug', $folder_slug, 'apex_folder');
                 
                 if ($term) {
-                    // Add debug information
-                    error_log("Filtering by folder: {$term->name} (ID: {$term->term_id})");
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("Filtering by folder: {$term->name} (ID: {$term->term_id})");
+                    }
                     
                     // Add explicit tax query
                     $query->set('tax_query', array(
@@ -62,11 +63,14 @@ class APEX_FOLDERS_Query {
                         ),
                     ));
                     
-                    // Add helpful debug
-                    $sql = $query->request;
-                    error_log("SQL query: $sql");
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        $sql = $query->request;
+                        error_log("SQL query: $sql");
+                    }
                 } else {
-                    error_log("Error: Media folder term not found for slug: {$folder_slug}");
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("Error: Media folder term not found for slug: {$folder_slug}");
+                    }
                 }
             }
         }
@@ -110,7 +114,9 @@ class APEX_FOLDERS_Query {
             // Convert string IDs to integers
             $folder_id = intval($folder_id);
             
-            error_log('Processing folder ID: ' . $folder_id);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Processing folder ID: ' . $folder_id);
+            }
             
             // Skip empty folder IDs
             if (!$folder_id) {

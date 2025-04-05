@@ -21,11 +21,11 @@ class APEX_FOLDERS_AJAX_Handler {
      */
     public function __construct() {
         // Register AJAX handlers
-        add_action('wp_ajax_theme_rename_apex_folder', array($this, 'rename_apex_folder'));
-        add_action('wp_ajax_theme_delete_apex_folder', array($this, 'delete_apex_folder'));
+        add_action('wp_ajax_apex_folders_rename_apex_folder', array($this, 'rename_apex_folder'));
+        add_action('wp_ajax_apex_folders_delete_apex_folder', array($this, 'delete_apex_folder'));
         add_action('wp_ajax_get_folder_slug', array($this, 'get_folder_slug'));
-        add_action('wp_ajax_theme_add_apex_folder', array($this, 'add_apex_folder'));
-        add_action('wp_ajax_theme_get_folder_counts', array($this, 'get_folder_counts'));
+        add_action('wp_ajax_apex_folders_add_apex_folder', array($this, 'add_apex_folder'));
+        add_action('wp_ajax_apex_folders_get_folder_counts', array($this, 'get_folder_counts'));
         add_action('wp_ajax_upload-attachment', array($this, 'async_upload'), 1);
     }
 
@@ -154,14 +154,15 @@ class APEX_FOLDERS_AJAX_Handler {
             wp_send_json_error();
         }
         
+        // Ensure folder_id is sanitized with intval()
         $folder_id = isset($_POST['folder_id']) ? intval($_POST['folder_id']) : 0;
         
         if ($folder_id) {
             $term = get_term($folder_id, 'apex_folder');
             if ($term && !is_wp_error($term)) {
                 wp_send_json_success(array(
-                    'slug' => $term->slug,
-                    'name' => $term->name
+                    'slug' => sanitize_text_field($term->slug),
+                    'name' => sanitize_text_field($term->name)
                 ));
             }
         }
@@ -181,6 +182,11 @@ class APEX_FOLDERS_AJAX_Handler {
         
         $folder_name = sanitize_text_field($_POST['folder_name']);
         $parent_id = isset($_POST['parent_id']) ? intval($_POST['parent_id']) : 0;
+
+        if (empty($folder_name)) {
+            wp_send_json_error(array('message' => 'Folder name cannot be empty'));
+            return;
+        }
         
         // Ensure parent folder exists if specified
         if ($parent_id > 0) {

@@ -11,7 +11,7 @@ jQuery(document).ready(function($) {
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'theme_get_folder_counts',
+                action: 'apex_folders_get_folder_counts',
                 nonce: apexFolderData.nonce
             },
             success: function(response) {

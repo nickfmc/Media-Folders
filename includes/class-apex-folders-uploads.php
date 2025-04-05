@@ -106,7 +106,9 @@ class APEX_FOLDERS_Upload {
      */
     public function handle_upload($file) {
         // For debugging
-        error_log('Upload handler called for file: ' . $file['name']);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Upload handler called for file: ' . sanitize_text_field($file['name']));
+        }
         
         // Check all possible sources for the folder ID
         $folder_id = 0;
@@ -134,11 +136,11 @@ class APEX_FOLDERS_Upload {
             }
         }
         
-        // Cookie fallback
-        if (!$folder_id && isset($_COOKIE['apex_folder_upload_id'])) {
-            $folder_id = intval($_COOKIE['apex_folder_upload_id']);
-            $source = 'COOKIE';
-        }
+    // Cookie fallback with sanitization
+    if (!$folder_id && isset($_COOKIE['apex_folder_upload_id'])) {
+        $folder_id = intval($_COOKIE['apex_folder_upload_id']);
+        $source = 'COOKIE';
+    }
         
         // If we still don't have a folder ID, use unassigned
         if (!$folder_id) {

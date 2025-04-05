@@ -15,7 +15,7 @@ window.updateFolderCounts = function() {
         url: ajaxurl,
         type: 'POST',
         data: {
-            action: 'theme_get_folder_counts'
+            action: 'apex_folders_get_folder_counts'
         },
         success: function(response) {
             if (response.success && response.data) {                
