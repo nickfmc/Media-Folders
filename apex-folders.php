@@ -22,7 +22,7 @@ define('MEDIA_FOLDERS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MEDIA_FOLDERS_VERSION', '0.9.0');
  
 // Includes
-require_once MEDIA_FOLDERS_PLUGIN_DIR . 'class-folder-drag-drop.php';
+require_once MEDIA_FOLDERS_PLUGIN_DIR . 'includes/class-folder-drag-drop.php';
 require_once MEDIA_FOLDERS_PLUGIN_DIR . 'includes/class-media-folders-unassigned.php';
 require_once MEDIA_FOLDERS_PLUGIN_DIR . 'includes/class-media-folders-utilities.php';
 require_once MEDIA_FOLDERS_PLUGIN_DIR . 'includes/class-ajax-handler.php';
