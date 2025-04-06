@@ -65,7 +65,7 @@ class APEX_FOLDERS_Drag_Drop {
                 'nonce' => wp_create_nonce( 'APEX_FOLDERS_drag_drop_nonce' ),
                 'ajaxUrl' => admin_url( 'admin-ajax.php' ),
                 'moveItemsAction' => 'apex_folder_move_items',
-                'unassignedFolderId' => APEX_FOLDERS_get_unassigned_id(),
+                'unassignedFolderId' => apex_folders_get_unassigned_id(),
                 'i18n' => array(
                     'movingItem' => esc_html__( 'Moving item', 'apex-folders' ),
                     'movingItems' => esc_html__( 'Moving items', 'apex-folders' ),
@@ -160,7 +160,7 @@ class APEX_FOLDERS_Drag_Drop {
         }
         
         // Update folder counts
-        APEX_FOLDERS_update_counts();
+        apex_folders_update_counts();
         
         // Prepare the response
         if ( $success_count > 0 ) {

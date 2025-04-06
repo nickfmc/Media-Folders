@@ -177,7 +177,7 @@ class APEX_FOLDERS_UI {
         
         // Get the current folder term
         $current_folders = wp_get_object_terms( $post->ID, 'apex_folder' );
-        $current_folder_id = ( ! empty( $current_folders ) && ! is_wp_error( $current_folders ) ) ? $current_folders[0]->term_id : APEX_FOLDERS_get_unassigned_id();
+        $current_folder_id = ( ! empty( $current_folders ) && ! is_wp_error( $current_folders ) ) ? $current_folders[0]->term_id : apex_folders_get_unassigned_id();
         
         // Organize folders by hierarchy
         $unassigned_folder = null;
@@ -185,7 +185,7 @@ class APEX_FOLDERS_UI {
         $child_folders = array();
         
         foreach ( $folders as $folder ) {
-            if ( $folder->term_id == APEX_FOLDERS_get_unassigned_id() ) {
+            if ( $folder->term_id == apex_folders_get_unassigned_id() ) {
                 $unassigned_folder = $folder;
             } elseif ( $folder->parent == 0 ) {
                 $parent_folders[] = $folder;
@@ -297,7 +297,7 @@ class APEX_FOLDERS_UI {
                 wp_set_object_terms( $post_id, array( $folder_id ), 'apex_folder', false );
             } else {
                 // If no folder or "0" selected, assign to Unassigned folder
-                $unassigned_id = APEX_FOLDERS_get_unassigned_id();
+                $unassigned_id = apex_folders_get_unassigned_id();
                 wp_set_object_terms( $post_id, array( $unassigned_id ), 'apex_folder', false );
             }
 

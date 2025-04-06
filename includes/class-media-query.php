@@ -174,7 +174,7 @@ class APEX_FOLDERS_Query {
     public function set_object_terms_callback( $object_id, $terms, $tt_ids, $taxonomy, $append, $old_tt_ids ) {
         if ( $taxonomy === 'apex_folder' ) {
             // Schedule a deferred count update to ensure it happens after WordPress completes its operations
-            wp_schedule_single_event( time() + 2, 'APEX_FOLDERS_update_counts_event' );
+            wp_schedule_single_event( time() + 2, 'apex_folders_update_counts_event' );
         }
     }
     
@@ -182,7 +182,7 @@ class APEX_FOLDERS_Query {
      * Register folder count event
      */
     public function register_folder_count_event() {
-        add_action( 'APEX_FOLDERS_update_counts_event', 'APEX_FOLDERS_update_counts' );
+        add_action( 'apex_folders_update_counts_event', 'apex_folders_update_counts' );
     }
 }
 

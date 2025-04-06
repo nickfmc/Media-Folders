@@ -54,7 +54,7 @@ class APEX_FOLDERS_Upload {
             return;
         }
 
-        $unassigned_id = APEX_FOLDERS_get_unassigned_id();
+        $unassigned_id = apex_folders_get_unassigned_id();
         
         // Build the dropdown HTML
         $dropdown_html  = '<div class="apex-folder-select-container upload-filter-section">';
@@ -147,7 +147,7 @@ class APEX_FOLDERS_Upload {
         
         // If we still don't have a folder ID, use unassigned
         if ( ! $folder_id ) {
-            $folder_id = APEX_FOLDERS_get_unassigned_id();
+            $folder_id = apex_folders_get_unassigned_id();
             $source    = 'DEFAULT (unassigned)';
         }
         
@@ -220,7 +220,7 @@ class APEX_FOLDERS_Upload {
         
         // If still no folder, use unassigned
         if ( ! $folder_id ) {
-            $folder_id = APEX_FOLDERS_get_unassigned_id();
+            $folder_id = apex_folders_get_unassigned_id();
             $source    = 'default (unassigned)';
         }
         
@@ -273,10 +273,10 @@ class APEX_FOLDERS_Upload {
                 }
                 
                 // Update term counts
-                APEX_FOLDERS_update_counts();
+                apex_folders_update_counts();
             } else {
                 // Folder doesn't exist, use Unassigned
-                $unassigned_id = APEX_FOLDERS_get_unassigned_id();
+                $unassigned_id = apex_folders_get_unassigned_id();
                 wp_set_object_terms( $attachment_id, array( $unassigned_id ), 'apex_folder', false );
                 
                 // translators: %1$d: folder ID that doesn't exist, %2$d: unassigned folder ID.
@@ -313,7 +313,7 @@ class APEX_FOLDERS_Upload {
         
         // If still no folder ID, use the unassigned folder
         if ( ! $folder_id ) {
-            $folder_id = APEX_FOLDERS_get_unassigned_id();
+            $folder_id = apex_folders_get_unassigned_id();
         }
         
         // Add our custom folder param

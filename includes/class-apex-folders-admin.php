@@ -48,7 +48,7 @@ class APEX_FOLDERS_Admin {
         }
         
         if ( current_user_can( 'manage_options' ) ) {
-            $unassigned_id = APEX_FOLDERS_get_unassigned_id();
+            $unassigned_id = apex_folders_get_unassigned_id();
             ?>
             <div class="notice notice-info is-dismissible">
                 <p>
@@ -126,7 +126,7 @@ class APEX_FOLDERS_Admin {
         }
         
         global $wpdb;
-        $unassigned_id = APEX_FOLDERS_get_unassigned_id();
+        $unassigned_id = apex_folders_get_unassigned_id();
         
         echo '<div class="notice notice-info">';
         echo '<h3>' . esc_html__( 'Unassigned Folder Debug', 'apex-folders' ) . '</h3>';
@@ -226,7 +226,7 @@ class APEX_FOLDERS_Admin {
             check_admin_referer( 'rebuild_unassigned' );
             
             // Use the direct assignment function
-            $count = APEX_FOLDERS_ensure_all_assigned();
+            $count = apex_folders_ensure_all_assigned();
             
             // Redirect with message
             wp_redirect( add_query_arg( 'rebuild_complete', $count, admin_url( 'upload.php' ) ) );

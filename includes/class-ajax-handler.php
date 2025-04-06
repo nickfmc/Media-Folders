@@ -42,7 +42,7 @@ class APEX_FOLDERS_AJAX_Handler {
         global $wpdb;
         
         $folder_id = intval( $_POST['folder_id'] );
-        $unassigned_id = APEX_FOLDERS_get_unassigned_id();
+        $unassigned_id = apex_folders_get_unassigned_id();
         
         // Prevent deleting the Unassigned folder
         if ( $folder_id === $unassigned_id ) {
@@ -194,7 +194,7 @@ class APEX_FOLDERS_AJAX_Handler {
             }
             
             // Ensure parent isn't the Unassigned folder
-            $unassigned_id = APEX_FOLDERS_get_unassigned_id();
+            $unassigned_id = apex_folders_get_unassigned_id();
             if ( $parent_id == $unassigned_id ) {
                 wp_send_json_error( array( 'message' => esc_html__( 'Cannot create subfolders under Unassigned', 'apex-folders' ) ) );
                 return;
@@ -233,7 +233,7 @@ class APEX_FOLDERS_AJAX_Handler {
         }
         
         // Force recount all terms
-        APEX_FOLDERS_update_counts();
+        apex_folders_update_counts();
         
         // Get updated folder data
         $folders = get_terms( array(
@@ -288,7 +288,7 @@ class APEX_FOLDERS_AJAX_Handler {
         
         $folder_id = intval( $_POST['folder_id'] );
         $new_name = sanitize_text_field( wp_unslash( $_POST['new_name'] ) );
-        $unassigned_id = APEX_FOLDERS_get_unassigned_id();
+        $unassigned_id = apex_folders_get_unassigned_id();
         
         // Validate input
         if ( empty( $new_name ) ) {
