@@ -47,7 +47,8 @@ class APEX_FOLDERS_Admin {
             return;
         }
         
-        if ( current_user_can( 'manage_options' ) ) {
+        // Only show debug tools if the option is enabled
+        if ( current_user_can( 'manage_options' ) && get_option( 'apex_folders_show_debug_tools', false ) ) {
             $unassigned_id = apex_folders_get_unassigned_id();
             ?>
             <div class="notice notice-info is-dismissible">
@@ -259,6 +260,27 @@ class APEX_FOLDERS_Admin {
      * Register plugin settings
      */
     public function register_settings() {
+
+        // Register the debug tools display setting
+        register_setting(
+            'media',
+            'apex_folders_show_debug_tools',
+            array(
+                'type' => 'boolean',
+                'sanitize_callback' => 'rest_sanitize_boolean',
+                'default' => false,
+            )
+        );
+
+        // Add the field for debug tools display
+        add_settings_field(
+            'apex_folders_show_debug_tools',
+            esc_html__( 'Admin Tools', 'apex-folders' ),
+            array( $this, 'render_show_debug_tools_field' ),
+            'media',
+            'apex_folders_settings'
+        );
+
         // Register a new settings section
         add_settings_section(
             'apex_folders_settings',
@@ -307,6 +329,22 @@ class APEX_FOLDERS_Admin {
         </label>
         <p class="description" style="color: #d63638;">
             <?php esc_html_e( 'Warning: When enabled, all your media folders and organization structure will be permanently deleted if you uninstall this plugin.', 'apex-folders' ); ?>
+        </p>
+        <?php
+    }
+    
+    /**
+     * Render the field for showing debug tools option
+     */
+    public function render_show_debug_tools_field() {
+        $value = get_option( 'apex_folders_show_debug_tools', false );
+        ?>
+        <label for="apex_folders_show_debug_tools">
+            <input type="checkbox" id="apex_folders_show_debug_tools" name="apex_folders_show_debug_tools" value="1" <?php checked( $value, true ); ?>>
+            <?php esc_html_e( 'Show debug tools in Media Library', 'apex-folders' ); ?>
+        </label>
+        <p class="description">
+            <?php esc_html_e( 'When enabled, administrator tools for debugging and rebuilding folders will be displayed in the Media Library.', 'apex-folders' ); ?>
         </p>
         <?php
     }

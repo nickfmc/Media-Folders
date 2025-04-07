@@ -368,7 +368,7 @@
         // Add a custom selection mode toggle button if it doesn't exist
         if (!$('.apex-folder-bulk-select').length) {
             $('.media-toolbar-secondary').prepend(
-                '<button type="button" class="button select-mode-toggle-button apex-folder-bulk-select">' +
+                '<button type="button" class="button button-primary select-mode-toggle-button apex-folder-bulk-select">' +
                 '<span class="screen-reader-text">Select multiple files for organization</span>' +
                 'Bulk Drag and Drop</button>'
             );
