@@ -25,10 +25,14 @@ class APEX_FOLDERS_UI {
         add_action( 'admin_notices', array( $this, 'render_folders_interface' ) );
         
         // Add folder field to attachment edit screen
-        add_filter( 'attachment_fields_to_edit', array( $this, 'add_folder_fields' ), 10, 2 );
+        // Use a higher priority (20) to ensure it runs after WordPress adds its fields
+        add_filter( 'attachment_fields_to_edit', array( $this, 'add_folder_fields' ), 20, 2 );
         
         // Save attachment folder assignments
         add_filter( 'attachment_fields_to_save', array( $this, 'save_folder_assignment' ), 999, 2 );
+        
+        // filter to prevent checkboxes in list view
+        add_filter( 'wp_terms_checklist_args', array( $this, 'prevent_folder_checklist' ), 10, 2 );
     }
     
     /**
@@ -39,11 +43,20 @@ class APEX_FOLDERS_UI {
         if ( $screen->base !== 'upload' ) {
             return;
         }
+
+        // Determine the current view mode, WordPress stores this in user meta - we need to check that
+        $user_id = get_current_user_id();
+        $media_library_mode = get_user_option( 'media_library_mode', $user_id );
         
-        // Check if we're in list view - if so, don't show the folders
-        $mode = isset( $_GET['mode'] ) ? sanitize_text_field( wp_unslash( $_GET['mode'] ) ) : '';
-        if ( $mode === 'list' ) {
-            return; // Exit early if in list view
+        // Default to 'grid' if not set
+        if ( empty( $media_library_mode ) ) {
+            $media_library_mode = 'grid';
+        }
+        
+        // URL parameter overrides the user preference
+        $url_mode = isset( $_GET['mode'] ) ? sanitize_text_field( wp_unslash( $_GET['mode'] ) ) : '';
+        if ( !empty( $url_mode ) && in_array( $url_mode, array( 'grid', 'list' ) ) ) {
+            $media_library_mode = $url_mode;
         }
 
         // Get organized folders using the utility class
@@ -52,7 +65,8 @@ class APEX_FOLDERS_UI {
         $parent_folders = $organized['parents'];
         $child_folders = $organized['children'];
         
-        echo '<div class="apex-folder-filter">';
+        // Add a CSS class based on the detected mode
+        echo '<div class="apex-folder-filter apex-mode-' . esc_attr($media_library_mode) . '">';
         echo '<h3>' . esc_html__( 'Apex Folders', 'apex-folders' ) . '</h3>';
         echo '<ul class="apex-folder-list">';
         
@@ -170,10 +184,26 @@ class APEX_FOLDERS_UI {
      * @return array Modified form fields
      */
     public function add_folder_fields( $form_fields, $post ) {
-        $folders = get_terms( array(
-            'taxonomy' => 'apex_folder',
-            'hide_empty' => false,
-        ) );
+        // Always remove any existing apex_folder fields, regardless of how they're rendered
+    if (isset($form_fields['apex_folder'])) {
+        unset($form_fields['apex_folder']);
+    }
+
+    // Store the current folder ID before getting new terms
+    // This ensures we don't lose the current selection
+    $current_folder_id = apex_folders_get_unassigned_id();
+    
+    // Get the current folder term
+    $current_folders = wp_get_object_terms( $post->ID, 'apex_folder' );
+    if ( !empty($current_folders) && !is_wp_error($current_folders) ) {
+        $current_folder_id = $current_folders[0]->term_id;
+    }
+    
+    // Get folders for the dropdown
+    $folders = get_terms( array(
+        'taxonomy' => 'apex_folder',
+        'hide_empty' => false,
+    ) );
         
         // Get the current folder term
         $current_folders = wp_get_object_terms( $post->ID, 'apex_folder' );
@@ -269,6 +299,29 @@ class APEX_FOLDERS_UI {
     }
     
     /**
+     * Prevent WordPress from showing the terms checklist for our taxonomy
+     *
+     * @param array $args Arguments for the terms checklist
+     * @param int $post_id Post ID
+     * @return array Modified arguments
+     * @since 0.9.9
+     */
+    /**
+     * Prevent WordPress from showing the terms checklist for our taxonomy
+     */
+    public function prevent_folder_checklist( $args, $post_id ) {
+        // If this is our taxonomy, prevent the checklist completely
+        if ( isset( $args['taxonomy'] ) && $args['taxonomy'] === 'apex_folder' ) {
+            // Set a special walker that outputs nothing
+            $args['walker'] = new WP_Walker_Empty();
+            $args['checked_ontop'] = false;
+            $args['selected_cats'] = array();
+        }
+        return $args;
+    }
+
+    
+    /**
      * Save folder assignment from attachment edit screen
      *
      * @param array $post Post data
@@ -331,6 +384,28 @@ class APEX_FOLDERS_UI {
         }
         
         return $post;
+    }
+}
+
+class WP_Walker_Empty extends Walker {
+    public function start_lvl( &$output, $depth = 0, $args = array() ) {
+        // Do nothing but maintain the expected structure
+        $output .= '';
+    }
+    
+    public function end_lvl( &$output, $depth = 0, $args = array() ) {
+        // Do nothing but maintain the expected structure
+        $output .= '';
+    }
+    
+    public function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 ) {
+        // Do nothing but maintain the expected structure
+        $output .= '';
+    }
+    
+    public function end_el( &$output, $object, $depth = 0, $args = array() ) {
+        // Do nothing but maintain the expected structure
+        $output .= '';
     }
 }
 

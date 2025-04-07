@@ -42,7 +42,7 @@ class APEX_FOLDERS_Utilities {
                     'search_items'      => esc_html__( 'Search Folders', 'apex-folders' ),
                 ),
                 'hierarchical'      => true,
-                'show_ui'           => true,
+                'show_ui'           => false,
                 'show_in_menu'      => false,
                 'show_in_nav_menus' => false,
                 'show_in_rest'      => true,

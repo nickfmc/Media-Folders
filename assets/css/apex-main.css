@@ -440,3 +440,116 @@
     background: #e6f0fa;
     border: 2px dashed #2271b1;
 }
+
+
+/* List mode styles - horizontal compact layout */
+.apex-mode-list.apex-folder-filter {
+    float: none;
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    box-sizing: border-box;
+}
+
+/* Horizontal folder list for list mode */
+.apex-mode-list .apex-folder-list {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+}
+
+/* Title for list mode */
+.apex-mode-list h3 {
+    margin: 0 0 10px 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    font-size: 14px;
+}
+
+/* Individual folders in list mode */
+.apex-mode-list .apex-folder-list li {
+    flex: 0 0 auto;
+    margin: 0 10px 5px 0;
+    padding: 0;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background: #f6f7f7;
+}
+
+.apex-mode-list .apex-folder-list li a {
+    padding: 5px 10px;
+    white-space: nowrap;
+    display: inline-block;
+    max-width: 200px;
+}
+
+/* Folder separators in horizontal mode */
+.apex-mode-list .apex-folder-list .folder-separator {
+    display: none;
+}
+
+/* Folder actions in horizontal layout */
+.apex-mode-list .delete-folder,
+.apex-mode-list .edit-folder,
+.apex-mode-list .add-subfolder {
+    position: relative;
+    display: inline-block;
+    top: 2px;
+    right: auto;
+    transform: none;
+    margin-left: 3px;
+    opacity: 0.5;
+}
+
+.apex-mode-list .apex-folder-list li:hover .delete-folder,
+.apex-mode-list .apex-folder-list li:hover .edit-folder,
+.apex-mode-list .apex-folder-list li:hover .add-subfolder {
+    opacity: 0.8;
+}
+
+/* Child folders in horizontal layout */
+.apex-mode-list .apex-folder-list li.child-folder {
+    margin-left: 15px;
+    position: relative;
+}
+
+.apex-mode-list .apex-folder-list li.child-folder .child-indicator {
+    display: none;
+}
+
+.apex-mode-list .apex-folder-list li.child-folder:before {
+    content: "└";
+    position: absolute;
+    left: -10px;
+    top: 6px;
+    color: #999;
+}
+
+.apex-mode-list .apex-folder-list li.child-folder a {
+    padding-left: 10px;
+}
+
+/* Add New Folder button in list mode */
+.apex-mode-list .add-new-folder {
+    display: inline-block;
+    width: auto;
+    padding: 5px 15px;
+    margin-top: 5px;
+}
+
+/* Reset the list mode table layout adjustments */
+.apex-mode-list + .wp-header-end + .wp-list-table,
+.apex-mode-list ~ .tablenav,
+.apex-mode-list ~ .subsubsub {
+    margin-left: 0;
+    width: 100%;
+}
