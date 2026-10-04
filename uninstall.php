@@ -41,6 +41,7 @@ if ($remove_all_data) {
     // Find and delete all plugin options
     $option_names = array(
         'apex_folders_remove_all_data',
+        'apex_folders_show_debug_tools',
         'apex_folders_needs_migration',
         'apex_folders_version',
         'apex_folders_settings',

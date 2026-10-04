@@ -186,7 +186,6 @@ class APEX_FOLDERS_UI {
         $folders_data = array(
             'currentFolder' => $current_folder,
             'nonce' => wp_create_nonce( 'APEX_FOLDERS_nonce' ),
-            'slugNonce' => wp_create_nonce( 'APEX_FOLDERS_get_slug' ),
             'viewNonce' => wp_create_nonce( 'apex_folder_view' ),
             'parentFolders' => array_map( function( $folder ) {
                 return array(
@@ -197,33 +196,39 @@ class APEX_FOLDERS_UI {
         );
         
         wp_enqueue_script( 'apex-folder-management', APEX_FOLDERS_PLUGIN_URL . 'assets/js/folder-management.js', array( 'jquery', 'jquery-ui-dialog' ), APEX_FOLDERS_VERSION, true );
-        wp_enqueue_script( 'apex-attachment-tracking', APEX_FOLDERS_PLUGIN_URL . 'assets/js/attachment-tracking.js', array( 'jquery' ), APEX_FOLDERS_VERSION, true );
         wp_enqueue_script( 'apex-folder-counts', APEX_FOLDERS_PLUGIN_URL . 'assets/js/folder-counts.js', array( 'jquery' ), APEX_FOLDERS_VERSION, true );
         
         wp_localize_script( 'apex-folder-management', 'apexFolderData', $folders_data );
-        wp_localize_script( 'apex-attachment-tracking', 'apexFolderData', $folders_data );
         wp_localize_script( 'apex-folder-counts', 'apexFolderData', $folders_data );
         
         // Add translatable strings for JavaScript
         wp_localize_script( 'apex-folder-management', 'apexFoldersL10n', array(
-            'addFolder'        => esc_html__( 'Add Folder', 'apex-folders' ),
-            'addSubfolder'     => esc_html__( 'Add Subfolder', 'apex-folders' ),
-            'renameFolder'     => esc_html__( 'Rename Folder', 'apex-folders' ),
-            'deleteFolder'     => esc_html__( 'Delete Folder', 'apex-folders' ),
-            'folderName'       => esc_html__( 'Folder Name', 'apex-folders' ),
-            'cancel'           => esc_html__( 'Cancel', 'apex-folders' ),
-            'save'             => esc_html__( 'Save', 'apex-folders' ),
-            'delete'           => esc_html__( 'Delete', 'apex-folders' ),
-            'confirmDelete'    => esc_html__( 'Are you sure you want to delete this folder? Files will be moved to the Unassigned folder.', 'apex-folders' ),
-            'creatingFolder'   => esc_html__( 'Creating folder...', 'apex-folders' ),
-            'renamingFolder'   => esc_html__( 'Renaming folder...', 'apex-folders' ),
-            'deletingFolder'   => esc_html__( 'Deleting folder...', 'apex-folders' ),
-            'updatingCounts'   => esc_html__( 'Updating folder counts...', 'apex-folders' ),
-            'error'            => esc_html__( 'An error occurred', 'apex-folders' ),
-            'success'          => esc_html__( 'Success', 'apex-folders' )
+            'createFolderTitle'      => __( 'Create New Folder', 'apex-folders' ),
+            'createFolder'           => __( 'Create Folder', 'apex-folders' ),
+            'folderName'             => __( 'Folder Name:', 'apex-folders' ),
+            'parentFolderOptional'   => __( 'Parent Folder (optional):', 'apex-folders' ),
+            'noParent'               => __( 'None (top level)', 'apex-folders' ),
+            'createSubfolderTitle'   => __( 'Create New Subfolder', 'apex-folders' ),
+            'createSubfolder'        => __( 'Create Subfolder', 'apex-folders' ),
+            'subfolderName'          => __( 'Subfolder Name:', 'apex-folders' ),
+            'parentFolder'           => __( 'Parent folder:', 'apex-folders' ),
+            'renameFolderTitle'      => __( 'Rename Folder', 'apex-folders' ),
+            'newName'                => __( 'New Name:', 'apex-folders' ),
+            'cancel'                 => __( 'Cancel', 'apex-folders' ),
+            'save'                   => __( 'Save', 'apex-folders' ),
+            /* translators: %s: folder name */
+            'confirmDelete'          => __( 'Are you sure you want to delete the folder "%s"?', 'apex-folders' ),
+            'confirmDeleteNote'      => __( 'Files in this folder will be moved to the Unassigned folder.', 'apex-folders' ),
+            'errorCreatingFolder'    => __( 'Error creating folder:', 'apex-folders' ),
+            'errorCreatingSubfolder' => __( 'Error creating subfolder:', 'apex-folders' ),
+            'errorRenamingFolder'    => __( 'Error renaming folder:', 'apex-folders' ),
+            'errorDeletingFolder'    => __( 'Error deleting folder:', 'apex-folders' ),
+            'unknownError'           => __( 'Unknown error', 'apex-folders' ),
+            'networkError'           => __( 'Network error. Please try again.', 'apex-folders' ),
+            'total'                  => __( 'total', 'apex-folders' ),
         ) );
     }
-    
+
     /**
      * Add folder selector to attachment edit screen
      *
@@ -268,7 +273,9 @@ class APEX_FOLDERS_UI {
             }
         }
         
-        $dropdown = '<select name="attachments[' . $post->ID . '][apex_folder]" id="attachments-' . $post->ID . '-apex_folder">';
+        // The field must not be named after the taxonomy: WordPress would then also
+        // save the submitted folder ID as if it were a folder name.
+        $dropdown = '<select name="attachments[' . $post->ID . '][apex_folder_id]" id="attachments-' . $post->ID . '-apex_folder">';
         
         // Add unassigned folder first
         if ( $unassigned_folder ) {
@@ -372,59 +379,29 @@ class APEX_FOLDERS_UI {
      * @return array Modified post data
      */
     public function save_folder_assignment( $post, $attachment ) {
-        // If already processing or no folder specified, return
-        if ( Apex_Folders_State::is_processing() || ! isset( $attachment['apex_folder'] ) ) {
+        // If no folder specified, return
+        if ( ! isset( $attachment['apex_folder_id'] ) ) {
             return $post;
         }
-        
+
         // Verify nonce
         $nonce_name = 'apex_folder_nonce_' . $post['ID'];
         if ( !isset($_POST[$nonce_name]) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST[$nonce_name])), 'save_apex_folder_' . $post['ID']) ) {
             return $post;
         }
-        
-        Apex_Folders_State::set_processing( true );
-        
-        try {
-            $folder_id = intval( $attachment['apex_folder'] );
-            $post_id = $post['ID'];
-            
-            // Remove existing terms
-            wp_delete_object_term_relationships( $post_id, 'apex_folder' );
-            
-            if ( $folder_id > 0 ) {
-                // Set the term to the selected folder
-                wp_set_object_terms( $post_id, array( $folder_id ), 'apex_folder', false );
-            } else {
-                // If no folder or "0" selected, assign to Unassigned folder
-                $unassigned_id = apex_folders_get_unassigned_id();
-                wp_set_object_terms( $post_id, array( $unassigned_id ), 'apex_folder', false );
-            }
 
-            // Add JavaScript to force refresh using wp_add_inline_script
-            $refresh_script = 'jQuery(document).ready(function($) {
-                // Force refresh of the media library view
-                if (wp.media.frame) {
-                    wp.media.frame.library.props.set({ignore: (+ new Date())});
-                    wp.media.frame.library.props.trigger("change");
-                }
-                
-                // If we are in grid mode, refresh that too
-                if (wp.media.view.Attachment.Library) {
-                    $(".attachments-browser .attachments").trigger("scroll");
-                }
-                
-                // Update folder counts
-                if (typeof window.updateFolderCounts === "function") {
-                    window.updateFolderCounts();
-                }
-            });';
-            wp_add_inline_script( 'jquery', $refresh_script );
+        $folder_id = absint( $attachment['apex_folder_id'] );
 
-        } finally {
-            Apex_Folders_State::set_processing( false );
+        // If no folder, "0" or a folder that no longer exists is selected, assign to Unassigned folder
+        if ( ! $folder_id || ! term_exists( $folder_id, 'apex_folder' ) ) {
+            $folder_id = (int) apex_folders_get_unassigned_id();
         }
-        
+
+        if ( $folder_id ) {
+            // Set the term to the selected folder
+            wp_set_object_terms( $post['ID'], array( $folder_id ), 'apex_folder', false );
+        }
+
         return $post;
     }
 }

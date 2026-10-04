@@ -2,8 +2,8 @@
 Contributors: nickfmc
 Tags: media, folders, attachment, organize, media library
 Requires at least: 5.3
-Tested up to: 6.8
-Stable tag: 1.0.1
+Tested up to: 7.1
+Stable tag: 1.1.0
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -78,10 +78,26 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 
 == Changelog ==
 
+= 1.1.0 =
+* Fixed: uploading several files at once no longer reloads the page after the first file. Files now appear in the folder as they finish uploading.
+* Fixed: uploads go to the folder you are viewing by default, and the folder chosen in the uploader is sent with every file.
+* Fixed: the upload folder no longer "sticks" to a folder picked earlier on another page.
+* Fixed: moving a file from its details panel or by drag and drop removes it from the old folder view and updates the counts.
+* Fixed: drag and drop works on the first attempt in current browsers.
+* Fixed: folder counts stay accurate without repeated recounts, and the folder filter shows live counts.
+* Fixed: the Unassigned folder is found reliably on translated sites and can no longer be deleted or renamed.
+* Changed: folders can now have numeric names, such as "2024".
+* Security: folder names are always output as text in dialogs and notices.
+* Security: removed an upload hook that allowed folder changes without a permission check; debug views now require a nonce.
+* All interface text is now translatable.
+
 = 1.0.0 =
 * Initial public release
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Fixes multi-file uploads, drag and drop, and folder counts. Recommended for all users.
 
 = 1.0.0 =
 Initial release of Apex Folders. Start organizing your media library with folders!

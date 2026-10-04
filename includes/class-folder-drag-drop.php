@@ -67,13 +67,25 @@ class APEX_FOLDERS_Drag_Drop {
                 'moveItemsAction' => 'apex_folder_move_items',
                 'unassignedFolderId' => apex_folders_get_unassigned_id(),
                 'i18n' => array(
-                    'movingItem' => esc_html__( 'Moving item', 'apex-folders' ),
-                    'movingItems' => esc_html__( 'Moving items', 'apex-folders' ),
-                    'successMove' => esc_html__( 'Successfully moved', 'apex-folders' ),
-                    'errorMove' => esc_html__( 'Error moving items', 'apex-folders' ),
-                    'dropToMove' => esc_html__( 'Drop to move to this folder', 'apex-folders' ),
-                    'noFilesSelected' => esc_html__( 'No files selected', 'apex-folders' ),
-                    'selectFiles' => esc_html__( 'Select files to move', 'apex-folders' ),
+                    /* translators: %s: file name */
+                    'movingOne' => __( 'Moving: %s', 'apex-folders' ),
+                    /* translators: %d: number of files */
+                    'movingCount' => __( 'Moving %d items', 'apex-folders' ),
+                    'item' => __( 'item', 'apex-folders' ),
+                    /* translators: %1$d: number of files, %2$s: folder name */
+                    'movingItemTo' => __( 'Moving %1$d item to "%2$s"', 'apex-folders' ),
+                    /* translators: %1$d: number of files, %2$s: folder name */
+                    'movingItemsTo' => __( 'Moving %1$d items to "%2$s"', 'apex-folders' ),
+                    /* translators: %s: folder name */
+                    'movedTo' => __( 'Successfully moved files to "%s"', 'apex-folders' ),
+                    'errorPrefix' => __( 'Error:', 'apex-folders' ),
+                    'couldNotMove' => __( 'Could not move files', 'apex-folders' ),
+                    'networkError' => __( 'Network error: Could not connect to server', 'apex-folders' ),
+                    'bulkButton' => __( 'Bulk Drag and Drop', 'apex-folders' ),
+                    'bulkButtonDescription' => __( 'Select multiple files for organization', 'apex-folders' ),
+                    'exitSelection' => __( 'Exit Selection Mode', 'apex-folders' ),
+                    'selectionModeLabel' => __( 'Selection Mode:', 'apex-folders' ),
+                    'selectionModeHelp' => __( 'Click on items to select multiple files, then drag any selected item to a folder.', 'apex-folders' ),
                 )
             )
         );

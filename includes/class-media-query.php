@@ -26,12 +26,6 @@ class APEX_FOLDERS_Query {
         
         // Add support for Block Editor media filtering
         add_filter( 'ajax_query_attachments_args', array( $this, 'filter_attachments_query' ) );
-        
-        // Add folder term count update trigger
-        add_action( 'set_object_terms', array( $this, 'set_object_terms_callback' ), 10, 6 );
-        
-        // Register term count update event
-        add_action( 'init', array( $this, 'register_folder_count_event' ) );
     }
     
     /**
@@ -64,7 +58,7 @@ class APEX_FOLDERS_Query {
             }
         }
     }
-    
+
     /**
      * Filter AJAX attachments query
      *
@@ -72,86 +66,49 @@ class APEX_FOLDERS_Query {
      * @return array Modified query arguments
      */
     public function filter_attachments_query( $query ) {
-        if ( isset( $query['apex_folder'] ) ) {
-            // If empty string or 0, remove any existing tax_query for apex_folder
-            if ( $query['apex_folder'] === '' || $query['apex_folder'] === '0' || $query['apex_folder'] === 0 ) {
-                // User selected "All Folders" - remove the apex_folder filter
-                unset( $query['apex_folder'] );
-                // Also remove any tax_query that might be for apex_folder
-                if ( isset( $query['tax_query'] ) && is_array( $query['tax_query'] ) ) {
-                    foreach ( $query['tax_query'] as $key => $tax_query ) {
-                        if ( isset( $tax_query['taxonomy'] ) && $tax_query['taxonomy'] === 'apex_folder' ) {
-                            unset( $query['tax_query'][$key] );
-                        }
-                    }
-                    // If tax_query is now empty, remove it
-                    if ( empty( $query['tax_query'] ) ) {
-                        unset( $query['tax_query'] );
-                    }
-                }
-                return $query;
-            }
-            
-            // Get the folder ID, ensuring it's an integer
-            $folder_id = $query['apex_folder'];
-            
-            // Handle various data formats
-            if ( is_array( $folder_id ) ) {
-                $folder_id = isset( $folder_id[0] ) ? $folder_id[0] : 0;
-            }
-            
-            // Convert string IDs to integers
-            $folder_id = intval( $folder_id );
-            
-            // Skip empty folder IDs
-            if ( ! $folder_id ) {
-                return $query;
-            }
-            
-            // Confirm folder exists
-            $term = get_term( $folder_id, 'apex_folder' );
-            if ( ! is_wp_error( $term ) && $term ) {
-                // Create tax query - use simplest possible format
-                $query['tax_query'] = array(
-                    'relation' => 'AND',
-                    array(
-                        'taxonomy' => 'apex_folder',
-                        'field' => 'term_taxonomy_id',
-                        'terms' => $folder_id,
-                        'operator' => 'IN'
-                    )
-                );
-                
-                // Remove any conflicting query params
-                unset( $query['apex_folder'] );
-            }
+        if ( ! isset( $query['apex_folder'] ) ) {
+            return $query;
         }
         
-        return $query;
-    }
-    
-    /**
-     * Trigger term count update when terms are set
-     *
-     * @param int    $object_id   Object ID.
-     * @param array  $terms       Terms.
-     * @param array  $tt_ids      Term taxonomy IDs.
-     * @param string $taxonomy    Taxonomy.
-     * @param bool   $append      Whether to append to existing terms.
-     * @param array  $old_tt_ids  Old term taxonomy IDs.
-     */
-    public function set_object_terms_callback( $object_id, $terms, $tt_ids, $taxonomy, $append, $old_tt_ids ) {
-        if ( $taxonomy === 'apex_folder' ) {
-            // Schedule a deferred count update to ensure it happens after WordPress completes its operations
-            wp_schedule_single_event( time() + 2, 'apex_folders_update_counts_event' );
+        $folder = $query['apex_folder'];
+        
+        // Handle various data formats
+        if ( is_array( $folder ) ) {
+            $folder = isset( $folder[0] ) ? $folder[0] : '';
         }
-    }
-    
-    /**
-     * Register folder count event
-     */
-    public function register_folder_count_event() {
-        add_action( 'apex_folders_update_counts_event', 'apex_folders_update_counts' );
+        
+        // User selected "All Folders" - remove the apex_folder filter
+        if ( '' === $folder || '0' === $folder || 0 === $folder ) {
+            unset( $query['apex_folder'] );
+            return $query;
+        }
+        
+        // The media library sends the folder slug; older links may still send the ID
+        $term = get_term_by( 'slug', sanitize_title( $folder ), 'apex_folder' );
+        if ( ! $term && is_numeric( $folder ) ) {
+            $term = get_term( (int) $folder, 'apex_folder' );
+        }
+        
+        // Unknown folder: leave the query alone so it matches nothing
+        if ( ! $term || is_wp_error( $term ) ) {
+            return $query;
+        }
+        
+        // Show only the folder's own files, the same as the list view does
+        unset( $query['apex_folder'] );
+        
+        if ( ! isset( $query['tax_query'] ) || ! is_array( $query['tax_query'] ) ) {
+            $query['tax_query'] = array();
+        }
+        
+        $query['tax_query'][] = array(
+            'taxonomy'         => 'apex_folder',
+            'field'            => 'term_id',
+            'terms'            => array( (int) $term->term_id ),
+            'include_children' => false,
+        );
+        
+        return $query;
     }
 }
 
