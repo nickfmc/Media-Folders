@@ -60,7 +60,7 @@ class APEX_FOLDERS_Drag_Drop {
         // Localize script with nonce and settings
         wp_localize_script(
             'apex-folder-drag-drop',
-            'mediaFolderSettings',
+            'apexfoMediaFolderSettings',
             array(
                 'nonce' => wp_create_nonce( 'APEX_FOLDERS_drag_drop_nonce' ),
                 'ajaxUrl' => admin_url( 'admin-ajax.php' ),
@@ -96,16 +96,17 @@ class APEX_FOLDERS_Drag_Drop {
             return;
         }
         
-        // Get data from request and sanitize
-        $attachment_ids = isset( $_POST['attachment_ids'] ) ? wp_unslash( $_POST['attachment_ids'] ) : array();
-        $folder_id = isset( $_POST['folder_id'] ) ? intval( $_POST['folder_id'] ) : 0;
+        // Get and sanitize data from request
+        $attachment_ids = array();
+
+        $input_ids = isset( $_POST['attachment_ids'] ) ? $_POST['attachment_ids'] : array();
         
-        // Sanitize attachment IDs array 
-        if ( is_array( $attachment_ids ) ) {
-            $attachment_ids = array_map( 'intval', $attachment_ids );
-        } else {
-            $attachment_ids = array();
+        if ( is_array( $input_ids ) ) {
+            // Properly sanitize array of integers
+            $attachment_ids = array_unique( array_map( 'absint', $input_ids ) );
         }
+        
+        $folder_id = isset( $_POST['folder_id'] ) ? absint( wp_unslash( $_POST['folder_id'] ) ) : 0;
         
         // Validate data
         if ( empty( $attachment_ids ) ) {

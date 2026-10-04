@@ -9,9 +9,9 @@
  * @wordpress-plugin
  *
  * Plugin Name: Apex Folders
- * Plugin URI: https://mountainairweb.com
+ * Plugin URI: 
  * Description: Reach the apex of media library organization.
- * Version: 0.9.9
+ * Version: 1.0.1
  * Author: Nick Murray
  * Author URI: https://mountainairweb.com
  * Text Domain: apex-folders
@@ -150,10 +150,10 @@ add_action( 'init', 'apex_folders_register_taxonomy' );
  * @param string $taxonomy The taxonomy name.
  * @return mixed Term name or WP_Error on failure.
  */
-function prevent_numeric_term_creation( $term, $taxonomy ) {
+function apexfo_prevent_numeric_term_creation( $term, $taxonomy ) {
     return APEX_FOLDERS_Utilities::prevent_numeric_term_creation( $term, $taxonomy );
 }
-add_filter( 'pre_insert_term', 'prevent_numeric_term_creation', 10, 2 );
+add_filter( 'pre_insert_term', 'apexfo_prevent_numeric_term_creation', 10, 2 );
 
 /**
  * Ensure all attachments have a folder assignment.

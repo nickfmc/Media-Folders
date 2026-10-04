@@ -274,6 +274,18 @@
     float: right;
 }
 
+/* Preserve WordPress core button positioning */
+.media-modal .media-toolbar-primary,
+.media-modal .media-toolbar-secondary {
+    float: none !important;
+    width: auto !important;
+}
+
+.media-modal .media-toolbar-primary .media-button-select {
+    float: right !important;
+}
+
+
 /* --- Responsive Design --- */
 @media (max-width: 1280px) {
     .apex-folder-filter {
@@ -552,4 +564,210 @@
 .apex-mode-list ~ .subsubsub {
     margin-left: 0;
     width: 100%;
+}
+
+/* Media modal folder browser styles */
+.media-folder-browser {
+    padding: 0 16px 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.media-folder-browser h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 1em 0 0.5em;
+}
+
+.media-folder-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.media-folder-item {
+    margin-bottom: 2px;
+    position: relative;
+    line-height: 1.4;
+}
+
+.media-folder-item a {
+    display: block;
+    padding: 6px 8px;
+    text-decoration: none;
+    color: #2c3338;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.media-folder-item a:hover {
+    background: rgba(0,0,0,0.04);
+}
+
+.media-folder-item.selected a {
+    background: #0073aa;
+    color: #fff;
+    font-weight: 500;
+}
+
+.child-folder-list {
+    margin-left: 16px;
+    list-style: none;
+    padding: 0;
+}
+
+.apex-folder-indicator {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 3px 8px;
+    background: #f0f0f1;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #50575e;
+}
+
+/* Fix attachment filters layout */
+.media-modal .attachments-browser .media-toolbar-secondary {
+    max-width: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Media Filter Dropdown Improvements */
+.attachment-filters.attachment-folder-filter {
+    max-width: 200px; 
+    min-width: 150px;
+    display: inline-block !important;
+    visibility: visible !important;
+    margin-right: 8px;
+}
+
+/* Critical fix for Gutenberg media modal - ensure folder filter is visible */
+.media-modal .media-toolbar-secondary #media-attachment-folder-filter {
+    display: inline-block !important;
+    margin: 0 8px;
+    vertical-align: middle;
+    float: none !important;
+    position: absolute;
+    top: 32px;
+    right: 10px;
+}
+
+/* Folder filter in media modal */
+.media-modal .media-frame-toolbar .media-toolbar-secondary .apex-folder-filter-dropdown {
+    padding: 0 10px 0 0;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.media-modal .media-frame-toolbar .media-toolbar-secondary .apex-folder-filter-dropdown select {
+    max-width: 160px;
+    height: 28px;
+    margin-top: 3px;
+    font-size: 13px;
+}
+
+.media-modal .media-frame-toolbar .media-toolbar-secondary .apex-folder-filter-dropdown label {
+    font-size: 13px;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+/* Fix spacing when multiple filters are present */
+.media-frame .attachment-filters {
+    margin-right: 8px;
+}
+
+/* Ensure visible dropdown in browse mode too */
+.attachments-browser .media-toolbar .media-toolbar-secondary .attachment-folder-filter {
+    display: inline-block !important;
+    visibility: visible !important;
+}
+
+/* Ensure folder dropdown in modal is visible */
+.media-frame:not(.hide-menu) .media-frame-toolbar .media-toolbar-secondary > .media-button:first-child,
+.media-frame:not(.hide-menu) .media-frame-toolbar .media-toolbar-secondary > .attachment-filters:first-child {
+    margin: 10px 0;
+}
+
+/* Media toolbar visibility fixes */
+.media-modal .media-toolbar-secondary .apex-folder-filter-dropdown {
+    display: none !important; /* Hide the custom dropdown in all tabs initially */
+}
+
+/* Show folder filter in the browse tab */
+.media-modal .attachments-browser .media-toolbar-secondary .attachment-folder-filter {
+    display: inline-block !important;
+    visibility: visible !important;
+    max-width: 200px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Ensure the folder filter is visible in the block editor */
+.block-editor .attachment-folder-filter,
+.wp-block-image .attachment-folder-filter {
+    display: inline-block !important;
+    visibility: visible !important;
+    margin-right: 8px;
+}
+
+/* Make sure the folder filter is visible for Gutenberg image selector modal */
+body.block-editor-page .attachment-folder-filter {
+    display: inline-block !important;
+    float: left;
+    margin-right: 8px;
+}
+
+/* Hide folder dropdown in upload tab */
+.media-modal[data-id*="insert"] .media-frame-content[data-columns="1"] .attachment-folder-filter,
+.media-modal .media-frame-content[data-id*="insert"] .attachment-folder-filter,
+.media-modal .media-frame-content[data-id*="upload"] .attachment-folder-filter {
+    display: none !important;
+}
+
+
+/* Fix for default media selector layout issues with dropdown */
+.supports-drag-drop .search-form,
+.supports-drag-drop .subsubsub {
+    width: auto !important;
+    float: none !important;
+}
+
+/* Fix the WordPress media library table */
+.supports-drag-drop .wp-list-table {
+    width: 78%;
+    float: right;
+}
+
+/* Preserve WordPress core media modal button positioning */
+.media-modal .media-toolbar-primary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100% !important;
+    float: none !important;
+}
+
+/* Ensure select button stays on the right */
+.media-modal .media-toolbar-primary .media-button-select {
+    margin-left: auto !important;
+    order: 999;
+}
+
+/* Fix alignment of elements in media library */
+.attachments-browser .media-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Ensure folder filter has proper positioning */
+.media-frame-content .attachment-folder-filter {
+    margin-right: 8px;
+    vertical-align: middle;
 }

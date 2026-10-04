@@ -70,7 +70,7 @@ class APEX_FOLDERS_Editor {
         wp_enqueue_script(
             'apex-folder-filters',
             APEX_FOLDERS_PLUGIN_URL . 'assets/js/apex-folders.js', 
-            array( 'jquery', 'wp-blocks', 'media-editor', 'apex-folder-data' ), 
+            array( 'jquery', 'wp-blocks', 'media-editor', 'apex-folder-data', 'jquery-ui-core', 'jquery-ui-draggable', 'jquery-ui-droppable' ), 
             filemtime( APEX_FOLDERS_PLUGIN_DIR . 'assets/js/apex-folders.js' ),
             false // Load in header, not footer
         );
@@ -92,6 +92,21 @@ class APEX_FOLDERS_Editor {
                 'loading'        => esc_html__( 'Loading folders...', 'apex-folders' ),
                 'error'          => esc_html__( 'Error loading folders', 'apex-folders' )
             )
+        );
+        
+        // Add nonce for AJAX operations
+        wp_localize_script(
+            'apex-folder-filters',
+            'apexFolderNonce',
+            array('nonce' => wp_create_nonce( 'APEX_FOLDERS_nonce' ))
+        );
+        
+        // Enqueue the CSS for the folder interface
+        wp_enqueue_style(
+            'apex-folders-css',
+            APEX_FOLDERS_PLUGIN_URL . 'assets/css/apex-main.css',
+            array(),
+            filemtime( APEX_FOLDERS_PLUGIN_DIR . 'assets/css/apex-main.css' )
         );
     }
 }

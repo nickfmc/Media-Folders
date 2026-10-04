@@ -41,21 +41,15 @@ class APEX_FOLDERS_Query {
      */
     public function filter_media_by_folder( $query ) {
         if ( is_admin() && $query->is_main_query() && isset( $query->query['post_type'] ) && $query->query['post_type'] === 'attachment' ) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a GET parameter used for filtering only, not a form submission
             if ( isset( $_GET['apex_folder'] ) && ! empty( $_GET['apex_folder'] ) ) {
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a GET parameter used for filtering only, not a form submission
                 $folder_slug = sanitize_text_field( wp_unslash( $_GET['apex_folder'] ) );
                 
                 // Get the term ID to make sure we're using the right one
                 $term = get_term_by( 'slug', $folder_slug, 'apex_folder' );
                 
                 if ( $term ) {
-                    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                        // translators: %1$s: folder name, %2$d: term ID
-                        error_log( sprintf( esc_html__( 'Filtering by folder: %1$s (ID: %2$d)', 'apex-folders' ), 
-                            $term->name, 
-                            $term->term_id 
-                        ) );
-                    }
-                    
                     // Add explicit tax query
                     $query->set( 'tax_query', array(
                         array(
@@ -66,17 +60,6 @@ class APEX_FOLDERS_Query {
                             'operator' => 'IN' // Explicitly set operator
                         ),
                     ) );
-                    
-                    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                        $sql = $query->request;
-                        // translators: %s: SQL query
-                        error_log( sprintf( esc_html__( 'SQL query: %s', 'apex-folders' ), $sql ) );
-                    }
-                } else {
-                    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                        // translators: %s: folder slug
-                        error_log( sprintf( esc_html__( 'Error: Media folder term not found for slug: %s', 'apex-folders' ), $folder_slug ) );
-                    }
                 }
             }
         }
@@ -120,41 +103,27 @@ class APEX_FOLDERS_Query {
             // Convert string IDs to integers
             $folder_id = intval( $folder_id );
             
-            if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                // translators: %d: folder ID
-                error_log( sprintf( esc_html__( 'Processing folder ID: %d', 'apex-folders' ), $folder_id ) );
-            }
-            
             // Skip empty folder IDs
             if ( ! $folder_id ) {
-                error_log( esc_html__( 'Empty folder ID, skipping filter', 'apex-folders' ) );
                 return $query;
             }
             
             // Confirm folder exists
             $term = get_term( $folder_id, 'apex_folder' );
             if ( ! is_wp_error( $term ) && $term ) {
-                // translators: %1$s: folder name, %2$d: term ID
-                error_log( sprintf( esc_html__( 'Found folder: %1$s (ID: %2$d)', 'apex-folders' ), $term->name, $term->term_id ) );
-                
                 // Create tax query - use simplest possible format
                 $query['tax_query'] = array(
                     'relation' => 'AND',
                     array(
                         'taxonomy' => 'apex_folder',
-                        'field' => 'term_id',
-                        'terms' => array( $folder_id ),
+                        'field' => 'term_taxonomy_id',
+                        'terms' => $folder_id,
                         'operator' => 'IN'
                     )
                 );
                 
                 // Remove any conflicting query params
                 unset( $query['apex_folder'] );
-                
-                error_log( esc_html__( 'Modified query: ', 'apex-folders' ) . print_r( $query, true ) );
-            } else {
-                // translators: %d: folder ID
-                error_log( sprintf( esc_html__( 'Term not found for ID: %d', 'apex-folders' ), $folder_id ) );
             }
         }
         

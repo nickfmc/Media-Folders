@@ -115,8 +115,6 @@ class APEX_FOLDERS_Utilities {
      * @return void
      */
     public static function update_folder_counts() {
-        global $wpdb;
-        
         // Get all media folder terms
         $folders = get_terms( array(
             'taxonomy'   => 'apex_folder',
@@ -128,21 +126,40 @@ class APEX_FOLDERS_Utilities {
         }
         
         foreach ( $folders as $folder ) {
-            // Count attachments in this folder
-            $count = $wpdb->get_var( $wpdb->prepare(
-                "SELECT COUNT(*) FROM $wpdb->term_relationships
-                 JOIN $wpdb->posts ON $wpdb->posts.ID = $wpdb->term_relationships.object_id
-                 WHERE $wpdb->term_relationships.term_taxonomy_id = %d
-                 AND $wpdb->posts.post_type = 'attachment'",
-                 $folder->term_taxonomy_id
-            ) );
-            
-            // Update the count in the database directly
-            $wpdb->update(
-                $wpdb->term_taxonomy,
-                array( 'count' => $count ),
-                array( 'term_taxonomy_id' => $folder->term_taxonomy_id )
+            // Use WP_Query to count attachments in this folder
+            $args = array(
+                'post_type'      => 'attachment',
+                'post_status'    => 'inherit',
+                'posts_per_page' => -1,
+                'fields'         => 'ids',
+                'tax_query'      => array(
+                    array(
+                        'taxonomy' => 'apex_folder',
+                        'field'    => 'term_id',
+                        'terms'    => $folder->term_id,
+                    ),
+                ),
             );
+            
+            $query = new WP_Query( $args );
+            $count = $query->found_posts;
+            
+            // Manually update the term count in the database
+            global $wpdb;
+            $tt_id = $folder->term_taxonomy_id;
+            
+            if ( $tt_id ) {
+                // Direct DB query used here because the WordPress built-in term count 
+                // functions don't properly handle attachment counts, especially in 
+                // the context of custom taxonomies. We ensure proper sanitization
+                // and clear all relevant caches afterward.
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Built-in term counting functions don't work reliably for attachment taxonomies and we took apporpriate precautions
+                $wpdb->update(
+                    $wpdb->term_taxonomy,
+                    array( 'count' => $count ),
+                    array( 'term_taxonomy_id' => $tt_id )
+                );
+            }
         }
         
         // Clear caches
@@ -205,11 +222,7 @@ class APEX_FOLDERS_Utilities {
         
         // If term is numeric, it's likely an ID being misinterpreted
         if ( is_numeric( $term ) ) {
-            if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                // translators: %s: numeric term name that was prevented
-                error_log( sprintf( esc_html__( 'Preventing creation of numeric term: %s', 'apex-folders' ), $term ) );
-            }
-            
+                     
             // Return an error to prevent term creation
             return new WP_Error( 'invalid_term', esc_html__( "Can't create folder with numeric name", 'apex-folders' ) );
         }

@@ -88,8 +88,9 @@ class APEX_FOLDERS_Upload {
         // Pass data to the script
         wp_localize_script(
             'apex-folders-uploader',
-            'MediaFolderUploaderData',
+            'apexfoMediaFolderUploaderData',
             array(
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just reading the GET parameter for UI purposes
                 'currentFolder' => isset( $_GET['apex_folder'] ) ? sanitize_text_field( wp_unslash( $_GET['apex_folder'] ) ) : null,
                 'dropdownHtml'  => $dropdown_html,
                 'folderNonce'   => wp_create_nonce( 'APEX_FOLDERS_nonce' ),
@@ -109,31 +110,33 @@ class APEX_FOLDERS_Upload {
      * @return array File information.
      */
     public function handle_upload( $file ) {
-        // For debugging
-        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-            // translators: %s: file name being uploaded.
-            error_log( sprintf( esc_html__( 'Upload handler called for file: %s', 'apex-folders' ), sanitize_text_field( $file['name'] ) ) );
-        }
-        
         // Check all possible sources for the folder ID
         $folder_id = 0;
         $source    = 'unknown';
         
         // Check various parameter names
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Processing upload parameters; WordPress handles upload security
         if ( isset( $_POST['apex_folder_id'] ) ) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Processing upload parameters; WordPress handles upload security
             $folder_id = intval( $_POST['apex_folder_id'] );
             $source    = 'POST apex_folder_id';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Processing upload parameters; WordPress handles upload security
         } elseif ( isset( $_POST['apex-folder-select'] ) ) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Processing upload parameters; WordPress handles upload security
             $folder_id = intval( $_POST['apex-folder-select'] );
             $source    = 'POST apex-folder-select';
         }
         
         // If not in POST, try REQUEST (which combines GET, POST, COOKIE)
         if ( ! $folder_id ) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Processing upload parameters; WordPress handles upload security
             if ( isset( $_REQUEST['apex_folder_id'] ) ) {
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Processing upload parameters; WordPress handles upload security
                 $folder_id = intval( $_REQUEST['apex_folder_id'] );
                 $source    = 'REQUEST apex_folder_id';
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Processing upload parameters; WordPress handles upload security
             } elseif ( isset( $_REQUEST['apex-folder-select'] ) ) {
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Processing upload parameters; WordPress handles upload security
                 $folder_id = intval( $_REQUEST['apex-folder-select'] );
                 $source    = 'REQUEST apex-folder-select';
             }
@@ -150,9 +153,6 @@ class APEX_FOLDERS_Upload {
             $folder_id = apex_folders_get_unassigned_id();
             $source    = 'DEFAULT (unassigned)';
         }
-        
-        // translators: %1$d: folder ID, %2$s: source of folder ID, %3$s: file name.
-        error_log( sprintf( esc_html__( 'Found folder ID %1$d from %2$s for file: %3$s', 'apex-folders' ), $folder_id, $source, $file['name'] ) );
         
         // Store this in a transient for later retrieval
         set_transient( 'apex_folder_for_' . sanitize_file_name( $file['name'] ), $folder_id, 5 * MINUTE_IN_SECONDS );
@@ -178,18 +178,19 @@ class APEX_FOLDERS_Upload {
         // Get the original filename
         $filename = basename( get_attached_file( $attachment_id ) );
         
-        // translators: %1$d: attachment ID, %2$s: filename.
-        error_log( sprintf( esc_html__( 'Processing new attachment ID %1$d (file: %2$s)', 'apex-folders' ), $attachment_id, $filename ) );
-        
         // Try multiple approaches to get the folder ID, in order of preference:
         $folder_id = 0;
         $source    = 'unknown';
         
         // 1. Check POST data directly with additional fallbacks
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Processing upload parameters; WordPress handles upload security
         if ( isset( $_POST['apex_folder_id'] ) ) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Processing upload parameters; WordPress handles upload security
             $folder_id = intval( $_POST['apex_folder_id'] );
             $source    = 'POST apex_folder_id';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Processing upload parameters; WordPress handles upload security
         } elseif ( isset( $_POST['apex-folder-select'] ) ) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Processing upload parameters; WordPress handles upload security
             $folder_id = intval( $_POST['apex-folder-select'] );
             $source    = 'POST select dropdown';
         }
@@ -209,8 +210,10 @@ class APEX_FOLDERS_Upload {
         }
         
         // 4. If we still have no folder, use the URL query parameter if present
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just using the GET parameter for folder selection, not for actions
         if ( ! $folder_id && isset( $_GET['apex_folder'] ) ) {
             // Convert slug to ID
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just using the GET parameter for folder selection, not for actions
             $term = get_term_by( 'slug', sanitize_text_field( wp_unslash( $_GET['apex_folder'] ) ), 'apex_folder' );
             if ( $term && ! is_wp_error( $term ) ) {
                 $folder_id = $term->term_id;
@@ -224,9 +227,6 @@ class APEX_FOLDERS_Upload {
             $source    = 'default (unassigned)';
         }
         
-        // translators: %1$d: folder ID, %2$s: source of folder ID, %3$d: attachment ID.
-        error_log( sprintf( esc_html__( 'Folder ID %1$d found from %2$s for attachment ID %3$d', 'apex-folders' ), $folder_id, $source, $attachment_id ) );
-        
         // If we have a valid folder ID and it exists, assign the attachment to it
         if ( $folder_id > 0 ) {
             // Verify the folder exists
@@ -235,41 +235,17 @@ class APEX_FOLDERS_Upload {
                 // Assign to folder - use both methods for redundancy
                 wp_set_object_terms( $attachment_id, array( $folder_id ), 'apex_folder', false );
                 
-                // translators: %1$d: attachment ID, %2$d: folder ID, %3$s: folder name.
-                error_log( sprintf( esc_html__( 'Assigned attachment ID %1$d to folder ID %2$d (%3$s)', 'apex-folders' ), $attachment_id, $folder_id, $term->name ) );
-                
                 // Also use direct database access as a backup approach
                 global $wpdb;
-                $tt_id = $wpdb->get_var( 
-                    $wpdb->prepare(
-                        "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-                         WHERE term_id = %d AND taxonomy = 'apex_folder'",
-                        $folder_id
-                    )
-                );
+                
+                // Get term information
+                $term = get_term( $folder_id, 'apex_folder' );
+                $tt_id = isset( $term->term_taxonomy_id ) ? $term->term_taxonomy_id : false;
                 
                 if ( $tt_id ) {
-                    // Ensure there's no existing relationship
-                    $wpdb->delete(
-                        $wpdb->term_relationships,
-                        array(
-                            'object_id'        => $attachment_id,
-                            'term_taxonomy_id' => $tt_id,
-                        )
-                    );
-                    
-                    // Insert direct relationship
-                    $wpdb->insert(
-                        $wpdb->term_relationships,
-                        array(
-                            'object_id'        => $attachment_id,
-                            'term_taxonomy_id' => $tt_id,
-                            'term_order'       => 0,
-                        )
-                    );
-                    
-                    // translators: %1$d: attachment ID, %2$d: folder ID.
-                    error_log( sprintf( esc_html__( 'Added direct database relationship between attachment %1$d and folder %2$d', 'apex-folders' ), $attachment_id, $folder_id ) );
+                    // For the backup approach, we'll just use wp_set_object_terms again
+                    // This is redundant but provides a safety check
+                    wp_set_object_terms( $attachment_id, array( $folder_id ), 'apex_folder', false );
                 }
                 
                 // Update term counts
@@ -278,9 +254,6 @@ class APEX_FOLDERS_Upload {
                 // Folder doesn't exist, use Unassigned
                 $unassigned_id = apex_folders_get_unassigned_id();
                 wp_set_object_terms( $attachment_id, array( $unassigned_id ), 'apex_folder', false );
-                
-                // translators: %1$d: folder ID that doesn't exist, %2$d: unassigned folder ID.
-                error_log( sprintf( esc_html__( 'Folder ID %1$d doesn\'t exist, using Unassigned (%2$d)', 'apex-folders' ), $folder_id, $unassigned_id ) );
             }
         }
         
@@ -300,10 +273,14 @@ class APEX_FOLDERS_Upload {
         $source    = 'DEFAULT';
         
         // First try the direct POST/GET variables
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Processing upload parameters; WordPress handles upload security
         if ( isset( $_REQUEST['apex_folder_id'] ) ) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Processing upload parameters; WordPress handles upload security
             $folder_id = intval( $_REQUEST['apex_folder_id'] );
             $source    = 'REQUEST';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Processing upload parameters; WordPress handles upload security
         } elseif ( isset( $_REQUEST['apex-folder-select'] ) ) { // Second, try from the dropdown in the uploader
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Processing upload parameters; WordPress handles upload security
             $folder_id = intval( $_REQUEST['apex-folder-select'] );
             $source    = 'SELECT';
         } elseif ( isset( $_COOKIE['apex_folder_upload_id'] ) ) { // Finally check cookie
@@ -318,10 +295,6 @@ class APEX_FOLDERS_Upload {
         
         // Add our custom folder param
         $plupload_init['multipart_params']['apex_folder_id'] = $folder_id;
-        
-        // Log what we're doing for debugging
-        // translators: %1$d: folder ID, %2$s: source of folder ID.
-        error_log( sprintf( esc_html__( 'Setting plupload apex_folder_id to: %1$d (Source: %2$s)', 'apex-folders' ), $folder_id, $source ) );
         
         return $plupload_init;
     }

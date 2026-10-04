@@ -36,6 +36,56 @@ class APEX_FOLDERS_UI {
     }
     
     /**
+     * Get sanitized folder from URL parameters with nonce verification when applicable
+     *
+     * @return string|null Sanitized folder slug or null
+     */
+    private function get_current_folder() {
+        // For requests that should have nonce verification
+        if (isset($_GET['apex_folder']) && isset($_GET['_wpnonce'])) {
+            if (wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'apex_folder_view')) {
+                return sanitize_text_field(wp_unslash($_GET['apex_folder']));
+            }
+            return null;
+        }
+        
+        // For regular page views (no action being taken, just viewing)
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just reading folder filter for display purposes, not making changes
+        if (isset($_GET['apex_folder'])) {
+            return sanitize_text_field(wp_unslash($_GET['apex_folder']));
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get the current view mode from URL or user settings
+     *
+     * @return string The current view mode ('grid' or 'list')
+     */
+    private function get_media_library_mode() {
+        $user_id = get_current_user_id();
+        $media_library_mode = get_user_option('media_library_mode', $user_id);
+        
+        // Default to 'grid' if not set
+        if (empty($media_library_mode)) {
+            $media_library_mode = 'grid';
+        }
+        
+        // URL parameter overrides the user preference
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just reading view preference, not making changes
+        if (isset($_GET['mode'])) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just reading view preference, not making changes
+            $url_mode = sanitize_text_field(wp_unslash($_GET['mode']));
+            if (!empty($url_mode) && in_array($url_mode, array('grid', 'list'), true)) {
+                $media_library_mode = $url_mode;
+            }
+        }
+        
+        return $media_library_mode;
+    }
+    
+    /**
      * Render the folders interface in the media library
      */
     public function render_folders_interface() {
@@ -44,20 +94,11 @@ class APEX_FOLDERS_UI {
             return;
         }
 
-        // Determine the current view mode, WordPress stores this in user meta - we need to check that
-        $user_id = get_current_user_id();
-        $media_library_mode = get_user_option( 'media_library_mode', $user_id );
+        // Determine the current view mode
+        $media_library_mode = $this->get_media_library_mode();
         
-        // Default to 'grid' if not set
-        if ( empty( $media_library_mode ) ) {
-            $media_library_mode = 'grid';
-        }
-        
-        // URL parameter overrides the user preference
-        $url_mode = isset( $_GET['mode'] ) ? sanitize_text_field( wp_unslash( $_GET['mode'] ) ) : '';
-        if ( !empty( $url_mode ) && in_array( $url_mode, array( 'grid', 'list' ) ) ) {
-            $media_library_mode = $url_mode;
-        }
+        // Get current folder
+        $current_folder = $this->get_current_folder();
 
         // Get organized folders using the utility class
         $organized = APEX_FOLDERS_Utilities::get_organized_folders();
@@ -71,14 +112,15 @@ class APEX_FOLDERS_UI {
         echo '<ul class="apex-folder-list">';
         
         // Add "All Files" option
-        $class = ! isset( $_GET['apex_folder'] ) ? 'current' : '';
+        $class = !$current_folder ? 'current' : '';
         echo '<li class="' . esc_attr( $class ) . ' all-files"><a href="' . esc_url( admin_url( 'upload.php' ) ) . '">' . esc_html__( 'All Files', 'apex-folders' ) . '</a></li>';
         
         // Add Unassigned folder immediately after All Files
         if ( $unassigned_folder ) {
-            $class = isset( $_GET['apex_folder'] ) && sanitize_text_field( wp_unslash( $_GET['apex_folder'] ) ) === $unassigned_folder->slug ? 'current' : '';
+            $class = $current_folder === $unassigned_folder->slug ? 'current' : '';
+            $nonce_url = wp_nonce_url(admin_url('upload.php?apex_folder=' . $unassigned_folder->slug), 'apex_folder_view');
             echo '<li class="' . esc_attr( $class ) . ' unassigned-folder" data-folder-id="' . intval( $unassigned_folder->term_id ) . '">';
-            echo '<a href="' . esc_url( admin_url( 'upload.php?apex_folder=' . $unassigned_folder->slug ) ) . '">' . esc_html( $unassigned_folder->name ) . ' (' . intval( $unassigned_folder->count ) . ')</a>';
+            echo '<a href="' . esc_url($nonce_url) . '">' . esc_html( $unassigned_folder->name ) . ' (' . intval( $unassigned_folder->count ) . ')</a>';
             echo '</li>';
         }
         
@@ -87,11 +129,12 @@ class APEX_FOLDERS_UI {
         
         // Add parent folders and their children
         foreach ( $parent_folders as $folder ) {
-            $class = isset( $_GET['apex_folder'] ) && sanitize_text_field( wp_unslash( $_GET['apex_folder'] ) ) === $folder->slug ? 'current' : '';
+            $class = $current_folder === $folder->slug ? 'current' : '';
             $has_children = isset( $child_folders[$folder->term_id] ) && ! empty( $child_folders[$folder->term_id] );
+            $nonce_url = wp_nonce_url(admin_url('upload.php?apex_folder=' . $folder->slug), 'apex_folder_view');
             
             echo '<li class="' . esc_attr( $class ) . ' custom-folder parent-folder' . ( $has_children ? ' has-children' : '' ) . '" data-folder-id="' . intval( $folder->term_id ) . '">';
-            echo '<a href="' . esc_url( admin_url( 'upload.php?apex_folder=' . $folder->slug ) ) . '">' . esc_html( $folder->name ) . ' (' . intval( $folder->count ) . ')</a>';
+            echo '<a href="' . esc_url($nonce_url) . '">' . esc_html( $folder->name ) . ' (' . intval( $folder->count ) . ')</a>';
             echo '<span class="edit-folder dashicons dashicons-edit" data-folder-id="' . intval( $folder->term_id ) . '" data-folder-name="' . esc_attr( $folder->name ) . '" title="' . esc_attr__( 'Edit folder', 'apex-folders' ) . '"></span>';
             echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . intval( $folder->term_id ) . '" data-folder-name="' . esc_attr( $folder->name ) . '" title="' . esc_attr__( 'Delete folder', 'apex-folders' ) . '"></span>';
             
@@ -103,11 +146,12 @@ class APEX_FOLDERS_UI {
             // Display children if any
             if ( $has_children ) {
                 foreach ( $child_folders[$folder->term_id] as $child ) {
-                    $child_class = isset( $_GET['apex_folder'] ) && sanitize_text_field( wp_unslash( $_GET['apex_folder'] ) ) === $child->slug ? 'current' : '';
+                    $child_class = $current_folder === $child->slug ? 'current' : '';
+                    $child_nonce_url = wp_nonce_url(admin_url('upload.php?apex_folder=' . $child->slug), 'apex_folder_view');
                     
                     echo '<li class="' . esc_attr( $child_class ) . ' custom-folder child-folder" data-folder-id="' . intval( $child->term_id ) . '" data-parent-id="' . intval( $folder->term_id ) . '">';
                     echo '<span class="child-indicator">└─</span>';
-                    echo '<a href="' . esc_url( admin_url( 'upload.php?apex_folder=' . $child->slug ) ) . '">' . esc_html( $child->name ) . ' (' . intval( $child->count ) . ')</a>';
+                    echo '<a href="' . esc_url($child_nonce_url) . '">' . esc_html( $child->name ) . ' (' . intval( $child->count ) . ')</a>';
                     echo '<span class="edit-folder dashicons dashicons-edit" data-folder-id="' . intval( $child->term_id ) . '" data-folder-name="' . esc_attr( $child->name ) . '" title="' . esc_attr__( 'Edit folder', 'apex-folders' ) . '"></span>';
                     echo '<span class="delete-folder dashicons dashicons-trash" data-folder-id="' . intval( $child->term_id ) . '" data-folder-name="' . esc_attr( $child->name ) . '" title="' . esc_attr__( 'Delete folder', 'apex-folders' ) . '"></span>';
                     echo '</li>';
@@ -135,11 +179,15 @@ class APEX_FOLDERS_UI {
         wp_enqueue_style( 'wp-jquery-ui-dialog' );
         wp_enqueue_script( 'jquery-ui-dialog' );
         
+        // Get current folder with safety check
+        $current_folder = $this->get_current_folder();
+        
         // Pass data to our scripts
         $folders_data = array(
-            'currentFolder' => isset( $_GET['apex_folder'] ) ? sanitize_text_field( wp_unslash( $_GET['apex_folder'] ) ) : null,
+            'currentFolder' => $current_folder,
             'nonce' => wp_create_nonce( 'APEX_FOLDERS_nonce' ),
             'slugNonce' => wp_create_nonce( 'APEX_FOLDERS_get_slug' ),
+            'viewNonce' => wp_create_nonce( 'apex_folder_view' ),
             'parentFolders' => array_map( function( $folder ) {
                 return array(
                     'term_id' => $folder->term_id,
@@ -185,29 +233,25 @@ class APEX_FOLDERS_UI {
      */
     public function add_folder_fields( $form_fields, $post ) {
         // Always remove any existing apex_folder fields, regardless of how they're rendered
-    if (isset($form_fields['apex_folder'])) {
-        unset($form_fields['apex_folder']);
-    }
+        if (isset($form_fields['apex_folder'])) {
+            unset($form_fields['apex_folder']);
+        }
 
-    // Store the current folder ID before getting new terms
-    // This ensures we don't lose the current selection
-    $current_folder_id = apex_folders_get_unassigned_id();
-    
-    // Get the current folder term
-    $current_folders = wp_get_object_terms( $post->ID, 'apex_folder' );
-    if ( !empty($current_folders) && !is_wp_error($current_folders) ) {
-        $current_folder_id = $current_folders[0]->term_id;
-    }
-    
-    // Get folders for the dropdown
-    $folders = get_terms( array(
-        'taxonomy' => 'apex_folder',
-        'hide_empty' => false,
-    ) );
+        // Store the current folder ID before getting new terms
+        // This ensures we don't lose the current selection
+        $current_folder_id = apex_folders_get_unassigned_id();
         
         // Get the current folder term
         $current_folders = wp_get_object_terms( $post->ID, 'apex_folder' );
-        $current_folder_id = ( ! empty( $current_folders ) && ! is_wp_error( $current_folders ) ) ? $current_folders[0]->term_id : apex_folders_get_unassigned_id();
+        if ( !empty($current_folders) && !is_wp_error($current_folders) ) {
+            $current_folder_id = $current_folders[0]->term_id;
+        }
+        
+        // Get folders for the dropdown
+        $folders = get_terms( array(
+            'taxonomy' => 'apex_folder',
+            'hide_empty' => false,
+        ) );
         
         // Organize folders by hierarchy
         $unassigned_folder = null;
@@ -288,6 +332,10 @@ class APEX_FOLDERS_UI {
         
         $dropdown .= '</select>';
         
+        // Add a nonce field
+        $nonce_field = wp_nonce_field('save_apex_folder_' . $post->ID, 'apex_folder_nonce_' . $post->ID, true, false);
+        $dropdown .= $nonce_field;
+        
         $form_fields['apex_folder'] = array(
             'label' => esc_html__( 'Folder', 'apex-folders' ),
             'input' => 'html',
@@ -304,22 +352,17 @@ class APEX_FOLDERS_UI {
      * @param array $args Arguments for the terms checklist
      * @param int $post_id Post ID
      * @return array Modified arguments
-     * @since 0.9.9
-     */
-    /**
-     * Prevent WordPress from showing the terms checklist for our taxonomy
      */
     public function prevent_folder_checklist( $args, $post_id ) {
         // If this is our taxonomy, prevent the checklist completely
         if ( isset( $args['taxonomy'] ) && $args['taxonomy'] === 'apex_folder' ) {
             // Set a special walker that outputs nothing
-            $args['walker'] = new WP_Walker_Empty();
+            $args['walker'] = new APEXFO_Walker_Empty();
             $args['checked_ontop'] = false;
             $args['selected_cats'] = array();
         }
         return $args;
     }
-
     
     /**
      * Save folder assignment from attachment edit screen
@@ -329,14 +372,18 @@ class APEX_FOLDERS_UI {
      * @return array Modified post data
      */
     public function save_folder_assignment( $post, $attachment ) {
-        global $is_processing_apex_folder;
-        
         // If already processing or no folder specified, return
-        if ( $is_processing_apex_folder || ! isset( $attachment['apex_folder'] ) ) {
+        if ( Apex_Folders_State::is_processing() || ! isset( $attachment['apex_folder'] ) ) {
             return $post;
         }
         
-        $is_processing_apex_folder = true;
+        // Verify nonce
+        $nonce_name = 'apex_folder_nonce_' . $post['ID'];
+        if ( !isset($_POST[$nonce_name]) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST[$nonce_name])), 'save_apex_folder_' . $post['ID']) ) {
+            return $post;
+        }
+        
+        Apex_Folders_State::set_processing( true );
         
         try {
             $folder_id = intval( $attachment['apex_folder'] );
@@ -354,40 +401,39 @@ class APEX_FOLDERS_UI {
                 wp_set_object_terms( $post_id, array( $unassigned_id ), 'apex_folder', false );
             }
 
-            // Add JavaScript to force refresh
-            add_action( 'admin_footer', function() use ( $post_id, $folder_id ) {
-                ?>
-                <script>
-                jQuery(document).ready(function($) {
-                    // Force refresh of the media library view
-                    if (wp.media.frame) {
-                        wp.media.frame.library.props.set({ignore: (+ new Date())});
-                        wp.media.frame.library.props.trigger('change');
-                    }
-                    
-                    // If we're in grid mode, refresh that too
-                    if (wp.media.view.Attachment.Library) {
-                        $('.attachments-browser .attachments').trigger('scroll');
-                    }
-                    
-                    // Update folder counts
-                    if (typeof window.updateFolderCounts === 'function') {
-                        window.updateFolderCounts();
-                    }
-                });
-                </script>
-                <?php
-            } );
+            // Add JavaScript to force refresh using wp_add_inline_script
+            $refresh_script = 'jQuery(document).ready(function($) {
+                // Force refresh of the media library view
+                if (wp.media.frame) {
+                    wp.media.frame.library.props.set({ignore: (+ new Date())});
+                    wp.media.frame.library.props.trigger("change");
+                }
+                
+                // If we are in grid mode, refresh that too
+                if (wp.media.view.Attachment.Library) {
+                    $(".attachments-browser .attachments").trigger("scroll");
+                }
+                
+                // Update folder counts
+                if (typeof window.updateFolderCounts === "function") {
+                    window.updateFolderCounts();
+                }
+            });';
+            wp_add_inline_script( 'jquery', $refresh_script );
 
         } finally {
-            $is_processing_apex_folder = false;
+            Apex_Folders_State::set_processing( false );
         }
         
         return $post;
     }
 }
 
-class WP_Walker_Empty extends Walker {
+/**
+ * Empty walker class for apex folders.
+ * Using proper naming convention to avoid conflicts.
+ */
+class APEXFO_Walker_Empty extends Walker {
     public function start_lvl( &$output, $depth = 0, $args = array() ) {
         // Do nothing but maintain the expected structure
         $output .= '';

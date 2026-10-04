@@ -67,72 +67,44 @@ class APEX_FOLDERS_Unassigned {
      * @return int Number of items assigned
      */
     public static function ensure_all_assigned() {
-        global $wpdb;
-        
         // Get the unassigned folder ID
         $unassigned_id = self::get_id();
         
-        // Get the term taxonomy ID
-        $tt_id = $wpdb->get_var( $wpdb->prepare(
-            "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-             WHERE term_id = %d AND taxonomy = 'apex_folder'",
-            $unassigned_id
-        ) );
+        // Get term object to access term_taxonomy_id
+        $term = get_term($unassigned_id, 'apex_folder');
         
-        if ( ! $tt_id ) {
-            error_log(
-                sprintf(
-                    /* translators: %d: unassigned folder ID */
-                    esc_html__( 'Error: Could not find term_taxonomy_id for Unassigned folder (ID: %d)', 'apex-folders' ),
-                    $unassigned_id
-                )
-            );
+        if (!$term || is_wp_error($term)) {
             return 0;
         }
-        
+
         // Find all attachments that don't have ANY folder assignment
-        $unassigned_attachments = $wpdb->get_col(
-            "SELECT p.ID FROM $wpdb->posts p
-             WHERE p.post_type = 'attachment'
-             AND NOT EXISTS (
-                 SELECT 1 FROM $wpdb->term_relationships tr
-                 JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                 WHERE tt.taxonomy = 'apex_folder' AND tr.object_id = p.ID
-             )"
-        );
+        $unassigned_query = new WP_Query( array(
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'apex_folder',
+                    'operator' => 'NOT EXISTS'
+                )
+            )
+        ) );
+        $unassigned_attachments = $unassigned_query->posts;
         
         $count = 0;
         
-        // Log what we found
-        error_log(
-            sprintf(
-                /* translators: %d: number of attachments with no folder */
-                esc_html__( 'Found %d attachments with no folder assignment', 'apex-folders' ),
-                count( $unassigned_attachments )
-            )
-        );
         
         // Process in batches to avoid timeouts
         foreach ( $unassigned_attachments as $attachment_id ) {
-            // Direct SQL approach to ensure reliability
-            $exists = $wpdb->get_var( $wpdb->prepare(
-                "SELECT COUNT(*) FROM $wpdb->term_relationships 
-                 WHERE object_id = %d AND term_taxonomy_id = %d",
-                $attachment_id, $tt_id
-            ) );
+            // Check if attachment already has this term
+            $exists = has_term( $unassigned_id, 'apex_folder', $attachment_id );
             
             if ( ! $exists ) {
-                // Insert the relationship directly
-                $wpdb->insert(
-                    $wpdb->term_relationships,
-                    array(
-                        'object_id' => $attachment_id,
-                        'term_taxonomy_id' => $tt_id,
-                        'term_order' => 0
-                    )
-                );
+                // Add term to attachment using WordPress API
+                $result = wp_set_object_terms($attachment_id, $unassigned_id, 'apex_folder', true);
                 
-                if ( $wpdb->insert_id || $wpdb->rows_affected ) {
+                if ( !is_wp_error($result) && !empty($result) ) {
                     $count++;
                 }
             }
@@ -140,13 +112,8 @@ class APEX_FOLDERS_Unassigned {
         
         // Update term count
         if ( $count > 0 ) {
-            // Update the count in the database directly
-            $wpdb->query( $wpdb->prepare(
-                "UPDATE $wpdb->term_taxonomy 
-                 SET count = count + %d
-                 WHERE term_taxonomy_id = %d",
-                $count, $tt_id
-            ) );
+            // Update the count in the database using WordPress API
+            wp_update_term_count_now( array( $unassigned_id ), 'apex_folder' );
             
             // Clear cache
             clean_term_cache( $unassigned_id, 'apex_folder' );

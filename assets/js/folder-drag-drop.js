@@ -306,7 +306,7 @@
                 action: 'apex_folder_move_items',
                 attachment_ids: MediaFolderDragDrop.draggedItems,
                 folder_id: targetFolderId,
-                nonce: mediaFolderSettings.nonce
+                nonce: apexfoMediaFolderSettings.nonce
             },
             success: function(response) {
                 if (response.success) {
