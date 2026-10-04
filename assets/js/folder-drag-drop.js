@@ -1,6 +1,6 @@
 /**
  * Media Folders - Drag and Drop Functionality
- * 
+ *
  * Enables drag and drop file organization in the WordPress media library.
  */
 
@@ -17,27 +17,40 @@
         bulkModeActive: false
     };
 
+    // Translated strings from PHP
+    var i18n = (window.mediaFolderSettings && mediaFolderSettings.i18n) || {};
+
+    /**
+     * Fill the placeholders of a translated string, in order
+     */
+    function format(text) {
+        var values = Array.prototype.slice.call(arguments, 1);
+        var index = 0;
+
+        return String(text).replace(/%(\d+\$)?[ds]/g, function(match, position) {
+            var value = position ? values[parseInt(position, 10) - 1] : values[index++];
+            return typeof value === 'undefined' ? match : value;
+        });
+    }
+
     /**
      * Initialize drag and drop functionality
      */
     function initDragDrop() {
         // Get current folder information
         getCurrentFolderInfo();
-        
+
         // Make attachments draggable
         initDraggableAttachments();
-        
+
         // Make folders droppable
         initDroppableFolders();
-        
+
         // Create the drag helper element
         createDragHelper();
-        
+
         // Add bulk selection support
         addBulkSelectionSupport();
-        
-        // Listen for media library refreshes
-        listenForLibraryRefresh();
     }
 
     /**
@@ -47,7 +60,7 @@
         // Get the current folder from URL or data attributes
         var urlParams = new URLSearchParams(window.location.search);
         MediaFolderDragDrop.currentFolderSlug = urlParams.get('apex_folder') || '';
-        
+
         // Find the current folder ID from the active folder item
         if (MediaFolderDragDrop.currentFolderSlug) {
             var $currentFolder = $('.apex-folder-list li.current');
@@ -55,22 +68,18 @@
                 MediaFolderDragDrop.currentFolderId = $currentFolder.data('folder-id');
             }
         }
-        
     }
 
     /**
      * Make attachments draggable
      */
     function initDraggableAttachments() {
-        // Use event delegation for attachments (they can be loaded dynamically)
-        $(document).on('mousedown', '.attachments-browser .attachment:not(.ui-draggable)', function() {
+        // Use event delegation for attachments (they can be loaded dynamically).
+        // Set up on mouseenter so the attachment is already draggable by the
+        // time the mouse button goes down on it.
+        $(document).on('mouseenter', '.attachments-browser .attachment:not(.ui-draggable)', function() {
             var $attachment = $(this);
-            
-            // Check if we're in grid view
-            if (!$attachment.closest('.attachments-browser').length) {
-                return;
-            }
-            
+
             // Initialize draggable on this attachment
             $attachment.draggable({
                 helper: 'clone',
@@ -92,11 +101,6 @@
                     updateDragHelper(event, ui);
                 }
             });
-            
-            // Trigger the draggable on this element if not already done
-            if (!$attachment.data('ui-draggable')) {
-                $attachment.trigger('mousedown');
-            }
         });
     }
 
@@ -105,12 +109,12 @@
      */
     function handleDragStart(event, ui, $attachment) {
         MediaFolderDragDrop.isDragging = true;
-        
-         // Add dragging class to body to prevent text selection
-    $('body').addClass('apex-folders-dragging');
+
+        // Add dragging class to body to prevent text selection
+        $('body').addClass('apex-folders-dragging');
         // Add dragging class to the original element
         $attachment.addClass('is-dragging');
-        
+
         // Style the helper
         ui.helper.css({
             'width': '50px',
@@ -121,45 +125,37 @@
             'box-shadow': '0 5px 10px rgba(0,0,0,0.2)',
             'border-radius': '3px'
         });
-        
+
+        var title = $attachment.find('.attachment-preview').attr('title') || i18n.item;
+        var $selectedItems = MediaFolderDragDrop.bulkModeActive ? $('.attachments-browser .attachment.selected') : $();
+
         // Check if we're in selection mode - if so, collect all selected items
-        if (MediaFolderDragDrop.bulkModeActive) {
-            var $selectedItems = $('.attachments-browser .attachment.selected');
-            
-            if ($selectedItems.length > 0) {
-                // Collect IDs of all selected items
-                MediaFolderDragDrop.draggedItems = [];
-                $selectedItems.each(function() {
-                    var id = $(this).data('id');
-                    if (id) {
-                        MediaFolderDragDrop.draggedItems.push(id);
-                    }
-                });
-                
-                // If the dragged item isn't in the selection, add it
-                var draggedId = $attachment.data('id');
-                if (draggedId && MediaFolderDragDrop.draggedItems.indexOf(draggedId) === -1) {
-                    MediaFolderDragDrop.draggedItems.push(draggedId);
+        if ($selectedItems.length > 0) {
+            // Collect IDs of all selected items
+            MediaFolderDragDrop.draggedItems = [];
+            $selectedItems.each(function() {
+                var id = $(this).data('id');
+                if (id) {
+                    MediaFolderDragDrop.draggedItems.push(id);
                 }
-                
-                // Update helper text to show multiple items
-                showDragHelper('Moving ' + MediaFolderDragDrop.draggedItems.length + ' items');
-            } else {
-                // No items selected, just drag the current item
-                MediaFolderDragDrop.draggedItems = [$attachment.data('id')];
-                var title = $attachment.find('.attachment-preview').attr('title') || 'item';
-                showDragHelper('Moving: ' + title);
+            });
+
+            // If the dragged item isn't in the selection, add it
+            var draggedId = $attachment.data('id');
+            if (draggedId && MediaFolderDragDrop.draggedItems.indexOf(draggedId) === -1) {
+                MediaFolderDragDrop.draggedItems.push(draggedId);
             }
+
+            // Update helper text to show multiple items
+            showDragHelper(format(i18n.movingCount, MediaFolderDragDrop.draggedItems.length));
         } else {
-            // Single item drag mode
+            // Single item drag mode, or no items selected: just drag the current item
             MediaFolderDragDrop.draggedItems = [$attachment.data('id')];
-            var title = $attachment.find('.attachment-preview').attr('title') || 'item';
-            showDragHelper('Moving: ' + title);
+            showDragHelper(format(i18n.movingOne, title));
         }
-        
+
         // Show all droppable folders
         $('.apex-folder-list li.droppable').addClass('active-drag');
-        
     }
 
     /**
@@ -168,13 +164,13 @@
     function handleDragStop(event, ui, $attachment) {
         MediaFolderDragDrop.isDragging = false;
         // Remove the dragging class from body
-    $('body').removeClass('apex-folders-dragging');
+        $('body').removeClass('apex-folders-dragging');
         // Remove dragging class
         $attachment.removeClass('is-dragging');
-        
+
         // Hide drag helper
         hideDragHelper();
-        
+
         // Reset droppable folders
         $('.apex-folder-list li.droppable').removeClass('active-drag drag-over');
     }
@@ -187,7 +183,7 @@
         if (!$('.apex-folder-drag-helper').length) {
             $('body').append('<div class="apex-folder-drag-helper" style="display:none;"></div>');
         }
-        
+
         // Store reference to the helper
         MediaFolderDragDrop.dragHelper = $('.apex-folder-drag-helper');
     }
@@ -195,7 +191,7 @@
     /**
      * Show the drag helper with text
      */
-      function showDragHelper(text) {
+    function showDragHelper(text) {
         if (MediaFolderDragDrop.dragHelper) {
             MediaFolderDragDrop.dragHelper
                 .text(text)
@@ -227,9 +223,10 @@
      */
     function updateDragHelper(event, ui) {
         if (MediaFolderDragDrop.dragHelper && MediaFolderDragDrop.dragHelper.is(':visible')) {
+            // The helper is position: fixed, so use viewport coordinates
             MediaFolderDragDrop.dragHelper.css({
-                'left': event.pageX + 15,
-                'top': event.pageY + 15
+                'left': event.clientX + 15,
+                'top': event.clientY + 15
             });
         }
     }
@@ -242,15 +239,15 @@
         $('.apex-folder-list li').each(function() {
             var $folder = $(this);
             var folderId = $folder.data('folder-id');
-            
+
             // Skip the current folder and non-folder items (like separators)
             if (!folderId || (MediaFolderDragDrop.currentFolderId && folderId === MediaFolderDragDrop.currentFolderId)) {
                 return;
             }
-            
+
             // Add droppable class
             $folder.addClass('droppable');
-            
+
             // Initialize droppable
             $folder.droppable({
                 accept: '.attachment',
@@ -278,267 +275,266 @@
         // Get folder info
         var targetFolderId = $folder.data('folder-id');
         var targetFolderName = $folder.find('a').text().split('(')[0].trim();
-        
+
+        // Remember what is being moved; another drag may start before the request returns
+        var movedItems = MediaFolderDragDrop.draggedItems.slice();
+        var itemCount = movedItems.length;
+
         // Remove highlight
         $folder.removeClass('drag-over');
-        
+
         // Show processing animation
         $folder.addClass('folder-updating');
-        
-        // Show a brief notification
-        var itemCount = MediaFolderDragDrop.draggedItems.length;
-        var message = 'Moving ' + itemCount + ' ' + 
-                      (itemCount === 1 ? 'item' : 'items') + 
-                      ' to "' + targetFolderName + '"';
-        
-        // Create a notification
-        var $notice = $('<div class="notice notice-info is-dismissible" style="position:fixed; top:32px; right:20px; z-index:9999; width:300px;">' +
-            '<p>' + message + ' <span class="spinner is-active" style="float:none;margin:0 0 0 5px;"></span></p>' +
-            '</div>');
-        
+
+        // Show a brief notification. The folder name is user input, so it is
+        // only ever inserted as text.
+        var message = format(itemCount === 1 ? i18n.movingItemTo : i18n.movingItemsTo, itemCount, targetFolderName);
+        var $noticeText = $('<span></span>').text(message);
+        var $spinner = $('<span class="spinner is-active" style="float:none;margin:0 0 0 5px;"></span>');
+        var $notice = $('<div class="notice notice-info is-dismissible" style="position:fixed; top:32px; right:20px; z-index:9999; width:300px;"></div>')
+            .append($('<p></p>').append($noticeText, ' ', $spinner));
+
         $('body').append($notice);
-        
+
         // Call AJAX to update folder assignments
         $.ajax({
             url: ajaxurl,
             type: 'POST',
             data: {
                 action: 'apex_folder_move_items',
-                attachment_ids: MediaFolderDragDrop.draggedItems,
+                attachment_ids: movedItems,
                 folder_id: targetFolderId,
                 nonce: mediaFolderSettings.nonce
             },
             success: function(response) {
+                $spinner.remove();
+
                 if (response.success) {
                     // Show success animation on folder
                     $folder.removeClass('folder-updating').addClass('folder-updated');
                     setTimeout(function() {
                         $folder.removeClass('folder-updated');
                     }, 2000);
-                    
-                    // If we're in a folder view, remove the moved items from view
-                    if (MediaFolderDragDrop.currentFolderSlug) {
-                        MediaFolderDragDrop.draggedItems.forEach(function(id) {
-                            var $item = $('.attachment[data-id="' + id + '"]');
-                            $item.fadeOut(300, function() {
-                                $(this).remove();
-                            });
+
+                    // Tell the media library which folder each file is in now. It
+                    // removes the files from a folder view they no longer belong
+                    // to and refreshes the folder counts.
+                    var processedIds = (response.data && response.data.processed_ids) || movedItems;
+
+                    if (window.wp && wp.media && wp.media.model && wp.media.model.Attachment) {
+                        processedIds.forEach(function(id) {
+                            wp.media.model.Attachment.get(id).set('apexFolder', parseInt(targetFolderId, 10));
                         });
-                    }
-                    
-                    // Update folder counts
-                    if (typeof window.updateFolderCounts === 'function') {
+                    } else if (typeof window.updateFolderCounts === 'function') {
                         window.updateFolderCounts();
                     }
-                    
+
                     // Update notice
-                    $notice.find('p').html('Successfully moved files to "' + targetFolderName + '"');
+                    $noticeText.text(format(i18n.movedTo, targetFolderName));
                     $notice.removeClass('notice-info').addClass('notice-success');
-                    $notice.find('.spinner').remove();
-                    
+
                     // Auto dismiss after 3 seconds
                     setTimeout(function() {
-                        $notice.fadeOut(300, function() { 
-                            $(this).remove(); 
+                        $notice.fadeOut(300, function() {
+                            $(this).remove();
                         });
                     }, 3000);
                 } else {
                     // Show error
                     $folder.removeClass('folder-updating');
                     $notice.removeClass('notice-info').addClass('notice-error');
-                    $notice.find('p').text('Error: ' + (response.data ? response.data.message : 'Could not move files'));
-                    $notice.find('.spinner').remove();
+                    $noticeText.text(i18n.errorPrefix + ' ' + (response.data && response.data.message ? response.data.message : i18n.couldNotMove));
                 }
             },
             error: function() {
                 // Handle network error
+                $spinner.remove();
                 $folder.removeClass('folder-updating');
                 $notice.removeClass('notice-info').addClass('notice-error');
-                $notice.find('p').text('Network error: Could not connect to server');
-                $notice.find('.spinner').remove();
+                $noticeText.text(i18n.networkError);
             }
         });
     }
 
-  
-        /**
+    /**
      * Add support for bulk selection mode
      */
     function addBulkSelectionSupport() {
         // Add a custom selection mode toggle button if it doesn't exist
         if (!$('.apex-folder-bulk-select').length) {
             $('.media-toolbar-secondary').prepend(
-                '<button type="button" class="button button-primary select-mode-toggle-button apex-folder-bulk-select">' +
-                '<span class="screen-reader-text">Select multiple files for organization</span>' +
-                'Bulk Drag and Drop</button>'
+                $('<button type="button" class="button button-primary select-mode-toggle-button apex-folder-bulk-select"></button>')
+                    .attr('aria-label', i18n.bulkButtonDescription)
+                    .text(i18n.bulkButton)
             );
         }
 
-                // Force refresh the view to ensure normal behavior returns
+        // Force refresh the view to ensure normal behavior returns
         setTimeout(function() {
             // Trigger a slight scroll to refresh handlers
             $(window).scrollTop($(window).scrollTop() + 1);
         }, 100);
-        
-        
-        
-                   // Handle bulk selection button click
-                $(document).on('click', '.apex-folder-bulk-select', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-         
-                    
-                    if ($('body').hasClass('selecting-mode')) {
-                        // Turn off selection mode
 
-                        $('body').removeClass('selecting-mode');
-                        $(this).text('Bulk Drag and Drop');
-                        MediaFolderDragDrop.bulkModeActive = false;
-                        
-                        // Remove our overlay that prevents clicks
-                        $('.apex-folders-selection-overlay').remove();
-                        
-                        // Remove the floating exit button 
-                        $('.apex-folders-exit-selection').remove();
-                        
-                        // Deselect all items
-                        $('.attachment.selected').removeClass('selected');
-                        $('.attachment').css('box-shadow', '');
-                        $('.selection-indicator').remove();
-                        
-                        // Force refresh the view to ensure normal behavior returns
-                        setTimeout(function() {
-                            $(window).scrollTop($(window).scrollTop() + 1);
-                        }, 100);
-                        
-                    } else {
-                        // Turn on selection mode
-                        $('body').addClass('selecting-mode');
-                        // $(this).text('Exit Selection Mode');
-                        MediaFolderDragDrop.bulkModeActive = true;
-                        
-                        // Create overlay FIRST before adding buttons
-                        $('<div class="apex-folders-selection-overlay"></div>')
-                            .css({
-                                'position': 'absolute',
-                                'top': 0,
-                                'left': 0,
-                                'right': 0, 
-                                'bottom': 0,
-                                'z-index': 99999,
-                                'background': 'rgba(0,0,0,0.01)', // Barely visible but ensures clicks are caught
-                                'cursor': 'pointer'
-                            })
-                            .appendTo('.attachments-browser .attachments');
-                        
-                        // Add a floating Exit button that's always accessible
-                        $('<button type="button" class="apex-folders-exit-selection button button-primary">Exit Selection Mode</button>')
-                            .css({
-                                'position': 'fixed',
-                                'bottom': '60px',           
-                                'right': '40%',         
-                                'z-index': '9999999',    
-                                'pointer-events': 'auto',
-                                'padding': '5px 15px',   
-                                'font-weight': 'bold',   
-                                'box-shadow': '0 2px 5px rgba(0,0,0,0.3)'
-                            })
-                            .appendTo('body')
-                            .on('click', function(e) {
-                                e.stopPropagation(); 
-                                $('.apex-folder-bulk-select').trigger('click');
-                                return false;
-                            });
-                        
-                        // Show helper message
-                        var $notice = $('<div class="notice notice-info" style="position:fixed; bottom:20px; right:20px; z-index:9999; width:300px;">' +
-                            '<p>🔍 <strong>Selection Mode:</strong> Click on items to select multiple files, then drag any selected item to a folder.</p>' +
-                            '</div>');
-                        $('body').append($notice);
-                        setTimeout(function() {
-                            $notice.fadeOut(300, function() { $(this).remove(); });
-                        }, 5000);
-                        
-                        // Add selection indicators to each attachment
-                        $('.attachment').append('<div class="selection-indicator"></div>');
-                    }
-                });
-        
-                 // Handle clicks on the selection overlay
-            $(document).on('click', '.apex-folders-selection-overlay', function(e) {
-                // Prevent the default WordPress behavior
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Temporarily hide the overlay to find what's underneath
-                $(this).hide();
-                
-                // Find the element at the click position
-                var elementBelow = document.elementFromPoint(e.clientX, e.clientY);
-                
-                // Show the overlay again
-                $(this).show();
-                
-                // Find the attachment that was clicked
-                var $attachment = $(elementBelow).closest('.attachment');
-                
-                if ($attachment.length) {
-                    // Toggle the selected class
-                    $attachment.toggleClass('selected');
-                    
-                    // Show visual feedback
-                    if ($attachment.hasClass('selected')) {
-                        $attachment.css('box-shadow', '0 0 0 3px #0073aa');
-                        // Make sure the indicator shows the selected state
-                        $attachment.find('.selection-indicator').css('background', '#0073aa');
-                    } else {
-                        $attachment.css('box-shadow', '');
-                        // Reset the indicator
-                        $attachment.find('.selection-indicator').css('background', '#f0f0f0');
-                    }
+        // Handle bulk selection button click
+        $(document).on('click', '.apex-folder-bulk-select', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if ($('body').hasClass('selecting-mode')) {
+                // Turn off selection mode
+                $('body').removeClass('selecting-mode');
+                $(this).text(i18n.bulkButton);
+                MediaFolderDragDrop.bulkModeActive = false;
+
+                // Remove our overlay that prevents clicks
+                $('.apex-folders-selection-overlay').remove();
+
+                // Remove the floating exit button
+                $('.apex-folders-exit-selection').remove();
+
+                // Deselect all items
+                $('.attachment.selected').removeClass('selected');
+                $('.attachment').css('box-shadow', '');
+                $('.selection-indicator').remove();
+
+                // Force refresh the view to ensure normal behavior returns
+                setTimeout(function() {
+                    $(window).scrollTop($(window).scrollTop() + 1);
+                }, 100);
+            } else {
+                // Turn on selection mode
+                $('body').addClass('selecting-mode');
+                MediaFolderDragDrop.bulkModeActive = true;
+
+                // Create overlay FIRST before adding buttons
+                $('<div class="apex-folders-selection-overlay"></div>')
+                    .css({
+                        'position': 'absolute',
+                        'top': 0,
+                        'left': 0,
+                        'right': 0,
+                        'bottom': 0,
+                        'z-index': 99999,
+                        'background': 'rgba(0,0,0,0.01)', // Barely visible but ensures clicks are caught
+                        'cursor': 'pointer'
+                    })
+                    .appendTo('.attachments-browser .attachments');
+
+                // Add a floating Exit button that's always accessible
+                $('<button type="button" class="apex-folders-exit-selection button button-primary"></button>')
+                    .text(i18n.exitSelection)
+                    .css({
+                        'position': 'fixed',
+                        'bottom': '60px',
+                        'right': '40%',
+                        'z-index': '9999999',
+                        'pointer-events': 'auto',
+                        'padding': '5px 15px',
+                        'font-weight': 'bold',
+                        'box-shadow': '0 2px 5px rgba(0,0,0,0.3)'
+                    })
+                    .appendTo('body')
+                    .on('click', function(e) {
+                        e.stopPropagation();
+                        $('.apex-folder-bulk-select').trigger('click');
+                        return false;
+                    });
+
+                // Show helper message
+                var $notice = $('<div class="notice notice-info" style="position:fixed; bottom:20px; right:20px; z-index:9999; width:300px;"></div>').append(
+                    $('<p></p>').append(
+                        $('<strong></strong>').text(i18n.selectionModeLabel),
+                        document.createTextNode(' ' + i18n.selectionModeHelp)
+                    )
+                );
+                $('body').append($notice);
+                setTimeout(function() {
+                    $notice.fadeOut(300, function() { $(this).remove(); });
+                }, 5000);
+
+                // Add selection indicators to each attachment
+                $('.attachment').append('<div class="selection-indicator"></div>');
+            }
+        });
+
+        // Handle clicks on the selection overlay
+        $(document).on('click', '.apex-folders-selection-overlay', function(e) {
+            // Prevent the default WordPress behavior
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Temporarily hide the overlay to find what's underneath
+            $(this).hide();
+
+            // Find the element at the click position
+            var elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+
+            // Show the overlay again
+            $(this).show();
+
+            // Find the attachment that was clicked
+            var $attachment = $(elementBelow).closest('.attachment');
+
+            if ($attachment.length) {
+                // Toggle the selected class
+                $attachment.toggleClass('selected');
+
+                // Show visual feedback
+                if ($attachment.hasClass('selected')) {
+                    $attachment.css('box-shadow', '0 0 0 3px #0073aa');
+                    // Make sure the indicator shows the selected state
+                    $attachment.find('.selection-indicator').css('background', '#0073aa');
+                } else {
+                    $attachment.css('box-shadow', '');
+                    // Reset the indicator
+                    $attachment.find('.selection-indicator').css('background', '#f0f0f0');
                 }
-                
-                return false; // Important to prevent default behavior
-            });
+            }
 
-                       // Allow dragging to start through the overlay
-                $(document).on('mousedown', '.apex-folders-selection-overlay', function(e) {
-                    // Temporarily hide the overlay
-                    $(this).hide();
-                    
-                    // Find the element at the click position
-                    var elementBelow = document.elementFromPoint(e.clientX, e.clientY);
-                    
-                    // Find the attachment that was clicked
-                    var $attachment = $(elementBelow).closest('.attachment');
-                    
-                    // Show the overlay again with pointer-events disabled
-                    $(this).css('pointer-events', 'none').show();
-                    
-                    if ($attachment.length && $attachment.hasClass('selected')) {
-                        
-                        // Create and dispatch a new mousedown event
-                        var mouseEvent = new MouseEvent('mousedown', {
-                            'bubbles': true,
-                            'cancelable': true,
-                            'view': window,
-                            'clientX': e.clientX,
-                            'clientY': e.clientY
-                        });
-                        
-                        $attachment[0].dispatchEvent(mouseEvent);
-                        
-                        // Set a timeout to restore pointer events
-                        setTimeout(function() {
-                            $('.apex-folders-selection-overlay').css('pointer-events', 'auto');
-                        }, 500); // Longer timeout to ensure drag starts
-                    } else {
-                        // If not a selected attachment, restore pointer events immediately
-                        $(this).css('pointer-events', 'auto');
-                    }
+            return false; // Important to prevent default behavior
+        });
+
+        // Allow dragging to start through the overlay
+        $(document).on('mousedown', '.apex-folders-selection-overlay', function(e) {
+            // Temporarily hide the overlay
+            $(this).hide();
+
+            // Find the element at the click position
+            var elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+
+            // Find the attachment that was clicked
+            var $attachment = $(elementBelow).closest('.attachment');
+
+            // Show the overlay again with pointer-events disabled
+            $(this).css('pointer-events', 'none').show();
+
+            if ($attachment.length && $attachment.hasClass('selected')) {
+                // The overlay covers the attachments, so they never see a
+                // mouseenter: make sure this one is draggable before the press
+                $attachment.trigger('mouseenter');
+
+                // Create and dispatch a new mousedown event
+                var mouseEvent = new MouseEvent('mousedown', {
+                    'bubbles': true,
+                    'cancelable': true,
+                    'view': window,
+                    'button': 0,
+                    'clientX': e.clientX,
+                    'clientY': e.clientY
                 });
-        
+
+                $attachment[0].dispatchEvent(mouseEvent);
+
+                // Set a timeout to restore pointer events
+                setTimeout(function() {
+                    $('.apex-folders-selection-overlay').css('pointer-events', 'auto');
+                }, 500); // Longer timeout to ensure drag starts
+            } else {
+                // If not a selected attachment, restore pointer events immediately
+                $(this).css('pointer-events', 'auto');
+            }
+        });
+
         // Also enable attachment selection when in selection mode
         $(document).on('click', '.attachments-browser .attachment', function(e) {
             if ($('body').hasClass('selecting-mode')) {
@@ -547,20 +543,19 @@
                 e.stopPropagation();
             }
         });
-        
+
         // Listen for escape key to exit selection mode
         $(document).on('keydown', function(e) {
             if (e.keyCode === 27 && MediaFolderDragDrop.bulkModeActive) {
                 $('.apex-folder-bulk-select').trigger('click');
             }
         });
-        
-        
-               $('<style>')
+
+        $('<style>')
             .text(
-                                '.apex-folders-exit-selection { font-weight: bold !important; box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important; }' +
+                '.apex-folders-exit-selection { font-weight: bold !important; box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important; }' +
                 '.apex-folders-selection-overlay { pointer-events: auto !important; }' +
-                                '.apex-folders-dragging { cursor: grabbing !important; }' +
+                '.apex-folders-dragging { cursor: grabbing !important; }' +
                 '.apex-folders-dragging * { user-select: none !important; -webkit-user-select: none !important; }' +
                 '.apex-folder-list { z-index: 101 !important; }' + // Make sure folders are above the overlay
                 '.selecting-mode .attachment:hover { cursor: pointer !important; }' +
@@ -574,28 +569,6 @@
                 '.apex-folder-bulk-select { position: relative; z-index: 100001 !important; }' // Ensure button is above overlay
             )
             .appendTo('head');
-        } 
-    /**
-     * Listen for media library refreshes to reinitialize drag and drop
-     */
-    function listenForLibraryRefresh() {
-        // When attachments are appended, make them draggable
-        $(document).on('DOMNodeInserted', '.attachments-browser .attachments .attachment', function() {
-            var $attachment = $(this);
-            
-            // Check if this attachment is already draggable
-            if (!$attachment.hasClass('ui-draggable')) {
-                setTimeout(function() {
-                    $attachment.trigger('mousedown');
-                }, 500);
-            }
-        });
-        
-        // Listen for view changes
-        $(document).on('click', '.media-frame-router .media-router .media-menu-item', function() {
-            // Re-initialize after a short delay
-            setTimeout(initDragDrop, 500);
-        });
     }
 
     /**

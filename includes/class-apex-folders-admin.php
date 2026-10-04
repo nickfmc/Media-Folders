@@ -55,15 +55,27 @@ class APEX_FOLDERS_Admin {
                 <p>
                     <strong><?php esc_html_e( 'Media Folders Tools:', 'apex-folders' ); ?></strong>
                     <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'upload.php?rebuild_unassigned=1' ), 'rebuild_unassigned' ) ); ?>" class="button"><?php esc_html_e( 'Rebuild Unassigned Folder', 'apex-folders' ); ?></a>
-                    <a href="<?php echo esc_url( admin_url( 'upload.php?debug_folders=1' ) ); ?>" class="button"><?php esc_html_e( 'Show Folder Debug Info', 'apex-folders' ); ?></a>
+                    <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'upload.php?debug_folders=1' ), 'apex_folders_debug' ) ); ?>" class="button"><?php esc_html_e( 'Show Folder Debug Info', 'apex-folders' ); ?></a>
                     <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'upload.php?flush_term_cache=1' ), 'flush_term_cache' ) ); ?>" class="button"><?php esc_html_e( 'Flush Term Cache', 'apex-folders' ); ?></a>
-                    <a href="<?php echo esc_url( admin_url( 'upload.php?debug_unassigned=1' ) ); ?>" class="button"><?php esc_html_e( 'Debug Unassigned', 'apex-folders' ); ?> (ID: <?php echo intval( $unassigned_id ); ?>)</a>
+                    <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'upload.php?debug_unassigned=1' ), 'apex_folders_debug' ) ); ?>" class="button"><?php esc_html_e( 'Debug Unassigned', 'apex-folders' ); ?> (ID: <?php echo intval( $unassigned_id ); ?>)</a>
                 </p>
             </div>
             <?php
         }
     }
     
+    /**
+     * Check whether a debug view was requested from the tools links by an administrator
+     *
+     * @param string $key Query parameter of the debug view.
+     * @return bool Whether to show the debug view.
+     */
+    private function is_debug_request( $key ) {
+        return isset( $_GET[ $key ], $_GET['_wpnonce'] )
+            && current_user_can( 'manage_options' )
+            && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'apex_folders_debug' );
+    }
+
     /**
      * Debug folder content
      */
@@ -73,7 +85,7 @@ class APEX_FOLDERS_Admin {
             return;
         }
         
-        if ( isset( $_GET['debug_folders'] ) && current_user_can( 'manage_options' ) ) {
+        if ( $this->is_debug_request( 'debug_folders' ) ) {
             global $wpdb;
             
             // IMPROVED: Use wp_kses for HTML in admin notices
@@ -122,7 +134,7 @@ class APEX_FOLDERS_Admin {
      * Debug unassigned folder
      */
     public function debug_unassigned_folder() {
-        if ( ! isset( $_GET['debug_unassigned'] ) || ! current_user_can( 'manage_options' ) ) {
+        if ( ! $this->is_debug_request( 'debug_unassigned' ) ) {
             return;
         }
         
@@ -247,7 +259,7 @@ class APEX_FOLDERS_Admin {
                     ); ?></p>
                     <p>
                         <a href="<?php echo esc_url( admin_url( 'upload.php?apex_folder=unassigned' ) ); ?>"><?php esc_html_e( 'View Unassigned folder', 'apex-folders' ); ?></a> | 
-                        <a href="<?php echo esc_url( admin_url( 'upload.php?debug_folders=1' ) ); ?>"><?php esc_html_e( 'View folder debug info', 'apex-folders' ); ?></a>
+                        <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'upload.php?debug_folders=1' ), 'apex_folders_debug' ) ); ?>"><?php esc_html_e( 'View folder debug info', 'apex-folders' ); ?></a>
                     </p>
                 </div>
                 <?php
@@ -261,6 +273,14 @@ class APEX_FOLDERS_Admin {
      */
     public function register_settings() {
 
+        // Register a new settings section
+        add_settings_section(
+            'apex_folders_settings',
+            esc_html__( 'Apex Folders Settings', 'apex-folders' ),
+            array( $this, 'render_settings_section' ),
+            'media'
+        );
+        
         // Register the debug tools display setting
         register_setting(
             'media',
@@ -281,14 +301,6 @@ class APEX_FOLDERS_Admin {
             'apex_folders_settings'
         );
 
-        // Register a new settings section
-        add_settings_section(
-            'apex_folders_settings',
-            esc_html__( 'Apex Folders Settings', 'apex-folders' ),
-            array( $this, 'render_settings_section' ),
-            'media'
-        );
-        
         // Register the uninstall setting
         register_setting(
             'media',

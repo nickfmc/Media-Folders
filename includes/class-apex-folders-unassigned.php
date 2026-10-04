@@ -23,20 +23,36 @@ class APEX_FOLDERS_Unassigned {
      * @return int Unassigned folder ID
      */
     public static function get_id() {
-        $unassigned = term_exists( esc_html__( 'Unassigned', 'apex-folders' ), 'apex_folder' );
-        if ( ! $unassigned ) {
-            // Create it if it doesn't exist
-            $unassigned = wp_insert_term(
-                esc_html__( 'Unassigned', 'apex-folders' ), 
-                'apex_folder',
-                array(
-                    'description' => esc_html__( 'Default folder for media items not assigned to any other folder', 'apex-folders' ),
-                    'slug' => 'unassigned'
-                )
-            );
+        static $ids = array();
+
+        $blog_id = get_current_blog_id();
+        if ( ! empty( $ids[ $blog_id ] ) ) {
+            return $ids[ $blog_id ];
         }
-        
-        return is_array( $unassigned ) ? $unassigned['term_id'] : $unassigned;
+
+        // Look it up by slug: the name is translated, so it differs between languages
+        $term = get_term_by( 'slug', 'unassigned', 'apex_folder' );
+        if ( $term ) {
+            $ids[ $blog_id ] = (int) $term->term_id;
+            return $ids[ $blog_id ];
+        }
+
+        // Create it if it doesn't exist
+        $unassigned = wp_insert_term(
+            esc_html__( 'Unassigned', 'apex-folders' ),
+            'apex_folder',
+            array(
+                'description' => esc_html__( 'Default folder for media items not assigned to any other folder', 'apex-folders' ),
+                'slug' => 'unassigned'
+            )
+        );
+
+        if ( is_wp_error( $unassigned ) ) {
+            return 0;
+        }
+
+        $ids[ $blog_id ] = (int) $unassigned['term_id'];
+        return $ids[ $blog_id ];
     }
     
     /**
@@ -80,16 +96,9 @@ class APEX_FOLDERS_Unassigned {
         ) );
         
         if ( ! $tt_id ) {
-            error_log(
-                sprintf(
-                    /* translators: %d: unassigned folder ID */
-                    esc_html__( 'Error: Could not find term_taxonomy_id for Unassigned folder (ID: %d)', 'apex-folders' ),
-                    $unassigned_id
-                )
-            );
             return 0;
         }
-        
+
         // Find all attachments that don't have ANY folder assignment
         $unassigned_attachments = $wpdb->get_col(
             "SELECT p.ID FROM $wpdb->posts p
@@ -100,63 +109,32 @@ class APEX_FOLDERS_Unassigned {
                  WHERE tt.taxonomy = 'apex_folder' AND tr.object_id = p.ID
              )"
         );
-        
+
         $count = 0;
-        
-        // Log what we found
-        error_log(
-            sprintf(
-                /* translators: %d: number of attachments with no folder */
-                esc_html__( 'Found %d attachments with no folder assignment', 'apex-folders' ),
-                count( $unassigned_attachments )
-            )
-        );
-        
-        // Process in batches to avoid timeouts
-        foreach ( $unassigned_attachments as $attachment_id ) {
-            // Direct SQL approach to ensure reliability
-            $exists = $wpdb->get_var( $wpdb->prepare(
-                "SELECT COUNT(*) FROM $wpdb->term_relationships 
-                 WHERE object_id = %d AND term_taxonomy_id = %d",
-                $attachment_id, $tt_id
-            ) );
-            
-            if ( ! $exists ) {
-                // Insert the relationship directly
-                $wpdb->insert(
-                    $wpdb->term_relationships,
-                    array(
-                        'object_id' => $attachment_id,
-                        'term_taxonomy_id' => $tt_id,
-                        'term_order' => 0
-                    )
-                );
-                
-                if ( $wpdb->insert_id || $wpdb->rows_affected ) {
-                    $count++;
-                }
+
+        // Process in batches to avoid timeouts: one insert per 500 attachments
+        foreach ( array_chunk( $unassigned_attachments, 500 ) as $batch ) {
+            $values = array();
+            foreach ( $batch as $attachment_id ) {
+                $values[] = $wpdb->prepare( '(%d, %d, 0)', $attachment_id, $tt_id );
             }
+
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Each row is prepared above.
+            $inserted = $wpdb->query( "INSERT IGNORE INTO $wpdb->term_relationships (object_id, term_taxonomy_id, term_order) VALUES " . implode( ', ', $values ) );
+
+            if ( $inserted ) {
+                $count += $inserted;
+            }
+
+            // The relationships were written directly, so drop the cached (empty) folder lists
+            clean_object_term_cache( array_map( 'intval', $batch ), 'attachment' );
         }
-        
+
         // Update term count
         if ( $count > 0 ) {
-            // Update the count in the database directly
-            $wpdb->query( $wpdb->prepare(
-                "UPDATE $wpdb->term_taxonomy 
-                 SET count = count + %d
-                 WHERE term_taxonomy_id = %d",
-                $count, $tt_id
-            ) );
-            
-            // Clear cache
-            clean_term_cache( $unassigned_id, 'apex_folder' );
+            wp_update_term_count_now( array( (int) $tt_id ), 'apex_folder' );
         }
-        
-        // Force update all term counts to be sure
-        if ( function_exists( 'apex_folders_update_counts' ) ) {
-            apex_folders_update_counts();
-        }
-        
+
         return $count;
     }
 }
