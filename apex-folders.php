@@ -11,7 +11,7 @@
  * Plugin Name: Apex Folders
  * Plugin URI: https://apex.mountainairweb.com/
  * Description: Reach the apex of media library organization.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Nick Murray
  * Author URI: https://mountainairweb.com
  * Text Domain: apex-folders
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Define plugin constants.
 define( 'APEX_FOLDERS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'APEX_FOLDERS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'APEX_FOLDERS_VERSION', '1.1.0' );
+define( 'APEX_FOLDERS_VERSION', '1.1.1' );
 
 // Core includes.
 require_once APEX_FOLDERS_PLUGIN_DIR . 'includes/class-folder-drag-drop.php';

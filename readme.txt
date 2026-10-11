@@ -3,7 +3,7 @@ Contributors: nickfmc
 Tags: media library, folders, media folders, file manager, organize media
 Requires at least: 5.3
 Tested up to: 7.1
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -85,6 +85,12 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 
 == Changelog ==
 
+= 1.1.1 =
+* New look: the folder sidebar, uploader and filters follow the Apex design, with folder icons, count badges and hover actions.
+* Bulk moves use WordPress's own Bulk select: select files, then drag any of them onto a folder. The separate "Bulk Drag and Drop" button is gone.
+* Fixed: the folder filter was hidden in the block editor's media modal.
+* Fixed: the sidebar could flash unstyled for a moment in list view.
+
 = 1.1.0 =
 * Fixed: uploading several files at once no longer reloads the page after the first file. Files now appear in the folder as they finish uploading.
 * Fixed: uploads go to the folder you are viewing by default, and the folder chosen in the uploader is sent with every file.
@@ -97,14 +103,14 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 * Security: folder names are always output as text in dialogs and notices.
 * Security: removed an upload hook that allowed folder changes without a permission check; debug views now require a nonce.
 * All interface text is now translatable.
-* New look: the folder sidebar, uploader and filters follow the Apex design, with folder icons, count badges and hover actions.
-* Bulk moves now use WordPress's own Bulk select: select files, then drag any of them onto a folder. The separate "Bulk Drag and Drop" button is gone.
-* The folder filter in the editor's media modal no longer breaks the toolbar layout.
 
 = 1.0.0 =
 * Initial public release
 
 == Upgrade Notice ==
+
+= 1.1.1 =
+Fresh Apex design, simpler bulk moves and a fix for the folder filter in the block editor.
 
 = 1.1.0 =
 Fixes multi-file uploads, drag and drop, and folder counts. Recommended for all users.
