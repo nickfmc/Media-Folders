@@ -24,6 +24,9 @@ class APEX_FOLDERS_UI {
         // Add folder listing to media library
         add_action( 'admin_notices', array( $this, 'render_folders_interface' ) );
         
+        // Load the sidebar styles in the head, before the sidebar is printed
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_sidebar_styles' ) );
+        
         // Add folder field to attachment edit screen
         // Use a higher priority (20) to ensure it runs after WordPress adds its fields
         add_filter( 'attachment_fields_to_edit', array( $this, 'add_folder_fields' ), 20, 2 );
@@ -94,11 +97,11 @@ class APEX_FOLDERS_UI {
     private function icon( $name ) {
         $icons = array(
             // The Apex family mark and the slash from the apex/<tool> wordmark
-            'mark'   => '<svg class="apexfo-mark" viewBox="0 0 274 248" aria-hidden="true" focusable="false"><path d="M23 163 L137 24 L251 163" fill="none" stroke="currentColor" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/><circle cx="137" cy="218" r="29.5" fill="#148a5a"/></svg>',
-            'slash'  => '<svg class="apexfo-slash" viewBox="0 0 71 143" aria-hidden="true" focusable="false"><path d="M52 0H71L19 143H0Z" fill="#148a5a"/></svg>',
-            'files'  => '<svg class="apexfo-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="2.75" y="4.75" width="14.5" height="11.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 13.5l4-4 3 3 2-2 5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="13" cy="8.5" r="1.25" fill="currentColor"/></svg>',
-            'inbox'  => '<svg class="apexfo-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 11.5l2.1-6A1.5 1.5 0 0 1 6.5 4.5h7a1.5 1.5 0 0 1 1.4 1l2.1 6v3a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5v-3Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M3 11.5h4l1 2h4l1-2h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
-            'folder' => '<svg class="apexfo-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M2.75 5.5A1.5 1.5 0 0 1 4.25 4h3.6l1.9 2h6a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-11.5a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+            'mark'   => '<svg class="apexfo-mark" width="24" height="22" viewBox="0 0 274 248" aria-hidden="true" focusable="false"><path d="M23 163 L137 24 L251 163" fill="none" stroke="currentColor" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/><circle cx="137" cy="218" r="29.5" fill="#148a5a"/></svg>',
+            'slash'  => '<svg class="apexfo-slash" width="7" height="14" viewBox="0 0 71 143" aria-hidden="true" focusable="false"><path d="M52 0H71L19 143H0Z" fill="#148a5a"/></svg>',
+            'files'  => '<svg class="apexfo-icon" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="2.75" y="4.75" width="14.5" height="11.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 13.5l4-4 3 3 2-2 5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="13" cy="8.5" r="1.25" fill="currentColor"/></svg>',
+            'inbox'  => '<svg class="apexfo-icon" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 11.5l2.1-6A1.5 1.5 0 0 1 6.5 4.5h7a1.5 1.5 0 0 1 1.4 1l2.1 6v3a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5v-3Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M3 11.5h4l1 2h4l1-2h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+            'folder' => '<svg class="apexfo-icon" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M2.75 5.5A1.5 1.5 0 0 1 4.25 4h3.6l1.9 2h6a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-11.5a1.5 1.5 0 0 1-1.5-1.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
         );
 
         return isset( $icons[ $name ] ) ? $icons[ $name ] : '';
@@ -144,6 +147,17 @@ class APEX_FOLDERS_UI {
         echo '</li>';
     }
 
+    /**
+     * Enqueue the sidebar stylesheet on the media library screen
+     *
+     * @param string $hook The current admin page.
+     */
+    public function enqueue_sidebar_styles( $hook ) {
+        if ( 'upload.php' === $hook ) {
+            wp_enqueue_style( 'apex-folders-css', APEX_FOLDERS_PLUGIN_URL . 'assets/css/apex-main.css', array(), APEX_FOLDERS_VERSION );
+        }
+    }
+    
     /**
      * Render the folders interface in the media library
      */

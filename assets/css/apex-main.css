@@ -35,7 +35,8 @@
     float: left;
     width: 20%;
     min-width: 220px;
-    margin: 65px 24px 0 0;
+    /* Lines the brand row up with the "Media Library" heading */
+    margin: 14px 24px 0 0;
     padding: 0;
     position: relative;
     z-index: 10;
