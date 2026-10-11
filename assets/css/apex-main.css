@@ -1,254 +1,414 @@
-/* --- Core Container --- */
+/*
+ * Apex Folders
+ *
+ * Styles for the folder sidebar in the Media Library, the folder filter in
+ * the media toolbar and the folder selector in the uploader.
+ *
+ * Colours and type follow the Apex design system (apex.mountainairweb.com):
+ * ink for text, cream and paper for surfaces, and a scarce brand green.
+ */
+
+:root {
+    --apexfo-ink: #18191d;
+    --apexfo-ink-2: #232429;
+    --apexfo-text: #1d2327;
+    --apexfo-muted: #5b5d64;
+    --apexfo-faint: #8c8f94;
+    --apexfo-cream: #f5f4ef;
+    --apexfo-paper: #fbfaf7;
+    --apexfo-border: #e4e2da;
+    --apexfo-green: #148a5a;
+    --apexfo-green-strong: #0f7a4f;
+    --apexfo-green-deep: #0b6340;
+    --apexfo-mint: #e3f1e9;
+    --apexfo-danger: #b32d2e;
+    --apexfo-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --apexfo-radius: 10px;
+    --apexfo-radius-sm: 6px;
+    --apexfo-shadow: 0 1px 2px rgba(24, 25, 29, 0.06), 0 6px 20px rgba(24, 25, 29, 0.05);
+    --apexfo-focus: 0 0 0 2px #fff, 0 0 0 4px var(--apexfo-green);
+}
+
+/* ─── Layout: sidebar beside the media library ────────────────────────── */
+
 .apex-folder-filter {
     float: left;
     width: 20%;
-    margin: 65px 20px 0 0;
+    min-width: 220px;
+    margin: 65px 24px 0 0;
     padding: 0;
-    background: transparent;
     position: relative;
     z-index: 10;
+    color: var(--apexfo-text);
 }
 
-/* --- Admin Notices Fix --- */
+.apex-folder-filter *,
+.apex-folder-filter *::before,
+.apex-folder-filter *::after {
+    box-sizing: border-box;
+}
+
+/* Keep admin notices clear of the sidebar */
 .wrap > .notice,
 .wrap > div.updated,
 .wrap > div.error,
 .wrap > div.info {
-    margin-left: calc(20% + 65px);
+    margin-left: calc(20% + 69px);
     width: auto;
 }
 
-.apex-folders-admin-notices-spacer {
-    clear: both;
-    height: 1px;
+/* ─── Brand header ───────────────────────────────────────────────────── */
+
+.apexfo-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 4px 14px;
+    color: var(--apexfo-ink);
 }
 
-.apex-folders-tools {
-    margin-left: calc(20% + 40px);
-    width: calc(80% - 40px);
+.apexfo-mark {
+    flex: none;
+    height: 22px;
+    width: auto;
 }
 
-/* --- Folder List Container --- */
+.apexfo-wordmark {
+    font-family: var(--apexfo-mono);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.apexfo-slash {
+    display: inline-block;
+    height: 0.95em;
+    width: auto;
+    margin: 0 0.05em 0 0.02em;
+    vertical-align: -0.11em;
+}
+
+/* ─── Folder list ────────────────────────────────────────────────────── */
+
 .apex-folder-list {
-    margin: 0 0 20px 0;
-    padding: 0;
+    margin: 0 0 12px;
+    padding: 6px;
     background: #fff;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    border: 1px solid var(--apexfo-border);
+    border-radius: var(--apexfo-radius);
+    box-shadow: var(--apexfo-shadow);
 }
 
-/* --- Folder Section Title --- */
-.apex-folder-filter h3 {
-    margin: 0 0 8px 0;
-    padding: 12px 15px;
-    background: #f0f0f1;
-    border-bottom: 1px solid #e2e4e7;
-    font-size: 14px;
-    color: #1d2327;
-    font-weight: 600;
-}
-
-/* --- Folder Items (Common Styles) --- */
 .apex-folder-list li {
+    position: relative;
     margin: 0;
     padding: 0;
-    position: relative;
-    border-bottom: 1px solid #f0f0f1;
-    transition: all 0.15s ease;
+    border-radius: var(--apexfo-radius-sm);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.apex-folder-list li:last-child {
-    border-bottom: none;
-}
-
-/* Folder links */
-.apex-folder-list li a {
-    display: block;
-    padding: 10px 15px;
+.apex-folder-list li > a {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 36px;
+    padding: 7px 10px;
+    color: var(--apexfo-text);
+    font-size: 13px;
+    line-height: 1.3;
     text-decoration: none;
-    color: #2c3338;
-    transition: all 0.15s ease;
+    border-radius: var(--apexfo-radius-sm);
+}
+
+.apex-folder-list li > a:focus {
+    outline: none;
+    box-shadow: var(--apexfo-focus);
+}
+
+.apex-folder-list li > a:focus:not(:focus-visible) {
+    box-shadow: none;
+}
+
+.apexfo-icon {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    color: var(--apexfo-faint);
+}
+
+.apexfo-name {
+    flex: 1 1 auto;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding-right: 75px;
-    font-size: 13px;
 }
 
-/* --- System Folders --- */
-/* All Files styling */
-.apex-folder-list li.all-files {
-    background: #f6f7f7;
+.apexfo-count {
+    flex: none;
+    min-width: 22px;
+    padding: 1px 6px;
+    font-family: var(--apexfo-mono);
+    font-size: 11px;
+    line-height: 16px;
+    text-align: center;
+    color: var(--apexfo-muted);
+    background: var(--apexfo-cream);
+    border-radius: 999px;
 }
 
-.apex-folder-list li.all-files a {
+/* Hover and current folder */
+.apex-folder-list li:not(.apexfo-section):not(.apexfo-empty):hover {
+    background: var(--apexfo-paper);
+}
+
+.apex-folder-list li.current {
+    background: var(--apexfo-mint);
+    box-shadow: inset 3px 0 0 var(--apexfo-green);
+}
+
+.apex-folder-list li.current > a {
+    color: var(--apexfo-ink);
     font-weight: 600;
-    color: #2271b1;
 }
 
-/* Unassigned folder styling */
-.apex-folder-list li.unassigned-folder {
-    background: #f9f9f9;
-    border-bottom: 1px solid #eee;
+.apex-folder-list li.current .apexfo-icon {
+    color: var(--apexfo-green-strong);
 }
 
-.apex-folder-list li.unassigned-folder a {
-    color: #50575e;
-    font-style: italic;
-}
-
-/* Folder separator */
-.apex-folder-list .folder-separator {
-    height: 27px;
-    background: #f0f0f1;
-    padding: 0;
-    border: none;
-}
-
-/* --- Custom Folders --- */
-/* Parent folders */
-.apex-folder-list li.custom-folder {
+.apex-folder-list li.current .apexfo-count {
+    color: var(--apexfo-green-deep);
     background: #fff;
 }
 
-.apex-folder-list li.custom-folder:hover {
-    background: #f6f7f7;
+/* System entries */
+.apex-folder-list li.unassigned-folder > a {
+    color: var(--apexfo-muted);
 }
 
-/* Parent folders with children */
-.apex-folder-list li.parent-folder.has-children {
-    border-left: 3px solid #2271b1;
+/* Section heading, written as an Apex path: "/ folders" */
+.apex-folder-list li.apexfo-section {
+    margin: 8px 0 2px;
+    padding: 6px 10px 2px;
+    font-family: var(--apexfo-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+    color: var(--apexfo-green-strong);
+    border-top: 1px solid var(--apexfo-border);
+    border-radius: 0;
 }
 
-/* Child folders - refined and compact */
-.apex-folder-list li.child-folder {
-    background: #fcfcfc;
-    padding-left: 0;
-    margin-left: 0;
-    border-left: 3px solid #dcdcde;
+.apex-folder-list li.apexfo-section::before {
+    content: "/ ";
+    font-weight: 700;
+    color: var(--apexfo-green);
 }
 
-.apex-folder-list li.child-folder a {
-    padding-left: 48px;
-    font-size: 12.5px;
+.apex-folder-list li.apexfo-empty {
+    padding: 8px 10px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--apexfo-muted);
 }
 
-.apex-folder-list li.child-folder .child-indicator {
+/* Subfolders */
+.apex-folder-list li.child-folder > a {
+    padding-left: 30px;
+}
+
+.apex-folder-list li.child-folder::before {
+    content: "";
     position: absolute;
-    left: 16px;
+    left: 18px;
+    top: 0;
+    bottom: 0;
+    border-left: 1px solid var(--apexfo-border);
+}
+
+.apex-folder-list li.child-folder.current::before {
+    border-color: var(--apexfo-green);
+}
+
+/* Actions: rename, subfolder, delete. Shown on hover and keyboard focus. */
+.apexfo-actions {
+    position: absolute;
     top: 50%;
+    right: 6px;
+    display: flex;
+    gap: 2px;
+    padding: 2px;
     transform: translateY(-50%);
-    color: #a7aaad;
-    font-size: 14px;
+    background: #fff;
+    border-radius: var(--apexfo-radius-sm);
+    box-shadow: 0 1px 4px rgba(24, 25, 29, 0.12);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
 }
 
-/* --- Active/Current Folder --- */
-.apex-folder-list li.current {
-    background: #f0f6fc;
+.apex-folder-list li:hover .apexfo-actions,
+.apex-folder-list li:focus-within .apexfo-actions {
+    opacity: 1;
+    pointer-events: auto;
 }
 
-.apex-folder-list li.current a {
-    color: #0a4b78;
+.apexfo-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    margin: 0;
+    color: var(--apexfo-muted);
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.apexfo-action .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.apexfo-action:hover,
+.apexfo-action:focus {
+    color: var(--apexfo-ink);
+    background: var(--apexfo-cream);
+    outline: none;
+}
+
+.apexfo-action:focus-visible {
+    box-shadow: var(--apexfo-focus);
+}
+
+.apexfo-action.delete-folder:hover,
+.apexfo-action.delete-folder:focus {
+    color: var(--apexfo-danger);
+    background: #fbeaea;
+}
+
+/* ─── Add folder button ──────────────────────────────────────────────── */
+
+.apexfo-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 12px;
+    color: #fff;
+    background: var(--apexfo-green-strong);
+    border: 0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 18px -6px rgba(15, 122, 79, 0.55);
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.apexfo-add .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.apexfo-add:hover,
+.apexfo-add:focus {
+    color: #fff;
+    background: var(--apexfo-green-deep);
+    outline: none;
+}
+
+.apexfo-add:focus-visible {
+    box-shadow: var(--apexfo-focus);
+}
+
+.apexfo-add:active {
+    transform: translateY(1px);
+}
+
+/* ─── Hint and credit ────────────────────────────────────────────────── */
+
+.apexfo-hint,
+.apexfo-credit {
+    margin: 12px 4px 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--apexfo-muted);
+}
+
+.apexfo-credit {
+    padding-top: 12px;
+    border-top: 1px solid var(--apexfo-border);
+    font-size: 11.5px;
+    color: var(--apexfo-faint);
+}
+
+.apexfo-credit-name {
+    font-family: var(--apexfo-mono);
+    font-weight: 700;
+    color: var(--apexfo-muted);
+}
+
+.apexfo-credit a {
+    color: var(--apexfo-green-strong);
+    text-decoration: none;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.apexfo-credit a:hover,
+.apexfo-credit a:focus {
+    color: var(--apexfo-green-deep);
+    text-decoration: underline;
+}
+
+/* ─── Live feedback: drag targets and count changes ──────────────────── */
+
+.apex-folder-list li.count-updated {
+    animation: apexfo-count-flash 1.6s ease;
+}
+
+@keyframes apexfo-count-flash {
+    0%   { background-color: var(--apexfo-mint); }
+    100% { background-color: transparent; }
+}
+
+.apex-folder-list li.droppable.drag-over {
+    background: var(--apexfo-mint);
+    box-shadow: inset 0 0 0 2px var(--apexfo-green);
+}
+
+.apex-folder-list li.droppable.drag-over > a {
+    color: var(--apexfo-green-deep);
     font-weight: 600;
 }
 
-/* --- Hover Effects --- */
-.apex-folder-list li:not(.folder-separator):hover {
-    background: #f0f6fc;
+.apex-folder-list li.droppable.drag-over .apexfo-icon {
+    color: var(--apexfo-green-strong);
 }
 
-/* --- Folder Actions --- */
-/* Delete folder button */
-.delete-folder {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #cc1818;
-    opacity: 0;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 3px;
-    z-index: 5;
+.apex-folder-list li.folder-updated {
+    animation: apexfo-folder-success 1.6s ease;
 }
 
-.apex-folder-list li:hover .delete-folder {
-    opacity: 0.7;
+@keyframes apexfo-folder-success {
+    0%, 60% { background-color: var(--apexfo-mint); box-shadow: inset 3px 0 0 var(--apexfo-green); }
+    100%    { background-color: transparent; box-shadow: none; }
 }
 
-.apex-folder-list li .delete-folder:hover {
-    opacity: 1;
-    background: rgba(204, 24, 24, 0.1);
-}
+/* ─── Dialogs (create, rename) ───────────────────────────────────────── */
 
-/* Add subfolder button */
-.add-subfolder {
-    position: absolute;
-    right: 36px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #2271b1;
-    opacity: 0;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 3px;
-    z-index: 5;
-}
-
-.apex-folder-list li:hover .add-subfolder {
-    opacity: 0.7;
-}
-
-.apex-folder-list li .add-subfolder:hover {
-    opacity: 1;
-    background: rgba(34, 113, 177, 0.1);
-}
-
-/* --- Add New Folder Button --- */
-.add-new-folder {
-    display: inline-block;
-    width: 100%;
-    padding: 10px 0;
-    background: #2271b1;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    text-align: center;
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.add-new-folder:before {
-    content: "+";
-    margin-right: 8px;
-    font-weight: bold;
-}
-
-.add-new-folder:hover {
-    background: #135e96;
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-}
-
-.add-new-folder:active {
-    transform: translateY(0);
-}
-
-/* --- Count Updates --- */
-.apex-folder-list li.count-updated {
-    background-color: #fcf9e8;
-    transition: background-color 2s;
-}
-
-/* --- Dialog Styles --- */
 .folder-creation-dialog label {
     display: block;
     margin-bottom: 5px;
@@ -261,49 +421,193 @@
     width: 100%;
     margin-bottom: 15px;
     padding: 8px;
-    border-radius: 4px;
+    border-radius: 6px;
     border: 1px solid #8c8f94;
 }
 
-/* --- Media Library Table --- */
-.supports-drag-drop .wp-list-table, 
-.supports-drag-drop .tablenav, 
-.supports-drag-drop .search-form, 
-.supports-drag-drop .subsubsub {
-    width: 78%;
-    float: right;
+.folder-creation-dialog input:focus,
+.folder-creation-dialog select:focus {
+    border-color: var(--apexfo-green-strong);
+    box-shadow: 0 0 0 1px var(--apexfo-green-strong);
+    outline: 2px solid transparent;
 }
 
-/* Preserve WordPress core button positioning */
-.media-modal .media-toolbar-primary,
-.media-modal .media-toolbar-secondary {
-    float: none !important;
-    width: auto !important;
+.wp-dialog .ui-dialog-buttonset .ui-button:last-child {
+    color: #fff;
+    background: var(--apexfo-green-strong);
+    border-color: var(--apexfo-green-strong);
 }
 
-.media-modal .media-toolbar-primary .media-button-select {
-    float: right !important;
+.wp-dialog .ui-dialog-buttonset .ui-button:last-child:hover,
+.wp-dialog .ui-dialog-buttonset .ui-button:last-child:focus {
+    background: var(--apexfo-green-deep);
+    border-color: var(--apexfo-green-deep);
 }
 
+/* ─── Media toolbar: folder filter (library grid and media modal) ────── */
 
-/* --- Responsive Design --- */
+/* Same size as the type and date filters it sits next to */
+.media-toolbar select#media-attachment-folder-filter {
+    max-width: 200px;
+}
+
+/* ─── Uploader: folder selector ──────────────────────────────────────── */
+
+.apex-folder-select-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px auto 4px;
+    padding: 6px 8px 6px 14px;
+    background: #fff;
+    border: 1px solid var(--apexfo-border);
+    border-radius: 999px;
+    box-shadow: var(--apexfo-shadow);
+}
+
+.apex-folder-select-container label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--apexfo-text);
+    white-space: nowrap;
+}
+
+.apex-folder-select-container select {
+    margin: 0;
+    min-width: 180px;
+    max-width: 260px;
+    border-radius: 999px;
+}
+
+.apex-folder-select-container select:focus {
+    border-color: var(--apexfo-green-strong);
+    box-shadow: 0 0 0 1px var(--apexfo-green-strong);
+}
+
+/* The dropdown sits with the other upload info, which core centres */
+.post-upload-ui .apex-folder-select-container {
+    margin-bottom: 8px;
+}
+
+/* ─── List view: folders as a row of chips above the table ───────────── */
+
+.apex-mode-list.apex-folder-filter {
+    float: none;
+    width: 100%;
+    min-width: 0;
+    margin: 10px 0 16px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid var(--apexfo-border);
+    border-radius: var(--apexfo-radius);
+    box-shadow: var(--apexfo-shadow);
+}
+
+.apex-mode-list .apexfo-brand {
+    padding: 0 0 10px;
+}
+
+.apex-mode-list .apex-folder-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.apex-mode-list .apex-folder-list li {
+    flex: 0 0 auto;
+    max-width: 260px;
+    background: var(--apexfo-paper);
+    border: 1px solid var(--apexfo-border);
+    border-radius: 999px;
+}
+
+.apex-mode-list .apex-folder-list li > a {
+    min-height: 30px;
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+.apex-mode-list .apex-folder-list li.current {
+    background: var(--apexfo-mint);
+    border-color: var(--apexfo-green);
+    box-shadow: none;
+}
+
+.apex-mode-list .apex-folder-list li.apexfo-section {
+    margin: 0 2px 0 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.apex-mode-list .apex-folder-list li.apexfo-empty {
+    padding: 4px 6px;
+    border: 0;
+    background: transparent;
+}
+
+.apex-mode-list .apex-folder-list li.child-folder > a {
+    padding-left: 10px;
+}
+
+.apex-mode-list .apex-folder-list li.child-folder::before {
+    display: none;
+}
+
+.apex-mode-list .apexfo-actions {
+    position: static;
+    transform: none;
+    margin-right: 4px;
+    box-shadow: none;
+    background: transparent;
+}
+
+.apex-mode-list .apex-folder-list li:hover > a {
+    padding-right: 4px;
+}
+
+.apex-mode-list .apex-folder-list li {
+    display: flex;
+    align-items: center;
+}
+
+.apex-mode-list .apexfo-add {
+    display: inline-flex;
+    width: auto;
+    min-height: 32px;
+    margin-top: 10px;
+    padding: 6px 14px;
+}
+
+.apex-mode-list .apexfo-hint {
+    display: inline;
+    margin-left: 12px;
+}
+
+.apex-mode-list .apexfo-credit {
+    margin-top: 10px;
+    padding-top: 8px;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────── */
+
 @media (max-width: 1280px) {
     .apex-folder-filter {
         width: 25%;
     }
-    
-    .wp-list-table, 
-    .tablenav, 
-    .search-form, 
-    .subsubsub {
-        width: 73%;
-    }
-    
+
     .wrap > .notice,
     .wrap > div.updated,
     .wrap > div.error,
     .wrap > div.info {
-        margin-left: calc(25% + 65px);
+        margin-left: calc(25% + 69px);
     }
 }
 
@@ -311,37 +615,23 @@
     .apex-folder-filter {
         width: 30%;
     }
-    
-    .wp-list-table, 
-    .tablenav, 
-    .search-form, 
-    .subsubsub {
-        width: 68%;
-    }
-    
+
     .wrap > .notice,
     .wrap > div.updated,
     .wrap > div.error,
     .wrap > div.info {
-        margin-left: calc(30% + 65px);
+        margin-left: calc(30% + 69px);
     }
 }
 
 @media (max-width: 782px) {
     .apex-folder-filter {
         width: 100%;
+        min-width: 0;
         float: none;
         margin: 20px 0;
     }
-    
-    .wp-list-table, 
-    .tablenav, 
-    .search-form, 
-    .subsubsub {
-        width: 100%;
-        float: none;
-    }
-    
+
     .wrap > .notice,
     .wrap > div.updated,
     .wrap > div.error,
@@ -349,425 +639,14 @@
         margin-left: 0;
         width: 100%;
     }
-}
 
+    .apexfo-actions {
+        opacity: 1;
+        pointer-events: auto;
+        box-shadow: none;
+    }
 
-.apex-folder-select-container {
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.apex-folder-select-container label {
-    margin-right: 8px;
-    font-weight: bold;
-}
-.apex-folder-select-container select {
-    flex-grow: 1;
-    max-width: 300px;
-}
-/* Fixes for WordPress media modal */
-.media-modal .uploader-inline .apex-folder-select-container {
-    padding: 0 16px;
-}
-
-
-.edit-folder {
-    position: absolute;
-    right: 36px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #50575e;
-    opacity: 0;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 3px;
-    z-index: 5;
-}
-
-.apex-folder-list li:hover .edit-folder {
-    opacity: 0.7;
-}
-
-.apex-folder-list li .edit-folder:hover {
-    opacity: 1;
-    background: rgba(80, 87, 94, 0.1);
-}
-
-/* Adjust delete button position */
-.delete-folder {
-    right: 10px;
-}
-
-/* Adjust add subfolder button position */
-.add-subfolder {
-    right: 62px;
-}
-
-/* Enhanced animation for count updates */
-@keyframes highlight-count {
-    0% { background-color: #fcf9e8; }
-    50% { background-color: #ffefaa; }
-    100% { background-color: #fcf9e8; }
-}
-
-.apex-folder-list li.count-updated {
-    animation: highlight-count 2s ease;
-}
-
-/* Focus styles for accessibility */
-.folder-creation-dialog input:focus,
-.folder-creation-dialog select:focus {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
-    outline: 2px solid transparent;
-}
-
-/* WordPress modal dialog enhancement */
-.wp-dialog.folder-dialog .ui-dialog-titlebar {
-    background: #fff;
-    border-bottom: 1px solid #dcdcde;
-    height: auto;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.4;
-}
-
-.wp-dialog.folder-dialog .ui-dialog-buttonpane {
-    margin-top: 0;
-    padding: 10px;
-    border-top: 1px solid #dcdcde;
-    background: #f6f7f7;
-}
-
-/* Improve visual feedback for folder operations */
-.apex-folder-list li.is-dragging {
-    opacity: 0.7;
-    border: 2px dashed #2271b1;
-    background: #f0f6fc;
-}
-
-.apex-folder-list li.drag-target {
-    background: #e6f0fa;
-    border: 2px dashed #2271b1;
-}
-
-
-/* List mode styles - horizontal compact layout */
-.apex-mode-list.apex-folder-filter {
-    float: none;
-    width: 100%;
-    margin: 10px 0;
-    padding: 10px;
-    border: 1px solid #e5e5e5;
-    background: #fff;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
-    box-sizing: border-box;
-}
-
-/* Horizontal folder list for list mode */
-.apex-mode-list .apex-folder-list {
-    display: flex;
-    flex-wrap: wrap;
-    margin: 0;
-    padding: 0;
-    background: transparent;
-    box-shadow: none;
-    border-radius: 0;
-    overflow: visible;
-}
-
-/* Title for list mode */
-.apex-mode-list h3 {
-    margin: 0 0 10px 0;
-    padding: 0;
-    background: transparent;
-    border: none;
-    font-size: 14px;
-}
-
-/* Individual folders in list mode */
-.apex-mode-list .apex-folder-list li {
-    flex: 0 0 auto;
-    margin: 0 10px 5px 0;
-    padding: 0;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    background: #f6f7f7;
-}
-
-.apex-mode-list .apex-folder-list li a {
-    padding: 5px 10px;
-    white-space: nowrap;
-    display: inline-block;
-    max-width: 200px;
-}
-
-/* Folder separators in horizontal mode */
-.apex-mode-list .apex-folder-list .folder-separator {
-    display: none;
-}
-
-/* Folder actions in horizontal layout */
-.apex-mode-list .delete-folder,
-.apex-mode-list .edit-folder,
-.apex-mode-list .add-subfolder {
-    position: relative;
-    display: inline-block;
-    top: 2px;
-    right: auto;
-    transform: none;
-    margin-left: 3px;
-    opacity: 0.5;
-}
-
-.apex-mode-list .apex-folder-list li:hover .delete-folder,
-.apex-mode-list .apex-folder-list li:hover .edit-folder,
-.apex-mode-list .apex-folder-list li:hover .add-subfolder {
-    opacity: 0.8;
-}
-
-/* Child folders in horizontal layout */
-.apex-mode-list .apex-folder-list li.child-folder {
-    margin-left: 15px;
-    position: relative;
-}
-
-.apex-mode-list .apex-folder-list li.child-folder .child-indicator {
-    display: none;
-}
-
-.apex-mode-list .apex-folder-list li.child-folder:before {
-    content: "└";
-    position: absolute;
-    left: -10px;
-    top: 6px;
-    color: #999;
-}
-
-.apex-mode-list .apex-folder-list li.child-folder a {
-    padding-left: 10px;
-}
-
-/* Add New Folder button in list mode */
-.apex-mode-list .add-new-folder {
-    display: inline-block;
-    width: auto;
-    padding: 5px 15px;
-    margin-top: 5px;
-}
-
-/* Reset the list mode table layout adjustments */
-.apex-mode-list + .wp-header-end + .wp-list-table,
-.apex-mode-list ~ .tablenav,
-.apex-mode-list ~ .subsubsub {
-    margin-left: 0;
-    width: 100%;
-}
-
-/* Media modal folder browser styles */
-.media-folder-browser {
-    padding: 0 16px 16px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid #dcdcde;
-}
-
-.media-folder-browser h2 {
-    font-size: 14px;
-    font-weight: 600;
-    margin: 1em 0 0.5em;
-}
-
-.media-folder-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.media-folder-item {
-    margin-bottom: 2px;
-    position: relative;
-    line-height: 1.4;
-}
-
-.media-folder-item a {
-    display: block;
-    padding: 6px 8px;
-    text-decoration: none;
-    color: #2c3338;
-    border-radius: 2px;
-    transition: all 0.2s ease;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.media-folder-item a:hover {
-    background: rgba(0,0,0,0.04);
-}
-
-.media-folder-item.selected a {
-    background: #0073aa;
-    color: #fff;
-    font-weight: 500;
-}
-
-.child-folder-list {
-    margin-left: 16px;
-    list-style: none;
-    padding: 0;
-}
-
-.apex-folder-indicator {
-    display: inline-block;
-    margin-left: 10px;
-    padding: 3px 8px;
-    background: #f0f0f1;
-    border-radius: 4px;
-    font-size: 13px;
-    color: #50575e;
-}
-
-/* Fix attachment filters layout */
-.media-modal .attachments-browser .media-toolbar-secondary {
-    max-width: none;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-/* Media Filter Dropdown Improvements */
-.attachment-filters.attachment-folder-filter {
-    max-width: 200px; 
-    min-width: 150px;
-    display: inline-block !important;
-    visibility: visible !important;
-    margin-right: 8px;
-}
-
-/* Critical fix for Gutenberg media modal - ensure folder filter is visible */
-.media-modal .media-toolbar-secondary #media-attachment-folder-filter {
-    display: inline-block !important;
-    margin: 0 8px;
-    vertical-align: middle;
-    float: none !important;
-    position: absolute;
-    top: 32px;
-    right: 10px;
-}
-
-/* Folder filter in media modal */
-.media-modal .media-frame-toolbar .media-toolbar-secondary .apex-folder-filter-dropdown {
-    padding: 0 10px 0 0;
-    display: inline-block;
-    vertical-align: middle;
-}
-
-.media-modal .media-frame-toolbar .media-toolbar-secondary .apex-folder-filter-dropdown select {
-    max-width: 160px;
-    height: 28px;
-    margin-top: 3px;
-    font-size: 13px;
-}
-
-.media-modal .media-frame-toolbar .media-toolbar-secondary .apex-folder-filter-dropdown label {
-    font-size: 13px;
-    vertical-align: middle;
-    margin-right: 4px;
-}
-
-/* Fix spacing when multiple filters are present */
-.media-frame .attachment-filters {
-    margin-right: 8px;
-}
-
-/* Ensure visible dropdown in browse mode too */
-.attachments-browser .media-toolbar .media-toolbar-secondary .attachment-folder-filter {
-    display: inline-block !important;
-    visibility: visible !important;
-}
-
-/* Ensure folder dropdown in modal is visible */
-.media-frame:not(.hide-menu) .media-frame-toolbar .media-toolbar-secondary > .media-button:first-child,
-.media-frame:not(.hide-menu) .media-frame-toolbar .media-toolbar-secondary > .attachment-filters:first-child {
-    margin: 10px 0;
-}
-
-/* Media toolbar visibility fixes */
-.media-modal .media-toolbar-secondary .apex-folder-filter-dropdown {
-    display: none !important; /* Hide the custom dropdown in all tabs initially */
-}
-
-/* Show folder filter in the browse tab */
-.media-modal .attachments-browser .media-toolbar-secondary .attachment-folder-filter {
-    display: inline-block !important;
-    visibility: visible !important;
-    max-width: 200px;
-    margin-right: 8px;
-    vertical-align: middle;
-}
-
-/* Ensure the folder filter is visible in the block editor */
-.block-editor .attachment-folder-filter,
-.wp-block-image .attachment-folder-filter {
-    display: inline-block !important;
-    visibility: visible !important;
-    margin-right: 8px;
-}
-
-/* Make sure the folder filter is visible for Gutenberg image selector modal */
-body.block-editor-page .attachment-folder-filter {
-    display: inline-block !important;
-    float: left;
-    margin-right: 8px;
-}
-
-/* Hide folder dropdown in upload tab */
-.media-modal[data-id*="insert"] .media-frame-content[data-columns="1"] .attachment-folder-filter,
-.media-modal .media-frame-content[data-id*="insert"] .attachment-folder-filter,
-.media-modal .media-frame-content[data-id*="upload"] .attachment-folder-filter {
-    display: none !important;
-}
-
-
-/* Fix for default media selector layout issues with dropdown */
-.supports-drag-drop .search-form,
-.supports-drag-drop .subsubsub {
-    width: auto !important;
-    float: none !important;
-}
-
-/* Fix the WordPress media library table */
-.supports-drag-drop .wp-list-table {
-    width: 78%;
-    float: right;
-}
-
-/* Preserve WordPress core media modal button positioning */
-.media-modal .media-toolbar-primary {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100% !important;
-    float: none !important;
-}
-
-/* Ensure select button stays on the right */
-.media-modal .media-toolbar-primary .media-button-select {
-    margin-left: auto !important;
-    order: 999;
-}
-
-/* Fix alignment of elements in media library */
-.attachments-browser .media-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-/* Ensure folder filter has proper positioning */
-.media-frame-content .attachment-folder-filter {
-    margin-right: 8px;
-    vertical-align: middle;
+    .apex-folder-list li > a {
+        padding-right: 90px;
+    }
 }

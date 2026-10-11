@@ -74,7 +74,8 @@ class APEX_FOLDERS_Editor {
             'apex-folder-filters',
             'apexfoFoldersMedia',
             array(
-                'allFolders' => __( 'All Folders', 'apex-folders' ),
+                'allFolders'     => __( 'All folders', 'apex-folders' ),
+                'filterByFolder' => __( 'Filter by folder', 'apex-folders' ),
                 'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
                 'nonce'      => wp_create_nonce( 'APEX_FOLDERS_nonce' ),
             )

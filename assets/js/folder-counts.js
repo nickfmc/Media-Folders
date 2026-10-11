@@ -9,29 +9,44 @@ jQuery(document).ready(function($) {
     var refreshTimer = null;
 
     /**
-     * Build the sidebar label for a folder
-     * Parent folders with subfolders also show the total including subfolders
+     * Count including subfolders, for a parent folder
      */
-    function getFolderLabel($item, counts) {
+    function getTotalCount($item, counts) {
         var folderId = $item.data('folder-id');
-        var folderData = counts[folderId];
-        var label = folderData.name + ' (' + folderData.count + ')';
-        var $children = $('.apex-folder-list li.child-folder[data-parent-id="' + folderId + '"]');
+        var total = counts[folderId].count;
+        var hasChildren = false;
 
-        if ($children.length) {
-            var totalCount = folderData.count;
+        $('.apex-folder-list li.child-folder[data-parent-id="' + folderId + '"]').each(function() {
+            var childData = counts[$(this).data('folder-id')];
+            hasChildren = true;
+            if (childData) {
+                total += childData.count;
+            }
+        });
 
-            $children.each(function() {
-                var childData = counts[$(this).data('folder-id')];
-                if (childData) {
-                    totalCount += childData.count;
-                }
-            });
+        return hasChildren ? total : null;
+    }
 
-            label += ' - ' + (l10n.total || 'total') + ' (' + totalCount + ')';
+    /**
+     * Show a count in a sidebar entry, flashing it if it changed
+     */
+    function showCount($item, count, title, skipHighlight) {
+        var $count = $item.find('.apexfo-count').first();
+        var previous = $item.data('apex-folder-count');
+
+        $count.text(count);
+        if (title) {
+            $count.attr('title', title);
         }
+        $item.data('apex-folder-count', count);
 
-        return label;
+        // Only highlight counts that changed since the last update
+        if (!skipHighlight && typeof previous !== 'undefined' && previous !== count) {
+            $item.addClass('count-updated');
+            setTimeout(function() {
+                $item.removeClass('count-updated');
+            }, 1600);
+        }
     }
 
     /**
@@ -53,28 +68,30 @@ jQuery(document).ready(function($) {
                     return;
                 }
 
+                var totalFiles = 0;
+                $.each(response.data, function(id, folderData) {
+                    totalFiles += folderData.count;
+                });
+
                 // Update all folder counts in the sidebar
                 $('.apex-folder-list li[data-folder-id]').each(function() {
                     var $item = $(this);
+                    var folderData = response.data[$item.data('folder-id')];
 
-                    if (!response.data[$item.data('folder-id')]) {
+                    if (!folderData) {
                         return;
                     }
 
-                    var label = getFolderLabel($item, response.data);
-                    var previousLabel = $item.data('apex-folder-label');
+                    var total = getTotalCount($item, response.data);
+                    var title = total === null ? '' : (l10n.countWithSubfolders || '%1$d in this folder, %2$d including subfolders')
+                        .replace('%1$d', folderData.count)
+                        .replace('%2$d', total);
 
-                    $item.children('a').text(label);
-                    $item.data('apex-folder-label', label);
-
-                    // Only highlight counts that changed since the last update
-                    if (!skipHighlight && previousLabel && previousLabel !== label) {
-                        $item.addClass('count-updated');
-                        setTimeout(function() {
-                            $item.removeClass('count-updated');
-                        }, 2000);
-                    }
+                    showCount($item, folderData.count, title, skipHighlight);
                 });
+
+                // Every file is in exactly one folder, so the folder counts add up to the library
+                showCount($('.apex-folder-list li.all-files'), totalFiles, '', skipHighlight);
 
                 // Let other folder UI (such as the folder filter dropdown) use the same counts
                 $(document).trigger('apex-folders-counts', [response.data]);

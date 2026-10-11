@@ -35,6 +35,10 @@ Apex Folders is a powerful yet lightweight plugin that adds folder organization 
 
 Apex Folders creates a custom taxonomy for your media attachments and provides an intuitive user interface for managing them. The plugin adds folder functionality directly to your existing WordPress Media Library interface, making it feel like a natural part of WordPress.
 
+### Part of Apex
+
+Apex Folders is free, and part of [Apex by Mountain Air Web](https://apex.mountainairweb.com/): a family of small, focused tools for web agencies, including Apex Proof for client feedback, Apex Launch for site checks and Apex Scout for sizing up a prospect's site.
+
 == Installation ==
 
 1. Upload the `apex-folders` folder to the `/wp-content/plugins/` directory, or install the plugin through the WordPress plugins screen directly.
@@ -90,6 +94,9 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 * Security: folder names are always output as text in dialogs and notices.
 * Security: removed an upload hook that allowed folder changes without a permission check; debug views now require a nonce.
 * All interface text is now translatable.
+* New look: the folder sidebar, uploader and filters follow the Apex design, with folder icons, count badges and hover actions.
+* Bulk moves now use WordPress's own Bulk select: select files, then drag any of them onto a folder. The separate "Bulk Drag and Drop" button is gone.
+* The folder filter in the editor's media modal no longer breaks the toolbar layout.
 
 = 1.0.0 =
 * Initial public release

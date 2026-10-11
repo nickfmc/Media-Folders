@@ -107,8 +107,8 @@ class APEX_FOLDERS_Upload {
 
         $unassigned_id = apex_folders_get_unassigned_id();
 
-        echo '<div class="apex-folder-select-container upload-filter-section">';
-        echo '<label for="apex-folder-select">' . esc_html__( 'Folder:', 'apex-folders' ) . '</label>';
+        echo '<div class="apex-folder-select-container">';
+        echo '<label for="apex-folder-select">' . esc_html__( 'Upload to folder', 'apex-folders' ) . '</label>';
         echo '<select id="apex-folder-select" class="apex-folder-select" name="apex-folder-select">';
         echo '<option value="' . esc_attr( $unassigned_id ) . '">' . esc_html__( 'Unassigned', 'apex-folders' ) . '</option>';
 

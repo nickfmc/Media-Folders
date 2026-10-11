@@ -9,7 +9,7 @@
  * @wordpress-plugin
  *
  * Plugin Name: Apex Folders
- * Plugin URI: 
+ * Plugin URI: https://apex.mountainairweb.com/
  * Description: Reach the apex of media library organization.
  * Version: 1.1.0
  * Author: Nick Murray

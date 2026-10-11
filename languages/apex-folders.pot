@@ -180,137 +180,162 @@ msgstr ""
 msgid "When enabled, administrator tools for debugging and rebuilding folders will be displayed in the Media Library."
 msgstr ""
 
-#: includes/class-apex-folders-block-editor.php:77 includes/class-apex-folders-utilities.php:34
-msgid "All Folders"
+#: includes/class-apex-folders-block-editor.php:77
+msgid "All folders"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:111
-msgid "Apex Folders"
+#: includes/class-apex-folders-block-editor.php:78
+msgid "Filter by folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:116
-msgid "All Files"
+#. translators: %1$d: files in this folder, %2$d: files including subfolders
+#: includes/class-apex-folders-ui.php:129 includes/class-apex-folders-ui.php:306
+msgid "%1$d in this folder, %2$d including subfolders"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:138 includes/class-apex-folders-ui.php:155
-msgid "Edit folder"
-msgstr ""
-
-#: includes/class-apex-folders-ui.php:139 includes/class-apex-folders-ui.php:156
-msgid "Delete folder"
-msgstr ""
-
-#: includes/class-apex-folders-ui.php:142
+#: includes/class-apex-folders-ui.php:137 includes/class-apex-folders-ui.php:137
 msgid "Add subfolder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:163 includes/class-apex-folders-utilities.php:38
-msgid "Add New Folder"
+#: includes/class-apex-folders-ui.php:139 includes/class-apex-folders-ui.php:139
+msgid "Rename folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:206
+#: includes/class-apex-folders-ui.php:140 includes/class-apex-folders-ui.php:140
+msgid "Delete folder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:183
+msgid "Apex Folders"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:192
+msgid "All files"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:202 includes/class-apex-folders-utilities.php:33
+msgid "Folders"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:205
+msgid "No folders yet. Add one below, then drag files onto it."
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:231
+msgid "Add folder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:233
+msgid "Drag a file onto a folder to move it. Use Bulk select to move several at once."
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:237
+msgid "is a free tool from Apex by Mountain Air Web."
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:238
+msgid "Meet the other Apex tools"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:283
 msgid "Create New Folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:207
+#: includes/class-apex-folders-ui.php:284
 msgid "Create Folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:208
+#: includes/class-apex-folders-ui.php:285
 msgid "Folder Name:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:209
+#: includes/class-apex-folders-ui.php:286
 msgid "Parent Folder (optional):"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:210
+#: includes/class-apex-folders-ui.php:287
 msgid "None (top level)"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:211
+#: includes/class-apex-folders-ui.php:288
 msgid "Create New Subfolder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:212
+#: includes/class-apex-folders-ui.php:289
 msgid "Create Subfolder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:213
+#: includes/class-apex-folders-ui.php:290
 msgid "Subfolder Name:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:214
+#: includes/class-apex-folders-ui.php:291
 msgid "Parent folder:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:215
+#: includes/class-apex-folders-ui.php:292
 msgid "Rename Folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:216
+#: includes/class-apex-folders-ui.php:293
 msgid "New Name:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:217
+#: includes/class-apex-folders-ui.php:294
 msgid "Cancel"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:218
+#: includes/class-apex-folders-ui.php:295
 msgid "Save"
 msgstr ""
 
 #. translators: %s: folder name
-#: includes/class-apex-folders-ui.php:220
+#: includes/class-apex-folders-ui.php:297
 msgid "Are you sure you want to delete the folder \"%s\"?"
 msgstr ""
 
 #. translators: %s: folder name
-#: includes/class-apex-folders-ui.php:221
+#: includes/class-apex-folders-ui.php:298
 msgid "Files in this folder will be moved to the Unassigned folder."
 msgstr ""
 
 #. translators: %s: folder name
-#: includes/class-apex-folders-ui.php:222
+#: includes/class-apex-folders-ui.php:299
 msgid "Error creating folder:"
 msgstr ""
 
 #. translators: %s: folder name
-#: includes/class-apex-folders-ui.php:223
+#: includes/class-apex-folders-ui.php:300
 msgid "Error creating subfolder:"
 msgstr ""
 
 #. translators: %s: folder name
-#: includes/class-apex-folders-ui.php:224
+#: includes/class-apex-folders-ui.php:301
 msgid "Error renaming folder:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:225
+#: includes/class-apex-folders-ui.php:302
 msgid "Error deleting folder:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:226
+#: includes/class-apex-folders-ui.php:303
 msgid "Unknown error"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:227
+#: includes/class-apex-folders-ui.php:304
 msgid "Network error. Please try again."
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:228
-msgid "total"
-msgstr ""
-
 #. translators: %1$d: folder's own file count, %2$d: total file count including subfolders
-#: includes/class-apex-folders-ui.php:310
+#: includes/class-apex-folders-ui.php:388
 msgid "%1$d / %2$d total"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:347
+#: includes/class-apex-folders-ui.php:425
 msgid "Folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:350
+#: includes/class-apex-folders-ui.php:428
 msgid "Select a folder for this media item"
 msgstr ""
 
@@ -323,7 +348,7 @@ msgid "Default folder for media items not assigned to any other folder"
 msgstr ""
 
 #: includes/class-apex-folders-uploads.php:111
-msgid "Folder:"
+msgid "Upload to folder"
 msgstr ""
 
 #: includes/class-apex-folders-utilities.php:31
@@ -334,8 +359,8 @@ msgstr ""
 msgid "Media Folder"
 msgstr ""
 
-#: includes/class-apex-folders-utilities.php:33
-msgid "Folders"
+#: includes/class-apex-folders-utilities.php:34
+msgid "All Folders"
 msgstr ""
 
 #: includes/class-apex-folders-utilities.php:35
@@ -348,6 +373,10 @@ msgstr ""
 
 #: includes/class-apex-folders-utilities.php:37
 msgid "Update Folder"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:38
+msgid "Add New Folder"
 msgstr ""
 
 #: includes/class-apex-folders-utilities.php:39
@@ -411,49 +440,28 @@ msgstr ""
 msgid "Network error: Could not connect to server"
 msgstr ""
 
-#. translators: %s: folder name
-#: includes/class-folder-drag-drop.php:84
-msgid "Bulk Drag and Drop"
-msgstr ""
-
-#: includes/class-folder-drag-drop.php:85
-msgid "Select multiple files for organization"
-msgstr ""
-
-#: includes/class-folder-drag-drop.php:86
-msgid "Exit Selection Mode"
-msgstr ""
-
-#: includes/class-folder-drag-drop.php:87
-msgid "Selection Mode:"
-msgstr ""
-
-#: includes/class-folder-drag-drop.php:88
-msgid "Click on items to select multiple files, then drag any selected item to a folder."
-msgstr ""
-
-#: includes/class-folder-drag-drop.php:106
+#: includes/class-folder-drag-drop.php:101
 msgid "You do not have permission to move files."
 msgstr ""
 
-#: includes/class-folder-drag-drop.php:126
+#: includes/class-folder-drag-drop.php:121
 msgid "No files selected to move."
 msgstr ""
 
-#: includes/class-folder-drag-drop.php:133
+#: includes/class-folder-drag-drop.php:128
 msgid "Invalid folder selected."
 msgstr ""
 
-#: includes/class-folder-drag-drop.php:142
+#: includes/class-folder-drag-drop.php:137
 msgid "The selected folder does not exist."
 msgstr ""
 
-#: includes/class-folder-drag-drop.php:198
+#: includes/class-folder-drag-drop.php:193
 msgid "Failed to move files. Please try again."
 msgstr ""
 
 #. translators: %1$d: number of files moved, %2$s: folder name
-#: includes/class-folder-drag-drop.php:183
+#: includes/class-folder-drag-drop.php:178
 msgid "%1$d file moved successfully to \"%2$s\"."
 msgid_plural "%1$d files moved successfully to \"%2$s\"."
 msgstr[0] ""

@@ -81,11 +81,6 @@ class APEX_FOLDERS_Drag_Drop {
                     'errorPrefix' => __( 'Error:', 'apex-folders' ),
                     'couldNotMove' => __( 'Could not move files', 'apex-folders' ),
                     'networkError' => __( 'Network error: Could not connect to server', 'apex-folders' ),
-                    'bulkButton' => __( 'Bulk Drag and Drop', 'apex-folders' ),
-                    'bulkButtonDescription' => __( 'Select multiple files for organization', 'apex-folders' ),
-                    'exitSelection' => __( 'Exit Selection Mode', 'apex-folders' ),
-                    'selectionModeLabel' => __( 'Selection Mode:', 'apex-folders' ),
-                    'selectionModeHelp' => __( 'Click on items to select multiple files, then drag any selected item to a folder.', 'apex-folders' ),
                 )
             )
         );

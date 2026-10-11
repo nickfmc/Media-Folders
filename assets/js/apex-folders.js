@@ -34,7 +34,27 @@
      * Text shown for a folder in the filter dropdown
      */
     function getFolderLabel(folder) {
-        return folder.name + ' (' + folder.count + ')';
+        return (folder.parent ? '\u2014 ' : '') + folder.name + ' (' + folder.count + ')';
+    }
+
+    /**
+     * Folders in display order: Unassigned, then each top-level folder followed by its subfolders
+     */
+    function getOrderedFolders() {
+        var unassigned = _.filter(folders, function(folder) { return folder.slug === 'unassigned'; });
+        var parents = _.filter(folders, function(folder) { return folder.slug !== 'unassigned' && !parseInt(folder.parent, 10); });
+        var ordered = unassigned.slice();
+
+        _.each(parents, function(parent) {
+            ordered.push(parent);
+            _.each(folders, function(folder) {
+                if (parseInt(folder.parent, 10) === parseInt(parent.id, 10)) {
+                    ordered.push(folder);
+                }
+            });
+        });
+
+        return ordered;
     }
 
     /**
@@ -86,8 +106,16 @@
             // Create our custom dropdown filter
             var folderFilter = this.createFolderFilter();
 
-            // Add it to the toolbar
+            // Add it to the toolbar after the date filter, labelled like the core filters
             if (folderFilter) {
+                this.toolbar.set('folderFilterLabel', new wp.media.view.Label({
+                    value: l10n.filterByFolder || 'Filter by folder',
+                    attributes: {
+                        'for': 'media-attachment-folder-filter'
+                    },
+                    priority: -71
+                }).render());
+
                 this.toolbar.set('folderFilter', folderFilter);
             }
         },
@@ -115,28 +143,20 @@
                         priority: 10
                     };
 
-                    // Add each folder as an option
-                    folders.forEach(function(folder) {
+                    // Add each folder as an option, subfolders under their parent
+                    var priority = 20;
+                    getOrderedFolders().forEach(function(folder) {
                         var filterName = 'folder-' + folder.id;
                         filters[filterName] = {
                             text: getFolderLabel(folder),
                             props: {
                                 apex_folder: folder.slug
                             },
-                            priority: 20
+                            priority: priority++
                         };
                     });
 
                     this.filters = filters;
-                },
-
-                // Keep the filter visible in every media modal toolbar
-                render: function() {
-                    var result = wp.media.view.AttachmentFilters.prototype.render.apply(this, arguments);
-
-                    this.$el.attr('style', 'display: inline-block !important; visibility: visible !important; margin-right: 8px;');
-
-                    return result;
                 }
             });
 
@@ -144,7 +164,7 @@
             var filter = new FolderFilter({
                 controller: this.controller,
                 model: this.collection.props,
-                priority: -75
+                priority: -70
             }).render();
 
             return filter;
