@@ -55,15 +55,27 @@ class APEX_FOLDERS_Admin {
                 <p>
                     <strong><?php esc_html_e( 'Media Folders Tools:', 'apex-folders' ); ?></strong>
                     <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'upload.php?rebuild_unassigned=1' ), 'rebuild_unassigned' ) ); ?>" class="button"><?php esc_html_e( 'Rebuild Unassigned Folder', 'apex-folders' ); ?></a>
-                    <a href="<?php echo esc_url( admin_url( 'upload.php?debug_folders=1' ) ); ?>" class="button"><?php esc_html_e( 'Show Folder Debug Info', 'apex-folders' ); ?></a>
+                    <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'upload.php?debug_folders=1' ), 'apex_folders_debug' ) ); ?>" class="button"><?php esc_html_e( 'Show Folder Debug Info', 'apex-folders' ); ?></a>
                     <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'upload.php?flush_term_cache=1' ), 'flush_term_cache' ) ); ?>" class="button"><?php esc_html_e( 'Flush Term Cache', 'apex-folders' ); ?></a>
-                    <a href="<?php echo esc_url( admin_url( 'upload.php?debug_unassigned=1' ) ); ?>" class="button"><?php esc_html_e( 'Debug Unassigned', 'apex-folders' ); ?> (ID: <?php echo intval( $unassigned_id ); ?>)</a>
+                    <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'upload.php?debug_unassigned=1' ), 'apex_folders_debug' ) ); ?>" class="button"><?php esc_html_e( 'Debug Unassigned', 'apex-folders' ); ?> (ID: <?php echo intval( $unassigned_id ); ?>)</a>
                 </p>
             </div>
             <?php
         }
     }
     
+    /**
+     * Check whether a debug view was requested from the tools links by an administrator
+     *
+     * @param string $key Query parameter of the debug view.
+     * @return bool Whether to show the debug view.
+     */
+    private function is_debug_request( $key ) {
+        return isset( $_GET[ $key ], $_GET['_wpnonce'] )
+            && current_user_can( 'manage_options' )
+            && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'apex_folders_debug' );
+    }
+
     /**
      * Debug folder content
      */
@@ -73,7 +85,7 @@ class APEX_FOLDERS_Admin {
             return;
         }
         
-        if ( isset( $_GET['debug_folders'] ) && current_user_can( 'manage_options' ) ) {
+        if ( $this->is_debug_request( 'debug_folders' ) ) {
             global $wpdb;
             
             // IMPROVED: Use wp_kses for HTML in admin notices
@@ -86,14 +98,13 @@ class APEX_FOLDERS_Admin {
             ) );
             
             foreach ( $folders as $folder ) {
-                // Count using SQL to avoid caching issues
-                $count = $wpdb->get_var( $wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$wpdb->term_relationships} tr
-                    JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                    JOIN {$wpdb->posts} p ON p.ID = tr.object_id
-                    WHERE tt.term_id = %d AND p.post_type = 'attachment'",
-                    $folder->term_id
-                ) );
+                // Use WordPress API to get objects in term and count them
+                $attachment_ids = get_objects_in_term( $folder->term_id, 'apex_folder' );
+                // Filter to ensure we only count attachments
+                $attachment_ids = array_filter( $attachment_ids, function( $id ) {
+                    return get_post_type( $id ) === 'attachment';
+                } );
+                $count = count( $attachment_ids );
                 
                 // IMPROVED: Escape all data before output
                 $output .= sprintf(
@@ -122,7 +133,7 @@ class APEX_FOLDERS_Admin {
      * Debug unassigned folder
      */
     public function debug_unassigned_folder() {
-        if ( ! isset( $_GET['debug_unassigned'] ) || ! current_user_can( 'manage_options' ) ) {
+        if ( ! $this->is_debug_request( 'debug_unassigned' ) ) {
             return;
         }
         
@@ -140,30 +151,26 @@ class APEX_FOLDERS_Admin {
         }
         
         // 2. Check term_taxonomy record
-        $tt_id = $wpdb->get_var( $wpdb->prepare(
-            "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-             WHERE term_id = %d AND taxonomy = 'apex_folder'",
-            $unassigned_id
-        ) );
+        $term = get_term( $unassigned_id, 'apex_folder' );
+        $tt_id = isset( $term->term_taxonomy_id ) ? $term->term_taxonomy_id : false;
         echo '<p>' . esc_html__( 'Term taxonomy ID:', 'apex-folders' ) . ' ' . ( $tt_id ? intval( $tt_id ) : esc_html__( 'Not found', 'apex-folders' ) ) . '</p>';
         
-        // 3. Count direct from database
-        $count = $wpdb->get_var( $wpdb->prepare(
-            "SELECT COUNT(*) FROM $wpdb->term_relationships tr
-             JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-             WHERE tt.term_id = %d AND tt.taxonomy = 'apex_folder'",
-            $unassigned_id
-        ) );
+        // 3. Count direct from WordPress API
+        $attachment_ids = get_objects_in_term( $unassigned_id, 'apex_folder' );
+        // Filter to ensure we only count attachments
+        $attachment_ids = array_filter( $attachment_ids, function( $id ) {
+            return get_post_type( $id ) === 'attachment';
+        } );
+        $count = count( $attachment_ids );
         echo '<p>' . esc_html__( 'Actual count in database:', 'apex-folders' ) . ' ' . intval( $count ) . '</p>';
         
         // 4. List some items in the unassigned folder
-        $items = $wpdb->get_col( $wpdb->prepare(
-            "SELECT tr.object_id FROM $wpdb->term_relationships tr
-             JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-             WHERE tt.term_id = %d AND tt.taxonomy = 'apex_folder'
-             LIMIT 10",
-            $unassigned_id
-        ) );
+        $attachment_ids = get_objects_in_term( $unassigned_id, 'apex_folder' );
+        // Filter to ensure we only include attachments
+        $filtered_items = array_filter( $attachment_ids, function( $id ) {
+            return get_post_type( $id ) === 'attachment';
+        } );
+        $items = array_slice( $filtered_items, 0, 10 );
         if ( $items ) {
             echo '<p>' . esc_html__( 'Sample items:', 'apex-folders' ) . ' ' . esc_html( implode( ', ', $items ) ) . '</p>';
         } else {
@@ -171,15 +178,19 @@ class APEX_FOLDERS_Admin {
         }
         
         // 5. Check for media with no folder
-        $no_folder = $wpdb->get_var(
-            "SELECT COUNT(*) FROM $wpdb->posts p 
-             WHERE p.post_type = 'attachment' 
-             AND NOT EXISTS (
-                 SELECT 1 FROM $wpdb->term_relationships tr
-                 JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                 WHERE tt.taxonomy = 'apex_folder' AND tr.object_id = p.ID
-             )"
-        );
+        $no_folder_query = new WP_Query( array(
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'apex_folder',
+                    'operator' => 'NOT EXISTS'
+                )
+            )
+        ) );
+        $no_folder = $no_folder_query->found_posts;
         echo '<p>' . esc_html__( 'Media items with no folder at all:', 'apex-folders' ) . ' ' . intval( $no_folder ) . '</p>';
         
         echo '</div>';
@@ -195,10 +206,11 @@ class APEX_FOLDERS_Admin {
             global $wpdb;
             
             // Get all media folder terms
-            $terms = $wpdb->get_col( "
-                SELECT term_id FROM $wpdb->term_taxonomy
-                WHERE taxonomy = 'apex_folder'
-            " );
+            $terms = get_terms( array(
+                'taxonomy' => 'apex_folder',
+                'hide_empty' => false,
+                'fields' => 'ids'
+            ) );
             
             // Clear caches
             clean_term_cache( $terms, 'apex_folder' );
@@ -208,6 +220,7 @@ class APEX_FOLDERS_Admin {
             exit;
         }
         
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just reading the GET parameter for admin notice after redirect
         if ( isset( $_GET['cache_flushed'] ) ) {
             add_action( 'admin_notices', function() {
                 ?>
@@ -235,19 +248,22 @@ class APEX_FOLDERS_Admin {
         }
         
         // Show success notice after rebuild
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just reading the GET parameter for admin notice after redirect
         if ( isset( $_GET['rebuild_complete'] ) ) {
             add_action( 'admin_notices', function() {
-                $count = intval( $_GET['rebuild_complete'] );
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just reading the GET parameter for admin notice after redirect
+                $count = isset( $_GET['rebuild_complete'] ) ? intval( $_GET['rebuild_complete'] ) : 0;
                 ?>
                 <div class="notice notice-success is-dismissible">
                     <p><?php echo sprintf(
                         /* translators: %d: number of items assigned to unassigned folder */
-                        esc_html__( 'Unassigned folder rebuilt. %d items were assigned to the Unassigned folder.', 'apex-folders' ), 
-                        $count
+                        esc_html__( 'Unassigned folder rebuilt. %d items were assigned to the Unassigned folder.', 'apex-folders' ),
+                        esc_html($count)
                     ); ?></p>
+                    
                     <p>
                         <a href="<?php echo esc_url( admin_url( 'upload.php?apex_folder=unassigned' ) ); ?>"><?php esc_html_e( 'View Unassigned folder', 'apex-folders' ); ?></a> | 
-                        <a href="<?php echo esc_url( admin_url( 'upload.php?debug_folders=1' ) ); ?>"><?php esc_html_e( 'View folder debug info', 'apex-folders' ); ?></a>
+                        <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'upload.php?debug_folders=1' ), 'apex_folders_debug' ) ); ?>"><?php esc_html_e( 'View folder debug info', 'apex-folders' ); ?></a>
                     </p>
                 </div>
                 <?php
@@ -261,13 +277,21 @@ class APEX_FOLDERS_Admin {
      */
     public function register_settings() {
 
+        // Register a new settings section
+        add_settings_section(
+            'apex_folders_settings',
+            esc_html__( 'Apex Folders Settings', 'apex-folders' ),
+            array( $this, 'render_settings_section' ),
+            'media'
+        );
+        
         // Register the debug tools display setting
         register_setting(
             'media',
             'apex_folders_show_debug_tools',
+            'rest_sanitize_boolean',
             array(
                 'type' => 'boolean',
-                'sanitize_callback' => 'rest_sanitize_boolean',
                 'default' => false,
             )
         );
@@ -281,21 +305,13 @@ class APEX_FOLDERS_Admin {
             'apex_folders_settings'
         );
 
-        // Register a new settings section
-        add_settings_section(
-            'apex_folders_settings',
-            esc_html__( 'Apex Folders Settings', 'apex-folders' ),
-            array( $this, 'render_settings_section' ),
-            'media'
-        );
-        
         // Register the uninstall setting
         register_setting(
             'media',
             'apex_folders_remove_all_data',
+            'rest_sanitize_boolean',
             array(
                 'type' => 'boolean',
-                'sanitize_callback' => 'rest_sanitize_boolean',
                 'default' => false,
             )
         );

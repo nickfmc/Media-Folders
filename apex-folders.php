@@ -9,9 +9,9 @@
  * @wordpress-plugin
  *
  * Plugin Name: Apex Folders
- * Plugin URI: https://mountainairweb.com
+ * Plugin URI: https://apex.mountainairweb.com/
  * Description: Reach the apex of media library organization.
- * Version: 0.9.9
+ * Version: 1.1.1
  * Author: Nick Murray
  * Author URI: https://mountainairweb.com
  * Text Domain: apex-folders
@@ -28,40 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Define plugin constants.
 define( 'APEX_FOLDERS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'APEX_FOLDERS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'APEX_FOLDERS_VERSION', '0.9.9' );
-
-/**
- * Class for tracking folder processing state.
- * 
- * @since 0.9.9
- */
-class Apex_Folders_State {
-    /**
-     * Storage for tracking folder processing state.
-     *
-     * @var boolean
-     */
-    private static $is_processing_folder = false;
-    
-    /**
-     * Set the processing state.
-     *
-     * @param boolean $value The processing state.
-     * @return void
-     */
-    public static function set_processing( $value ) {
-        self::$is_processing_folder = $value;
-    }
-    
-    /**
-     * Check if folders are currently being processed.
-     *
-     * @return boolean Current processing state.
-     */
-    public static function is_processing() {
-        return self::$is_processing_folder;
-    }
-}
+define( 'APEX_FOLDERS_VERSION', '1.1.1' );
 
 // Core includes.
 require_once APEX_FOLDERS_PLUGIN_DIR . 'includes/class-folder-drag-drop.php';
@@ -143,19 +110,6 @@ function apex_folders_register_taxonomy() {
 add_action( 'init', 'apex_folders_register_taxonomy' );
 
 /**
- * Prevent creation of terms with numeric names that should be IDs.
- *
- * @since 0.9.9
- * @param string $term     The term name to check.
- * @param string $taxonomy The taxonomy name.
- * @return mixed Term name or WP_Error on failure.
- */
-function prevent_numeric_term_creation( $term, $taxonomy ) {
-    return APEX_FOLDERS_Utilities::prevent_numeric_term_creation( $term, $taxonomy );
-}
-add_filter( 'pre_insert_term', 'prevent_numeric_term_creation', 10, 2 );
-
-/**
  * Ensure all attachments have a folder assignment.
  *
  * @since 0.9.9
@@ -190,15 +144,3 @@ function apex_folders_ensure_all_assigned() {
 function apex_folders_update_counts() {
     APEX_FOLDERS_Utilities::update_folder_counts();
 }
-
-/**
- * Initialize plugin.
- *
- * @since 0.9.9
- * @return void
- */
-function apex_folders_init() {
-    // Migration is already handled during activation.
-    update_option( 'apex_folders_needs_migration', false );
-}
-add_action( 'init', 'apex_folders_init' );

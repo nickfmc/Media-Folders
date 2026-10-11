@@ -1,0 +1,468 @@
+# Copyright (C) 2025 Mountain Air Web
+# This file is distributed under the GPL-2.0+.
+msgid ""
+msgstr ""
+"Project-Id-Version: Apex Folders 1.1.1\n"
+"Report-Msgid-Bugs-To: https://mountainairweb.com\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: apex-folders\n"
+
+#: includes/class-ajax-handler.php:45
+msgid "The Unassigned folder cannot be deleted."
+msgstr ""
+
+#: includes/class-ajax-handler.php:51 includes/class-ajax-handler.php:196
+msgid "Folder not found."
+msgstr ""
+
+#. translators: %d: number of files moved to unassigned folder
+#: includes/class-ajax-handler.php:75
+msgid "Folder deleted. %d files moved to Unassigned folder."
+msgstr ""
+
+#: includes/class-ajax-handler.php:96
+msgid "Folder name cannot be empty"
+msgstr ""
+
+#: includes/class-ajax-handler.php:104
+msgid "Parent folder does not exist"
+msgstr ""
+
+#: includes/class-ajax-handler.php:111
+msgid "Cannot create subfolders under Unassigned"
+msgstr ""
+
+#: includes/class-ajax-handler.php:118
+msgid "Only one level of subfolders is supported"
+msgstr ""
+
+#: includes/class-ajax-handler.php:146
+msgid "Permission denied"
+msgstr ""
+
+#: includes/class-ajax-handler.php:183
+msgid "Folder name cannot be empty."
+msgstr ""
+
+#: includes/class-ajax-handler.php:189
+msgid "The Unassigned folder cannot be renamed."
+msgstr ""
+
+#: includes/class-ajax-handler.php:208
+msgid "Folder renamed successfully."
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:56
+msgid "Media Folders Tools:"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:57
+msgid "Rebuild Unassigned Folder"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:58
+msgid "Show Folder Debug Info"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:59
+msgid "Flush Term Cache"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:60
+msgid "Debug Unassigned"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:92
+msgid "Media Folders Debug:"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:144
+msgid "Unassigned Folder Debug"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:148
+msgid "Term check:"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:148
+msgid "Found"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:148 includes/class-apex-folders-admin.php:156
+msgid "Not found"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:150
+msgid "Term details:"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:150
+msgid "Name="
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:150
+msgid "Slug="
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:150
+msgid "Count="
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:156
+msgid "Term taxonomy ID:"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:165
+msgid "Actual count in database:"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:175
+msgid "Sample items:"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:177
+msgid "No items found in Unassigned folder"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:194
+msgid "Media items with no folder at all:"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:228
+msgid "Term caches have been flushed."
+msgstr ""
+
+#. translators: %d: number of items assigned to unassigned folder
+#: includes/class-apex-folders-admin.php:260
+msgid "Unassigned folder rebuilt. %d items were assigned to the Unassigned folder."
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:265
+msgid "View Unassigned folder"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:266
+msgid "View folder debug info"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:283
+msgid "Apex Folders Settings"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:302
+msgid "Admin Tools"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:322
+msgid "Plugin Cleanup"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:333
+msgid "Configure settings for the Apex Folders plugin."
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:344
+msgid "Remove all folder data when plugin is uninstalled"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:347
+msgid "Warning: When enabled, all your media folders and organization structure will be permanently deleted if you uninstall this plugin."
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:360
+msgid "Show debug tools in Media Library"
+msgstr ""
+
+#: includes/class-apex-folders-admin.php:363
+msgid "When enabled, administrator tools for debugging and rebuilding folders will be displayed in the Media Library."
+msgstr ""
+
+#: includes/class-apex-folders-block-editor.php:77
+msgid "All folders"
+msgstr ""
+
+#: includes/class-apex-folders-block-editor.php:78
+msgid "Filter by folder"
+msgstr ""
+
+#. translators: %1$d: files in this folder, %2$d: files including subfolders
+#: includes/class-apex-folders-ui.php:132 includes/class-apex-folders-ui.php:320
+msgid "%1$d in this folder, %2$d including subfolders"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:140 includes/class-apex-folders-ui.php:140
+msgid "Add subfolder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:142 includes/class-apex-folders-ui.php:142
+msgid "Rename folder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:143 includes/class-apex-folders-ui.php:143
+msgid "Delete folder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:197
+msgid "Apex Folders"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:206
+msgid "All files"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:216 includes/class-apex-folders-utilities.php:33
+msgid "Folders"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:219
+msgid "No folders yet. Add one below, then drag files onto it."
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:245
+msgid "Add folder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:247
+msgid "Drag a file onto a folder to move it. Use Bulk select to move several at once."
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:251
+msgid "is a free tool from Apex by Mountain Air Web."
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:252
+msgid "Meet the other Apex tools"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:297
+msgid "Create New Folder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:298
+msgid "Create Folder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:299
+msgid "Folder Name:"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:300
+msgid "Parent Folder (optional):"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:301
+msgid "None (top level)"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:302
+msgid "Create New Subfolder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:303
+msgid "Create Subfolder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:304
+msgid "Subfolder Name:"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:305
+msgid "Parent folder:"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:306
+msgid "Rename Folder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:307
+msgid "New Name:"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:308
+msgid "Cancel"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:309
+msgid "Save"
+msgstr ""
+
+#. translators: %s: folder name
+#: includes/class-apex-folders-ui.php:311
+msgid "Are you sure you want to delete the folder \"%s\"?"
+msgstr ""
+
+#. translators: %s: folder name
+#: includes/class-apex-folders-ui.php:312
+msgid "Files in this folder will be moved to the Unassigned folder."
+msgstr ""
+
+#. translators: %s: folder name
+#: includes/class-apex-folders-ui.php:313
+msgid "Error creating folder:"
+msgstr ""
+
+#. translators: %s: folder name
+#: includes/class-apex-folders-ui.php:314
+msgid "Error creating subfolder:"
+msgstr ""
+
+#. translators: %s: folder name
+#: includes/class-apex-folders-ui.php:315
+msgid "Error renaming folder:"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:316
+msgid "Error deleting folder:"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:317
+msgid "Unknown error"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:318
+msgid "Network error. Please try again."
+msgstr ""
+
+#. translators: %1$d: folder's own file count, %2$d: total file count including subfolders
+#: includes/class-apex-folders-ui.php:402
+msgid "%1$d / %2$d total"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:439
+msgid "Folder"
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:442
+msgid "Select a folder for this media item"
+msgstr ""
+
+#: includes/class-apex-folders-unassigned.php:42 includes/class-apex-folders-uploads.php:113
+msgid "Unassigned"
+msgstr ""
+
+#: includes/class-apex-folders-unassigned.php:45
+msgid "Default folder for media items not assigned to any other folder"
+msgstr ""
+
+#: includes/class-apex-folders-uploads.php:111
+msgid "Upload to folder"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:31
+msgid "Media Folders"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:32
+msgid "Media Folder"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:34
+msgid "All Folders"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:35
+msgid "Edit Folder"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:36
+msgid "View Folder"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:37
+msgid "Update Folder"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:38
+msgid "Add New Folder"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:39
+msgid "New Folder Name"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:40
+msgid "Parent Folder"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:41
+msgid "Parent Folder:"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:42
+msgid "Search Folders"
+msgstr ""
+
+#. translators: %s: file name
+#: includes/class-folder-drag-drop.php:71
+msgid "Moving: %s"
+msgstr ""
+
+#. translators: %d: number of files
+#: includes/class-folder-drag-drop.php:73
+msgid "Moving %d items"
+msgstr ""
+
+#. translators: %d: number of files
+#: includes/class-folder-drag-drop.php:74
+msgid "item"
+msgstr ""
+
+#. translators: %1$d: number of files, %2$s: folder name
+#: includes/class-folder-drag-drop.php:76
+msgid "Moving %1$d item to \"%2$s\""
+msgstr ""
+
+#. translators: %1$d: number of files, %2$s: folder name
+#: includes/class-folder-drag-drop.php:78
+msgid "Moving %1$d items to \"%2$s\""
+msgstr ""
+
+#. translators: %s: folder name
+#: includes/class-folder-drag-drop.php:80
+msgid "Successfully moved files to \"%s\""
+msgstr ""
+
+#. translators: %s: folder name
+#: includes/class-folder-drag-drop.php:81
+msgid "Error:"
+msgstr ""
+
+#. translators: %s: folder name
+#: includes/class-folder-drag-drop.php:82
+msgid "Could not move files"
+msgstr ""
+
+#. translators: %s: folder name
+#: includes/class-folder-drag-drop.php:83
+msgid "Network error: Could not connect to server"
+msgstr ""
+
+#: includes/class-folder-drag-drop.php:101
+msgid "You do not have permission to move files."
+msgstr ""
+
+#: includes/class-folder-drag-drop.php:121
+msgid "No files selected to move."
+msgstr ""
+
+#: includes/class-folder-drag-drop.php:128
+msgid "Invalid folder selected."
+msgstr ""
+
+#: includes/class-folder-drag-drop.php:137
+msgid "The selected folder does not exist."
+msgstr ""
+
+#: includes/class-folder-drag-drop.php:193
+msgid "Failed to move files. Please try again."
+msgstr ""
+
+#. translators: %1$d: number of files moved, %2$s: folder name
+#: includes/class-folder-drag-drop.php:178
+msgid "%1$d file moved successfully to \"%2$s\"."
+msgid_plural "%1$d files moved successfully to \"%2$s\"."
+msgstr[0] ""
+msgstr[1] ""

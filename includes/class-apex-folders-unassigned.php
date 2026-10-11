@@ -23,20 +23,36 @@ class APEX_FOLDERS_Unassigned {
      * @return int Unassigned folder ID
      */
     public static function get_id() {
-        $unassigned = term_exists( esc_html__( 'Unassigned', 'apex-folders' ), 'apex_folder' );
-        if ( ! $unassigned ) {
-            // Create it if it doesn't exist
-            $unassigned = wp_insert_term(
-                esc_html__( 'Unassigned', 'apex-folders' ), 
-                'apex_folder',
-                array(
-                    'description' => esc_html__( 'Default folder for media items not assigned to any other folder', 'apex-folders' ),
-                    'slug' => 'unassigned'
-                )
-            );
+        static $ids = array();
+
+        $blog_id = get_current_blog_id();
+        if ( ! empty( $ids[ $blog_id ] ) ) {
+            return $ids[ $blog_id ];
         }
-        
-        return is_array( $unassigned ) ? $unassigned['term_id'] : $unassigned;
+
+        // Look it up by slug: the name is translated, so it differs between languages
+        $term = get_term_by( 'slug', 'unassigned', 'apex_folder' );
+        if ( $term ) {
+            $ids[ $blog_id ] = (int) $term->term_id;
+            return $ids[ $blog_id ];
+        }
+
+        // Create it if it doesn't exist
+        $unassigned = wp_insert_term(
+            esc_html__( 'Unassigned', 'apex-folders' ),
+            'apex_folder',
+            array(
+                'description' => esc_html__( 'Default folder for media items not assigned to any other folder', 'apex-folders' ),
+                'slug' => 'unassigned'
+            )
+        );
+
+        if ( is_wp_error( $unassigned ) ) {
+            return 0;
+        }
+
+        $ids[ $blog_id ] = (int) $unassigned['term_id'];
+        return $ids[ $blog_id ];
     }
     
     /**
@@ -67,96 +83,43 @@ class APEX_FOLDERS_Unassigned {
      * @return int Number of items assigned
      */
     public static function ensure_all_assigned() {
-        global $wpdb;
-        
         // Get the unassigned folder ID
         $unassigned_id = self::get_id();
-        
-        // Get the term taxonomy ID
-        $tt_id = $wpdb->get_var( $wpdb->prepare(
-            "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy 
-             WHERE term_id = %d AND taxonomy = 'apex_folder'",
-            $unassigned_id
-        ) );
-        
-        if ( ! $tt_id ) {
-            error_log(
-                sprintf(
-                    /* translators: %d: unassigned folder ID */
-                    esc_html__( 'Error: Could not find term_taxonomy_id for Unassigned folder (ID: %d)', 'apex-folders' ),
-                    $unassigned_id
-                )
-            );
+
+        if ( ! $unassigned_id ) {
             return 0;
         }
-        
+
         // Find all attachments that don't have ANY folder assignment
-        $unassigned_attachments = $wpdb->get_col(
-            "SELECT p.ID FROM $wpdb->posts p
-             WHERE p.post_type = 'attachment'
-             AND NOT EXISTS (
-                 SELECT 1 FROM $wpdb->term_relationships tr
-                 JOIN $wpdb->term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                 WHERE tt.taxonomy = 'apex_folder' AND tr.object_id = p.ID
-             )"
-        );
-        
+        $unassigned_query = new WP_Query( array(
+            'post_type'      => 'attachment',
+            'post_status'    => 'inherit',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'no_found_rows'  => true,
+            'tax_query'      => array(
+                array(
+                    'taxonomy' => 'apex_folder',
+                    'operator' => 'NOT EXISTS',
+                ),
+            ),
+        ) );
+
         $count = 0;
-        
-        // Log what we found
-        error_log(
-            sprintf(
-                /* translators: %d: number of attachments with no folder */
-                esc_html__( 'Found %d attachments with no folder assignment', 'apex-folders' ),
-                count( $unassigned_attachments )
-            )
-        );
-        
-        // Process in batches to avoid timeouts
-        foreach ( $unassigned_attachments as $attachment_id ) {
-            // Direct SQL approach to ensure reliability
-            $exists = $wpdb->get_var( $wpdb->prepare(
-                "SELECT COUNT(*) FROM $wpdb->term_relationships 
-                 WHERE object_id = %d AND term_taxonomy_id = %d",
-                $attachment_id, $tt_id
-            ) );
-            
-            if ( ! $exists ) {
-                // Insert the relationship directly
-                $wpdb->insert(
-                    $wpdb->term_relationships,
-                    array(
-                        'object_id' => $attachment_id,
-                        'term_taxonomy_id' => $tt_id,
-                        'term_order' => 0
-                    )
-                );
-                
-                if ( $wpdb->insert_id || $wpdb->rows_affected ) {
-                    $count++;
-                }
+
+        // Assign them all, then recount the folder once at the end
+        wp_defer_term_counting( true );
+
+        foreach ( $unassigned_query->posts as $attachment_id ) {
+            $result = wp_set_object_terms( $attachment_id, array( $unassigned_id ), 'apex_folder', true );
+
+            if ( ! is_wp_error( $result ) && ! empty( $result ) ) {
+                $count++;
             }
         }
-        
-        // Update term count
-        if ( $count > 0 ) {
-            // Update the count in the database directly
-            $wpdb->query( $wpdb->prepare(
-                "UPDATE $wpdb->term_taxonomy 
-                 SET count = count + %d
-                 WHERE term_taxonomy_id = %d",
-                $count, $tt_id
-            ) );
-            
-            // Clear cache
-            clean_term_cache( $unassigned_id, 'apex_folder' );
-        }
-        
-        // Force update all term counts to be sure
-        if ( function_exists( 'apex_folders_update_counts' ) ) {
-            apex_folders_update_counts();
-        }
-        
+
+        wp_defer_term_counting( false );
+
         return $count;
     }
 }

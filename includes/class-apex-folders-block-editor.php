@@ -17,16 +17,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class for block editor integration
  */
 class APEX_FOLDERS_Editor {
-    
+
     /**
      * Constructor
      */
     public function __construct() {
-        // Add assets to block editor
-        add_action( 'admin_init', array( $this, 'enqueue_block_editor_assets' ), 5 );
-        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_block_editor_assets' ) );
+        // Add assets wherever the media grid/modal is loaded
+        add_action( 'wp_enqueue_media', array( $this, 'enqueue_block_editor_assets' ) );
     }
-    
+
     /**
      * Enqueue block editor assets
      */
@@ -36,7 +35,11 @@ class APEX_FOLDERS_Editor {
             'taxonomy' => 'apex_folder',
             'hide_empty' => false,
         ) );
-        
+
+        if ( is_wp_error( $folders ) ) {
+            $folders = array();
+        }
+
         // Convert to array for JavaScript
         $folders_data = array();
         foreach ( $folders as $folder ) {
@@ -49,49 +52,41 @@ class APEX_FOLDERS_Editor {
             );
         }
 
-        // First, register and enqueue the folder data
-        wp_register_script(
-            'apex-folder-data',
-            '',
-            array( 'media-editor' ),
-            '1.0',
-            false
+        // Enqueue our filtering script. It loads after the media views it extends
+        // and runs before any media frame is created.
+        wp_enqueue_script(
+            'apex-folder-filters',
+            APEX_FOLDERS_PLUGIN_URL . 'assets/js/apex-folders.js',
+            array( 'jquery', 'media-views' ),
+            filemtime( APEX_FOLDERS_PLUGIN_DIR . 'assets/js/apex-folders.js' ),
+            true
         );
-        
+
         // Add media folders data to the page
         wp_add_inline_script(
-            'apex-folder-data',
+            'apex-folder-filters',
             'window.mediaFolders = ' . wp_json_encode( $folders_data ) . ';',
             'before'
         );
-        wp_enqueue_script( 'apex-folder-data' );
-        
-        // Then, enqueue our filtering script - IMPORTANT: set in_footer to FALSE
-        wp_enqueue_script(
-            'apex-folder-filters',
-            APEX_FOLDERS_PLUGIN_URL . 'assets/js/apex-folders.js', 
-            array( 'jquery', 'wp-blocks', 'media-editor', 'apex-folder-data' ), 
-            filemtime( APEX_FOLDERS_PLUGIN_DIR . 'assets/js/apex-folders.js' ),
-            false // Load in header, not footer
-        );
-        
+
         // Add translatable strings for JavaScript
         wp_localize_script(
             'apex-folder-filters',
-            'apexFoldersL10n',
+            'apexfoFoldersMedia',
             array(
-                'allMedia'       => esc_html__( 'All Media', 'apex-folders' ),
-                'unassigned'     => esc_html__( 'Unassigned', 'apex-folders' ),
-                'folders'        => esc_html__( 'Folders', 'apex-folders' ),
-                'filterByFolder' => esc_html__( 'Filter by folder', 'apex-folders' ),
-                'selectFolder'   => esc_html__( 'Select folder', 'apex-folders' ),
-                'createFolder'   => esc_html__( 'Create folder', 'apex-folders' ),
-                'deleteFolder'   => esc_html__( 'Delete folder', 'apex-folders' ),
-                'renameFolder'   => esc_html__( 'Rename folder', 'apex-folders' ),
-                'moveTo'         => esc_html__( 'Move to', 'apex-folders' ),
-                'loading'        => esc_html__( 'Loading folders...', 'apex-folders' ),
-                'error'          => esc_html__( 'Error loading folders', 'apex-folders' )
+                'allFolders'     => __( 'All folders', 'apex-folders' ),
+                'filterByFolder' => __( 'Filter by folder', 'apex-folders' ),
+                'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+                'nonce'      => wp_create_nonce( 'APEX_FOLDERS_nonce' ),
             )
+        );
+
+        // Enqueue the CSS for the folder interface
+        wp_enqueue_style(
+            'apex-folders-css',
+            APEX_FOLDERS_PLUGIN_URL . 'assets/css/apex-main.css',
+            array(),
+            filemtime( APEX_FOLDERS_PLUGIN_DIR . 'assets/css/apex-main.css' )
         );
     }
 }

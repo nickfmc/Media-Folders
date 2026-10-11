@@ -49,64 +49,10 @@ class APEX_FOLDERS_Utilities {
                 'show_admin_column' => true,
                 'query_var'         => true,
                 'rewrite'           => array( 'slug' => 'apex-folder' ),
+                // Count every attachment; the default callback skips unattached media
+                'update_count_callback' => '_update_generic_term_count',
             )
         );
-    }
-    
-    /**
-     * Enqueue admin scripts for the media library
-     * 
-     * @return void
-     */
-    public static function enqueue_admin_scripts() {
-        $screen = get_current_screen();
-        
-        // Only on media upload screen
-        if ( $screen->base === 'upload' ) {
-            // Enqueue jQuery UI core and all required components for dialogs
-            wp_enqueue_script( 'jquery-ui-core' ); 
-            wp_enqueue_script( 'jquery-ui-dialog' );
-            wp_enqueue_script( 'jquery-ui-draggable' );
-            wp_enqueue_script( 'jquery-ui-resizable' );
-            
-            // Enqueue jQuery UI CSS
-            wp_enqueue_style( 'wp-jquery-ui-dialog' );
-        }
-    }
-    
-    /**
-     * Enqueue CSS styles for the media library
-     * 
-     * @return void
-     */
-    public static function enqueue_styles() {
-        $screen = get_current_screen();
-        if ( $screen->base === 'upload' ) {
-            wp_enqueue_style(
-                'apex-folders-css',
-                APEX_FOLDERS_PLUGIN_URL . 'assets/css/apex-main.css',
-                array(),
-                APEX_FOLDERS_VERSION
-            );
-        }
-    }
-    
-    /**
-     * Enqueue refresh script for the media library
-     * 
-     * @return void
-     */
-    public static function enqueue_refresh_script() {
-        wp_add_inline_script( 'media-editor', '
-            // Force refresh helper
-            window.mediaFoldersRefreshView = function() {
-                if (wp.media.frame) {
-                    wp.media.frame.library.props.set({ignore: (+ new Date())});
-                    wp.media.frame.library.props.trigger("change");
-                }
-                jQuery(".attachments-browser .attachments").trigger("scroll");
-            };
-        ' );
     }
     
     /**
@@ -115,41 +61,24 @@ class APEX_FOLDERS_Utilities {
      * @return void
      */
     public static function update_folder_counts() {
-        global $wpdb;
-        
         // Get all media folder terms
         $folders = get_terms( array(
             'taxonomy'   => 'apex_folder',
             'hide_empty' => false,
         ) );
-        
-        if ( empty( $folders ) ) {
+
+        if ( empty( $folders ) || is_wp_error( $folders ) ) {
             return;
         }
-        
-        foreach ( $folders as $folder ) {
-            // Count attachments in this folder
-            $count = $wpdb->get_var( $wpdb->prepare(
-                "SELECT COUNT(*) FROM $wpdb->term_relationships
-                 JOIN $wpdb->posts ON $wpdb->posts.ID = $wpdb->term_relationships.object_id
-                 WHERE $wpdb->term_relationships.term_taxonomy_id = %d
-                 AND $wpdb->posts.post_type = 'attachment'",
-                 $folder->term_taxonomy_id
-            ) );
-            
-            // Update the count in the database directly
-            $wpdb->update(
-                $wpdb->term_taxonomy,
-                array( 'count' => $count ),
-                array( 'term_taxonomy_id' => $folder->term_taxonomy_id )
-            );
-        }
-        
+
+        // Recount through WordPress; the taxonomy's count callback counts every attachment
+        wp_update_term_count_now( wp_list_pluck( $folders, 'term_taxonomy_id' ), 'apex_folder' );
+
         // Clear caches
         clean_term_cache( wp_list_pluck( $folders, 'term_id' ), 'apex_folder' );
         delete_transient( 'apex_folder_counts' );
     }
-    
+
     /**
      * Get organized folders
      * 
@@ -188,32 +117,5 @@ class APEX_FOLDERS_Utilities {
             'parents'    => $parent_folders,
             'children'   => $child_folders
         );
-    }
-    
-    /**
-     * Prevent numeric term creation
-     * 
-     * @param string $term     The term name
-     * @param string $taxonomy The taxonomy name
-     * @return string|WP_Error The term name or error
-     */
-    public static function prevent_numeric_term_creation( $term, $taxonomy ) {
-        // Only check apex_folder taxonomy
-        if ( $taxonomy !== 'apex_folder' ) {
-            return $term;
-        }
-        
-        // If term is numeric, it's likely an ID being misinterpreted
-        if ( is_numeric( $term ) ) {
-            if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                // translators: %s: numeric term name that was prevented
-                error_log( sprintf( esc_html__( 'Preventing creation of numeric term: %s', 'apex-folders' ), $term ) );
-            }
-            
-            // Return an error to prevent term creation
-            return new WP_Error( 'invalid_term', esc_html__( "Can't create folder with numeric name", 'apex-folders' ) );
-        }
-        
-        return $term;
     }
 }

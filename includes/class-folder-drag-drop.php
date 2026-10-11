@@ -60,20 +60,27 @@ class APEX_FOLDERS_Drag_Drop {
         // Localize script with nonce and settings
         wp_localize_script(
             'apex-folder-drag-drop',
-            'mediaFolderSettings',
+            'apexfoMediaFolderSettings',
             array(
                 'nonce' => wp_create_nonce( 'APEX_FOLDERS_drag_drop_nonce' ),
                 'ajaxUrl' => admin_url( 'admin-ajax.php' ),
                 'moveItemsAction' => 'apex_folder_move_items',
                 'unassignedFolderId' => apex_folders_get_unassigned_id(),
                 'i18n' => array(
-                    'movingItem' => esc_html__( 'Moving item', 'apex-folders' ),
-                    'movingItems' => esc_html__( 'Moving items', 'apex-folders' ),
-                    'successMove' => esc_html__( 'Successfully moved', 'apex-folders' ),
-                    'errorMove' => esc_html__( 'Error moving items', 'apex-folders' ),
-                    'dropToMove' => esc_html__( 'Drop to move to this folder', 'apex-folders' ),
-                    'noFilesSelected' => esc_html__( 'No files selected', 'apex-folders' ),
-                    'selectFiles' => esc_html__( 'Select files to move', 'apex-folders' ),
+                    /* translators: %s: file name */
+                    'movingOne' => __( 'Moving: %s', 'apex-folders' ),
+                    /* translators: %d: number of files */
+                    'movingCount' => __( 'Moving %d items', 'apex-folders' ),
+                    'item' => __( 'item', 'apex-folders' ),
+                    /* translators: %1$d: number of files, %2$s: folder name */
+                    'movingItemTo' => __( 'Moving %1$d item to "%2$s"', 'apex-folders' ),
+                    /* translators: %1$d: number of files, %2$s: folder name */
+                    'movingItemsTo' => __( 'Moving %1$d items to "%2$s"', 'apex-folders' ),
+                    /* translators: %s: folder name */
+                    'movedTo' => __( 'Successfully moved files to "%s"', 'apex-folders' ),
+                    'errorPrefix' => __( 'Error:', 'apex-folders' ),
+                    'couldNotMove' => __( 'Could not move files', 'apex-folders' ),
+                    'networkError' => __( 'Network error: Could not connect to server', 'apex-folders' ),
                 )
             )
         );
@@ -96,16 +103,17 @@ class APEX_FOLDERS_Drag_Drop {
             return;
         }
         
-        // Get data from request and sanitize
-        $attachment_ids = isset( $_POST['attachment_ids'] ) ? wp_unslash( $_POST['attachment_ids'] ) : array();
-        $folder_id = isset( $_POST['folder_id'] ) ? intval( $_POST['folder_id'] ) : 0;
+        // Get and sanitize data from request
+        $attachment_ids = array();
+
+        $input_ids = isset( $_POST['attachment_ids'] ) ? $_POST['attachment_ids'] : array();
         
-        // Sanitize attachment IDs array 
-        if ( is_array( $attachment_ids ) ) {
-            $attachment_ids = array_map( 'intval', $attachment_ids );
-        } else {
-            $attachment_ids = array();
+        if ( is_array( $input_ids ) ) {
+            // Properly sanitize array of integers
+            $attachment_ids = array_unique( array_map( 'absint', $input_ids ) );
         }
+        
+        $folder_id = isset( $_POST['folder_id'] ) ? absint( wp_unslash( $_POST['folder_id'] ) ) : 0;
         
         // Validate data
         if ( empty( $attachment_ids ) ) {
