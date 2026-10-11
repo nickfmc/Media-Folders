@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1544 500" width="1544" height="500">
+  <rect width="1544" height="500" fill="#18191d"/>
+  <g stroke="#2b2d33" stroke-width="1">
+    <path d="M0 125H1544M0 250H1544M0 375H1544M193 0V500M386 0V500M579 0V500M772 0V500M965 0V500M1158 0V500M1351 0V500"/>
+  </g>
+  <g transform="translate(118 94) scale(0.61)">
+    <path d="M80 160a32 32 0 0 1 32-32h104l40 40h144a32 32 0 0 1 32 32v184a32 32 0 0 1-32 32H112a32 32 0 0 1-32-32Z" fill="#f5f4ef"/>
+    <path d="M176 346 256 246l80 100" fill="none" stroke="#18191d" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="256" cy="384" r="19" fill="#148a5a"/>
+  </g>
+  <text x="430" y="228" font-family="JetBrains Mono, Cascadia Code, Consolas, Menlo, monospace" font-size="92" font-weight="700" fill="#ffffff">apex<tspan fill="#3ecf8e">/</tspan>folders</text>
+  <text x="434" y="296" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="34" fill="#f5f4ef">Media Library folders. Drag and drop, subfolders, upload to a folder.</text>
+  <text x="434" y="352" font-family="JetBrains Mono, Cascadia Code, Consolas, Menlo, monospace" font-size="26" font-weight="500" fill="#3ecf8e">/ every feature free, forever. no pro version.</text>
+</svg>

@@ -1,0 +1,4 @@
+# WordPress.org listing artwork lives in the repo but never ships inside the plugin
+.wordpress-org export-ignore
+.gitattributes export-ignore
+README.md export-ignore

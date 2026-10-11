@@ -1,6 +1,6 @@
-=== Apex Folders ===
+=== Apex Folders – Media Library Folders, 100% Free ===
 Contributors: nickfmc
-Tags: media, folders, attachment, organize, media library
+Tags: media library, folders, media folders, file manager, organize media
 Requires at least: 5.3
 Tested up to: 7.1
 Stable tag: 1.1.0
@@ -8,36 +8,33 @@ Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Organize your WordPress Media Library with folders, making it easy to manage thousands of media files.
+Media Library folders with drag and drop, subfolders and upload-to-folder. Every feature included. No Pro version, no upsells, ever.
 
 == Description ==
 
-Apex Folders is a powerful yet lightweight plugin that adds folder organization to your WordPress Media Library. It allows you to create a hierarchical folder structure to organize your images, videos, documents, and other media files, making them much easier to find and manage.
+Apex Folders adds folders to the WordPress Media Library so you can find files in seconds instead of scrolling through thousands of them. Drag files into folders, upload straight into a folder, and filter by folder right inside the editor's media picker.
 
-### Key Features
+**Everything is free.** There is no Pro version, no locked features and no upgrade nags. Folders, subfolders, drag and drop and bulk moves are all included, with no limits on how many folders or files you organize.
 
-* **Hierarchical Folders**: Create unlimited folders and subfolders to organize your media
-* **Drag & Drop Interface**: Easily move media files between folders with intuitive drag and drop functionality
-* **Upload to Folders**: Directly upload new media to specific folders
-* **Works with Default Media Library**: Seamlessly integrates with WordPress's built-in media management
-* **Automatic Unassigned Folder**: Media without a folder is automatically placed in an "Unassigned" folder
-* **No Media Duplication**: Files are organized virtually without duplicating them on your server
-* **Lightweight**: Optimized for performance with minimal impact on your site's speed
+### Features
 
-### Perfect For
+* **Folders and subfolders** in a sidebar next to your Media Library, with live file counts
+* **Drag and drop**: drop any file onto a folder to move it
+* **Bulk moves**: use the Media Library's own Bulk select, then drag the whole selection at once
+* **Upload to a folder**: pick the folder in the uploader, or just upload while viewing a folder
+* **Folder filter in the editor**: filter by folder in the media modal used by the block editor and classic editor
+* **Works in grid and list view**, and with the folder shown in each file's details panel
+* **Unassigned folder**: anything without a folder is kept together, never lost
+* **Nothing moves on disk**: folders are virtual, so file URLs never change and nothing breaks
+* **Translation ready** and built on WordPress's own taxonomy system, with no extra database tables
 
-* **Content Creators**: Easily find and reuse media assets across your site
-* **Agencies & Developers**: Organize client media by project, category or purpose
-* **Online Stores**: Keep product images organized by category, season, or brand
-* **Large Media Libraries**: Manage thousands of files without the frustration of endless scrolling
+### Why Apex Folders instead of a "freemium" folder plugin?
 
-### How It Works
-
-Apex Folders creates a custom taxonomy for your media attachments and provides an intuitive user interface for managing them. The plugin adds folder functionality directly to your existing WordPress Media Library interface, making it feel like a natural part of WordPress.
+Most Media Library folder plugins give you a taste for free and charge for subfolders, bulk moves or removing the folder limit. Apex Folders is the whole tool. It is made by a web agency that needed it on its own client sites, and it is free as a thank-you to the WordPress community.
 
 ### Part of Apex
 
-Apex Folders is free, and part of [Apex by Mountain Air Web](https://apex.mountainairweb.com/): a family of small, focused tools for web agencies, including Apex Proof for client feedback, Apex Launch for site checks and Apex Scout for sizing up a prospect's site.
+Apex Folders is part of [Apex by Mountain Air Web](https://apex.mountainairweb.com/): a family of small, focused tools for web agencies, including Apex Proof for client feedback, Apex Launch for site checks and Apex Scout for sizing up a prospect's site.
 
 == Installation ==
 
@@ -52,9 +49,17 @@ Apex Folders is free, and part of [Apex by Mountain Air Web](https://apex.mounta
 
 No, Apex Folders organizes your media files virtually using WordPress taxonomies. Your actual file structure on the server remains unchanged, and no files are duplicated.
 
+= Is there a Pro version? =
+
+No. Every feature is in this free plugin, and it will stay that way.
+
 = Can I move multiple files at once? =
 
-Yes, you can select multiple files in the Media Library and move them to a folder using the bulk actions menu or by dragging and dropping.
+Yes. Click Bulk select in the Media Library, select the files, then drag any one of them onto a folder.
+
+= Can I upload straight into a folder? =
+
+Yes. Open a folder and upload, or pick a folder in the uploader's "Upload to folder" dropdown. Every file in the batch goes to that folder.
 
 = Does this work with the block editor (Gutenberg)? =
 
@@ -74,11 +79,9 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 
 == Screenshots ==
 
-1. Media Library with folder organization
-2. Creating a new folder
-3. Drag and drop interface for moving files
-4. Uploading directly to a folder
-5. Admin settings panel
+1. Folders in the Media Library sidebar, with live counts
+2. Upload straight into a folder
+3. Filter by folder in the editor's media picker
 
 == Changelog ==
 
@@ -113,7 +116,7 @@ Initial release of Apex Folders. Start organizing your media library with folder
 
 = Folder Hierarchy =
 
-Apex Folders supports unlimited folder nesting, allowing you to create as deep a hierarchy as you need for your media organization.
+Create as many folders as you like, each with its own subfolders. Keeping the hierarchy to one level of subfolders keeps the sidebar quick to scan.
 
 = Admin Tools =
 
