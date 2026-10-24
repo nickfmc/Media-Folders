@@ -115,13 +115,25 @@ class APEX_FOLDERS_UI {
      * @param string  $classes        Extra classes for the list item.
      * @param int     $parent_id      Parent folder ID for subfolders.
      * @param int     $total          Count including subfolders, for parent folders.
+     * @param bool    $expanded       Whether a parent folder's subfolders are shown.
      */
-    private function render_folder_item( $folder, $current_folder, $classes, $parent_id = 0, $total = 0 ) {
+    private function render_folder_item( $folder, $current_folder, $classes, $parent_id = 0, $total = 0, $expanded = true ) {
         $is_current = $current_folder === $folder->slug;
         $url        = wp_nonce_url( admin_url( 'upload.php?apex_folder=' . $folder->slug ), 'apex_folder_view' );
         $is_system  = (int) $folder->term_id === (int) apex_folders_get_unassigned_id();
+        $has_children = false !== strpos( $classes, 'has-children' );
+
+        if ( $has_children && ! $expanded ) {
+            $classes .= ' apexfo-collapsed';
+        }
 
         echo '<li class="' . esc_attr( trim( ( $is_current ? 'current ' : '' ) . $classes ) ) . '" data-folder-id="' . intval( $folder->term_id ) . '"' . ( $parent_id ? ' data-parent-id="' . intval( $parent_id ) . '"' : '' ) . '>';
+
+        // Parent folders fold their subfolders away
+        if ( $has_children ) {
+            echo '<button type="button" class="apexfo-toggle" data-folder-id="' . intval( $folder->term_id ) . '" aria-expanded="' . ( $expanded ? 'true' : 'false' ) . '" aria-label="' . esc_attr__( 'Show or hide subfolders', 'apex-folders' ) . '"><span class="dashicons dashicons-arrow-right-alt2"></span></button>';
+        }
+
         echo '<a href="' . esc_url( $url ) . '"' . ( $is_current ? ' aria-current="page"' : '' ) . '>';
         echo $this->icon( $is_system ? 'inbox' : 'folder' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static SVG markup.
         echo '<span class="apexfo-name">' . esc_html( $folder->name ) . '</span>';
@@ -131,7 +143,8 @@ class APEX_FOLDERS_UI {
             /* translators: %1$d: files in this folder, %2$d: files including subfolders */
             $count_title = sprintf( __( '%1$d in this folder, %2$d including subfolders', 'apex-folders' ), $folder->count, $total );
         }
-        echo '<span class="apexfo-count"' . ( $count_title ? ' title="' . esc_attr( $count_title ) . '"' : '' ) . '>' . intval( $folder->count ) . '</span>';
+        // A parent folder shows everything inside it, subfolders included
+        echo '<span class="apexfo-count"' . ( $count_title ? ' title="' . esc_attr( $count_title ) . '"' : '' ) . '>' . intval( max( $total, $folder->count ) ) . '</span>';
         echo '</a>';
 
         if ( ! $is_system ) {
@@ -230,12 +243,23 @@ class APEX_FOLDERS_UI {
                 }
             }
 
-            $this->render_folder_item( $folder, $current_folder, 'custom-folder parent-folder' . ( $has_children ? ' has-children' : '' ), 0, $total );
+            // Subfolders start folded away, unless the folder being viewed is in this group.
+            // The visitor's own choice, remembered by the browser, is applied by JavaScript.
+            $expanded = $current_folder === $folder->slug;
+            if ( $has_children && ! $expanded ) {
+                foreach ( $child_folders[ $folder->term_id ] as $child ) {
+                    if ( $current_folder === $child->slug ) {
+                        $expanded = true;
+                    }
+                }
+            }
+
+            $this->render_folder_item( $folder, $current_folder, 'custom-folder parent-folder' . ( $has_children ? ' has-children' : '' ), 0, $total, $expanded );
 
             // Display children if any
             if ( $has_children ) {
                 foreach ( $child_folders[ $folder->term_id ] as $child ) {
-                    $this->render_folder_item( $child, $current_folder, 'custom-folder child-folder', $folder->term_id );
+                    $this->render_folder_item( $child, $current_folder, 'custom-folder child-folder' . ( $expanded ? '' : ' apexfo-hidden' ), $folder->term_id );
                 }
             }
         }

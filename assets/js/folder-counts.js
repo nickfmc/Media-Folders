@@ -87,7 +87,8 @@ jQuery(document).ready(function($) {
                         .replace('%1$d', folderData.count)
                         .replace('%2$d', total);
 
-                    showCount($item, folderData.count, title, skipHighlight);
+                    // A parent folder shows everything inside it, subfolders included
+                    showCount($item, total === null ? folderData.count : total, title, skipHighlight);
                 });
 
                 // Every file is in exactly one folder, so the folder counts add up to the library

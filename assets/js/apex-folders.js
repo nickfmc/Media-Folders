@@ -31,10 +31,41 @@
     }
 
     /**
+     * Files in a folder, including its subfolders for a parent folder
+     */
+    function getFolderTotal(folder) {
+        var total = parseInt(folder.count, 10) || 0;
+
+        _.each(folders, function(candidate) {
+            if (parseInt(candidate.parent, 10) === parseInt(folder.id, 10)) {
+                total += parseInt(candidate.count, 10) || 0;
+            }
+        });
+
+        return total;
+    }
+
+    /**
+     * Whether a file in one folder belongs in the view of another:
+     * the same folder, or a parent folder of it
+     */
+    function isInFolderView(attachmentFolderId, viewFolderId) {
+        if (attachmentFolderId === viewFolderId) {
+            return true;
+        }
+
+        var folder = _.find(folders, function(candidate) {
+            return parseInt(candidate.id, 10) === attachmentFolderId;
+        });
+
+        return !!folder && parseInt(folder.parent, 10) === viewFolderId;
+    }
+
+    /**
      * Text shown for a folder in the filter dropdown
      */
     function getFolderLabel(folder) {
-        return (folder.parent ? '\u2014 ' : '') + folder.name + ' (' + folder.count + ')';
+        return (folder.parent ? '\u2014 ' : '') + folder.name + ' (' + getFolderTotal(folder) + ')';
     }
 
     /**
@@ -67,6 +98,9 @@
             }
 
             folder.count = counts[folder.id].count;
+        });
+
+        _.each(folders, function(folder) {
             jQuery('select#media-attachment-folder-filter option[value="folder-' + folder.id + '"]').text(getFolderLabel(folder));
         });
     }
@@ -181,7 +215,7 @@
     Attachments.prototype.validator = function(attachment) {
         var folderId = getFolderId(this.props.get('apex_folder'));
 
-        if (folderId && attachment.has('apexFolder') && parseInt(attachment.get('apexFolder'), 10) !== folderId) {
+        if (folderId && attachment.has('apexFolder') && !isInFolderView(parseInt(attachment.get('apexFolder'), 10), folderId)) {
             return false;
         }
 

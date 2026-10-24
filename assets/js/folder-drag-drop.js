@@ -253,6 +253,11 @@
                 over: function(event, ui) {
                     // Highlight this folder
                     $folder.addClass('drag-over');
+
+                    // Open a folded parent so its subfolders can be dropped on too
+                    if ($folder.hasClass('apexfo-collapsed')) {
+                        $folder.find('.apexfo-toggle').trigger('click');
+                    }
                 },
                 out: function(event, ui) {
                     // Remove highlight

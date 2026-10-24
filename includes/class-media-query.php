@@ -50,7 +50,7 @@ class APEX_FOLDERS_Query {
                             'taxonomy' => 'apex_folder',
                             'field' => 'term_id',
                             'terms' => $term->term_id,
-                            'include_children' => false,
+                            'include_children' => true,
                             'operator' => 'IN' // Explicitly set operator
                         ),
                     ) );
@@ -94,7 +94,7 @@ class APEX_FOLDERS_Query {
             return $query;
         }
         
-        // Show only the folder's own files, the same as the list view does
+        // A parent folder shows its own files and its subfolders' files
         unset( $query['apex_folder'] );
         
         if ( ! isset( $query['tax_query'] ) || ! is_array( $query['tax_query'] ) ) {
@@ -105,7 +105,7 @@ class APEX_FOLDERS_Query {
             'taxonomy'         => 'apex_folder',
             'field'            => 'term_id',
             'terms'            => array( (int) $term->term_id ),
-            'include_children' => false,
+            'include_children' => true,
         );
         
         return $query;

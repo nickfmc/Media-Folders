@@ -72,6 +72,56 @@ jQuery(document).ready(function($) {
         });
     }
 
+    /**
+     * Collapsible parent folders. The choice is remembered in this browser;
+     * the folder being viewed always starts open.
+     */
+    var collapsedKey = 'apexfo_collapsed';
+    var collapsed = {};
+
+    try {
+        collapsed = JSON.parse(localStorage.getItem(collapsedKey)) || {};
+    } catch (e) {
+        collapsed = {};
+    }
+
+    function setExpanded($parent, expanded) {
+        var folderId = $parent.data('folder-id');
+
+        $parent.toggleClass('apexfo-collapsed', !expanded);
+        $parent.find('.apexfo-toggle').attr('aria-expanded', expanded ? 'true' : 'false');
+        $('.apex-folder-list li.child-folder[data-parent-id="' + folderId + '"]').toggleClass('apexfo-hidden', !expanded);
+    }
+
+    // Apply remembered choices, except where the current folder lives
+    $('.apex-folder-list li.parent-folder.has-children').each(function() {
+        var $parent = $(this);
+        var folderId = $parent.data('folder-id');
+        var holdsCurrent = $parent.hasClass('current') ||
+            $('.apex-folder-list li.child-folder.current[data-parent-id="' + folderId + '"]').length > 0;
+
+        if (!holdsCurrent && typeof collapsed[folderId] === 'boolean') {
+            setExpanded($parent, !collapsed[folderId]);
+        }
+    });
+
+    $('.apex-folder-list').on('click', '.apexfo-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var $parent = $(this).closest('li');
+        var expanded = $parent.hasClass('apexfo-collapsed');
+
+        setExpanded($parent, expanded);
+
+        collapsed[$parent.data('folder-id')] = !expanded;
+        try {
+            localStorage.setItem(collapsedKey, JSON.stringify(collapsed));
+        } catch (e) {
+            // Remembering the choice is a convenience only
+        }
+    });
+
     // Add subfolder handler
     $('.add-subfolder').on('click', function(e) {
         e.preventDefault();
