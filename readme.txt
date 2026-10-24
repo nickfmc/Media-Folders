@@ -3,7 +3,7 @@ Contributors: nickfmc
 Tags: media library, folders, media folders, file manager, organize media
 Requires at least: 5.3
 Tested up to: 7.1
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -85,6 +85,11 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 
 == Changelog ==
 
+= 1.1.2 =
+* Parent folders now show their subfolders' files too, in the Media Library and in the editor's media picker, and their counts include subfolders.
+* Parent folders can be collapsed. The folder you are viewing always starts open, and your choice is remembered.
+* Hovering a collapsed folder while dragging opens it, so you can drop onto a subfolder.
+
 = 1.1.1 =
 * New look: the folder sidebar, uploader and filters follow the Apex design, with folder icons, count badges and hover actions.
 * Bulk moves use WordPress's own Bulk select: select files, then drag any of them onto a folder. The separate "Bulk Drag and Drop" button is gone.
@@ -108,6 +113,9 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 * Initial public release
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+Parent folders include their subfolders' files and counts, and can be collapsed.
 
 = 1.1.1 =
 Fresh Apex design, simpler bulk moves and a fix for the folder filter in the block editor.
