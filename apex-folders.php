@@ -42,6 +42,8 @@ require_once APEX_FOLDERS_PLUGIN_DIR . 'includes/class-apex-folders-uploads.php'
 require_once APEX_FOLDERS_PLUGIN_DIR . 'includes/class-apex-folders-admin.php';
 require_once APEX_FOLDERS_PLUGIN_DIR . 'includes/class-media-query.php';
 require_once APEX_FOLDERS_PLUGIN_DIR . 'includes/class-apex-folders-block-editor.php';
+require_once APEX_FOLDERS_PLUGIN_DIR . 'includes/class-apex-folders-ai.php';
+require_once APEX_FOLDERS_PLUGIN_DIR . 'includes/class-apex-folders-abilities.php';
 
 // Register activation and deactivation hooks.
 register_activation_hook( __FILE__, 'apex_folders_activate' );

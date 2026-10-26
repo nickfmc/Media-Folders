@@ -92,46 +92,12 @@ class APEX_FOLDERS_AJAX_Handler {
         $folder_name = isset( $_POST['folder_name'] ) ? sanitize_text_field( wp_unslash( $_POST['folder_name'] ) ) : '';
         $parent_id = isset( $_POST['parent_id'] ) ? intval( $_POST['parent_id'] ) : 0;
     
-        if ( empty( $folder_name ) ) {
-            wp_send_json_error( array( 'message' => esc_html__( 'Folder name cannot be empty', 'apex-folders' ) ) );
-            return;
-        }
-        
-        // Ensure parent folder exists if specified
-        if ( $parent_id > 0 ) {
-            $parent_term = get_term( $parent_id, 'apex_folder' );
-            if ( ! $parent_term || is_wp_error( $parent_term ) ) {
-                wp_send_json_error( array( 'message' => esc_html__( 'Parent folder does not exist', 'apex-folders' ) ) );
-                return;
-            }
-            
-            // Ensure parent isn't the Unassigned folder
-            $unassigned_id = apex_folders_get_unassigned_id();
-            if ( $parent_id == $unassigned_id ) {
-                wp_send_json_error( array( 'message' => esc_html__( 'Cannot create subfolders under Unassigned', 'apex-folders' ) ) );
-                return;
-            }
-            
-            // Check if parent itself has a parent (limit to one level)
-            $parent_parent = get_term_field( 'parent', $parent_id, 'apex_folder' );
-            if ( ! is_wp_error( $parent_parent ) && $parent_parent > 0 ) {
-                wp_send_json_error( array( 'message' => esc_html__( 'Only one level of subfolders is supported', 'apex-folders' ) ) );
-                return;
-            }
-        }
-        
-        $result = wp_insert_term(
-            $folder_name, 
-            'apex_folder',
-            array(
-                'parent' => $parent_id
-            )
-        );
-        
+        $result = APEX_FOLDERS_Utilities::create_folder( $folder_name, $parent_id );
+
         if ( is_wp_error( $result ) ) {
-            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+            wp_send_json_error( array( 'message' => esc_html( $result->get_error_message() ) ) );
         } else {
-            wp_send_json_success();
+            wp_send_json_success( array( 'folder_id' => $result ) );
         }
     }
 

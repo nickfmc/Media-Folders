@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: Apex Folders 1.1.2\n"
+"Project-Id-Version: Apex Folders 1.2.0\n"
 "Report-Msgid-Bugs-To: https://mountainairweb.com\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -14,7 +14,7 @@ msgstr ""
 msgid "The Unassigned folder cannot be deleted."
 msgstr ""
 
-#: includes/class-ajax-handler.php:51 includes/class-ajax-handler.php:196
+#: includes/class-ajax-handler.php:51 includes/class-ajax-handler.php:162
 msgid "Folder not found."
 msgstr ""
 
@@ -23,36 +23,68 @@ msgstr ""
 msgid "Folder deleted. %d files moved to Unassigned folder."
 msgstr ""
 
-#: includes/class-ajax-handler.php:96
-msgid "Folder name cannot be empty"
-msgstr ""
-
-#: includes/class-ajax-handler.php:104
-msgid "Parent folder does not exist"
-msgstr ""
-
-#: includes/class-ajax-handler.php:111
-msgid "Cannot create subfolders under Unassigned"
-msgstr ""
-
-#: includes/class-ajax-handler.php:118
-msgid "Only one level of subfolders is supported"
-msgstr ""
-
-#: includes/class-ajax-handler.php:146
+#: includes/class-ajax-handler.php:112
 msgid "Permission denied"
 msgstr ""
 
-#: includes/class-ajax-handler.php:183
+#: includes/class-ajax-handler.php:149
 msgid "Folder name cannot be empty."
 msgstr ""
 
-#: includes/class-ajax-handler.php:189
+#: includes/class-ajax-handler.php:155
 msgid "The Unassigned folder cannot be renamed."
 msgstr ""
 
-#: includes/class-ajax-handler.php:208
+#: includes/class-ajax-handler.php:174
 msgid "Folder renamed successfully."
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:39
+msgid "Media folders"
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:40
+msgid "Organize the Media Library into folders with Apex Folders."
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:72
+msgid "Parent folder ID, or 0 for a top-level folder."
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:78
+msgid "List media folders"
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:79
+msgid "Lists every Media Library folder with its ID, slug, parent and file count. The \"unassigned\" folder holds files that are not in any folder."
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:95
+msgid "Get files not in a folder"
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:96
+msgid "Returns Media Library files that are still in the Unassigned folder, with the metadata useful for deciding where they belong. Paginated."
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:139
+msgid "Create a media folder"
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:140
+msgid "Creates a Media Library folder. Give a parent ID to create a subfolder; only one level of subfolders is supported."
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:161
+msgid "Move files into a folder"
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:162
+msgid "Moves Media Library files into a folder by ID. A file is in exactly one folder, so this replaces its current folder. Files never move on disk and their URLs do not change."
+msgstr ""
+
+#: includes/class-apex-folders-abilities.php:168
+msgid "Target folder ID."
 msgstr ""
 
 #: includes/class-apex-folders-admin.php:56
@@ -180,6 +212,191 @@ msgstr ""
 msgid "When enabled, administrator tools for debugging and rebuilding folders will be displayed in the Media Library."
 msgstr ""
 
+#: includes/class-apex-folders-ai.php:138 includes/class-apex-folders-ui.php:274
+msgid "Auto-organize with AI"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:139
+msgid "The AI provider connected to this site reads each file's name, title, alt text, caption and a small thumbnail, then proposes folders. Nothing changes until you apply the plan."
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:140
+msgid "Unassigned files only"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:141
+msgid "Every file in the library"
+msgstr ""
+
+#. translators: %1$s: number of files, %2$s: number of images
+#: includes/class-apex-folders-ai.php:143
+msgid "%1$s files, %2$s of them images"
+msgstr ""
+
+#. translators: %1$s: low token estimate, %2$s: high token estimate
+#: includes/class-apex-folders-ai.php:145
+msgid "About %1$s to %2$s tokens"
+msgstr ""
+
+#. translators: %1$s: low cost, %2$s: high cost
+#: includes/class-apex-folders-ai.php:147
+msgid "Roughly %1$s to %2$s, depending on the model your provider picks. Your provider bills you directly; this is an estimate."
+msgstr ""
+
+#. translators: %1$s: low cost, %2$s: high cost
+#: includes/class-apex-folders-ai.php:148
+msgid "There are no files to organize."
+msgstr ""
+
+#. translators: %1$s: low cost, %2$s: high cost
+#: includes/class-apex-folders-ai.php:149 includes/class-apex-folders-ai.php:531
+msgid "No AI provider is connected yet."
+msgstr ""
+
+#. translators: %1$s: low cost, %2$s: high cost
+#: includes/class-apex-folders-ai.php:150
+msgid "Connect a provider in Settings → Connectors"
+msgstr ""
+
+#. translators: %1$s: low cost, %2$s: high cost
+#: includes/class-apex-folders-ai.php:151
+msgid "Analyse files"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:152 includes/class-apex-folders-ui.php:345
+msgid "Cancel"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:153
+msgid "Close"
+msgstr ""
+
+#. translators: %1$s: files analysed so far, %2$s: total files
+#: includes/class-apex-folders-ai.php:155
+msgid "Analysed %1$s of %2$s files"
+msgstr ""
+
+#. translators: %1$s: tokens used, %2$s: model name
+#: includes/class-apex-folders-ai.php:157
+msgid "%1$s tokens so far · %2$s"
+msgstr ""
+
+#. translators: %1$s: cost so far, %2$s: projected cost
+#: includes/class-apex-folders-ai.php:159
+msgid "About %1$s so far, %2$s projected"
+msgstr ""
+
+#. translators: %1$s: cost so far, %2$s: projected cost
+#: includes/class-apex-folders-ai.php:160
+msgid "Review the plan"
+msgstr ""
+
+#. translators: %1$s: number of files to move, %2$s: number of folders, %3$s: number of new folders
+#: includes/class-apex-folders-ai.php:162
+msgid "%1$s files into %2$s folders (%3$s new)"
+msgstr ""
+
+#. translators: %1$s: number of files to move, %2$s: number of folders, %3$s: number of new folders
+#: includes/class-apex-folders-ai.php:163
+msgid "New"
+msgstr ""
+
+#. translators: %1$s: number of files to move, %2$s: number of folders, %3$s: number of new folders
+#: includes/class-apex-folders-ai.php:164
+msgid "in"
+msgstr ""
+
+#. translators: %1$s: number of files to move, %2$s: number of folders, %3$s: number of new folders
+#: includes/class-apex-folders-ai.php:165
+msgid "Skip"
+msgstr ""
+
+#. translators: %1$s: number of files to move, %2$s: number of folders, %3$s: number of new folders
+#: includes/class-apex-folders-ai.php:166
+msgid "Left in Unassigned: nothing fit well enough"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:167
+msgid "Anything to change?"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:168
+msgid "For example: put every PDF in Documents, and do not create a Screenshots folder."
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:169
+msgid "Re-plan"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:170
+msgid "Apply"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:171
+msgid "Applying…"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:172
+msgid "Done"
+msgstr ""
+
+#. translators: %1$s: number of files moved, %2$s: number of folders created
+#: includes/class-apex-folders-ai.php:174
+msgid "%1$s files moved, %2$s folders created."
+msgstr ""
+
+#. translators: %1$s: number of files moved, %2$s: number of folders created
+#: includes/class-apex-folders-ai.php:175
+msgid "Undo"
+msgstr ""
+
+#. translators: %1$s: number of files moved, %2$s: number of folders created
+#: includes/class-apex-folders-ai.php:176
+msgid "Folders restored."
+msgstr ""
+
+#. translators: %1$s: number of files moved, %2$s: number of folders created
+#: includes/class-apex-folders-ai.php:177
+msgid "Something went wrong."
+msgstr ""
+
+#. translators: %1$s: number of files moved, %2$s: number of folders created
+#: includes/class-apex-folders-ai.php:178
+msgid "The AI could not place any of these files. Try adding an instruction and re-planning."
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:179
+msgid "Reload to see the folders"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:247
+msgid "This WordPress does not have the AI Client."
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:251
+msgid "You are not allowed to auto-organize this library."
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:508
+msgid "None of these files exist."
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:636
+msgid "The AI returned no answer."
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:642
+msgid "The AI answer could not be read."
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:765
+msgid "There is nothing to apply."
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:858
+msgid "There is nothing to undo."
+msgstr ""
+
 #: includes/class-apex-folders-block-editor.php:77
 msgid "All folders"
 msgstr ""
@@ -193,7 +410,7 @@ msgid "Show or hide subfolders"
 msgstr ""
 
 #. translators: %1$d: files in this folder, %2$d: files including subfolders
-#: includes/class-apex-folders-ui.php:144 includes/class-apex-folders-ui.php:344
+#: includes/class-apex-folders-ui.php:144 includes/class-apex-folders-ui.php:357
 msgid "%1$d in this folder, %2$d including subfolders"
 msgstr ""
 
@@ -229,117 +446,121 @@ msgstr ""
 msgid "Add folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:271
-msgid "Drag a file onto a folder to move it. Use Bulk select to move several at once."
-msgstr ""
-
-#: includes/class-apex-folders-ui.php:275
-msgid "is a free tool from Apex by Mountain Air Web."
+#: includes/class-apex-folders-ui.php:276
+msgid "Connect an AI provider"
 msgstr ""
 
 #: includes/class-apex-folders-ui.php:276
+msgid "to auto-organize your library."
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:280
+msgid "Drag a file onto a folder to move it. Use Bulk select to move several at once."
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:284
+msgid "is a free tool from Apex by Mountain Air Web."
+msgstr ""
+
+#: includes/class-apex-folders-ui.php:285
 msgid "Meet the other Apex tools"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:321
+#: includes/class-apex-folders-ui.php:334
 msgid "Create New Folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:322
+#: includes/class-apex-folders-ui.php:335
 msgid "Create Folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:323
+#: includes/class-apex-folders-ui.php:336
 msgid "Folder Name:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:324
+#: includes/class-apex-folders-ui.php:337
 msgid "Parent Folder (optional):"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:325
+#: includes/class-apex-folders-ui.php:338
 msgid "None (top level)"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:326
+#: includes/class-apex-folders-ui.php:339
 msgid "Create New Subfolder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:327
+#: includes/class-apex-folders-ui.php:340
 msgid "Create Subfolder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:328
+#: includes/class-apex-folders-ui.php:341
 msgid "Subfolder Name:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:329
+#: includes/class-apex-folders-ui.php:342
 msgid "Parent folder:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:330
+#: includes/class-apex-folders-ui.php:343
 msgid "Rename Folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:331
+#: includes/class-apex-folders-ui.php:344
 msgid "New Name:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:332
-msgid "Cancel"
-msgstr ""
-
-#: includes/class-apex-folders-ui.php:333
+#: includes/class-apex-folders-ui.php:346
 msgid "Save"
 msgstr ""
 
 #. translators: %s: folder name
-#: includes/class-apex-folders-ui.php:335
+#: includes/class-apex-folders-ui.php:348
 msgid "Are you sure you want to delete the folder \"%s\"?"
 msgstr ""
 
 #. translators: %s: folder name
-#: includes/class-apex-folders-ui.php:336
+#: includes/class-apex-folders-ui.php:349
 msgid "Files in this folder will be moved to the Unassigned folder."
 msgstr ""
 
 #. translators: %s: folder name
-#: includes/class-apex-folders-ui.php:337
+#: includes/class-apex-folders-ui.php:350
 msgid "Error creating folder:"
 msgstr ""
 
 #. translators: %s: folder name
-#: includes/class-apex-folders-ui.php:338
+#: includes/class-apex-folders-ui.php:351
 msgid "Error creating subfolder:"
 msgstr ""
 
 #. translators: %s: folder name
-#: includes/class-apex-folders-ui.php:339
+#: includes/class-apex-folders-ui.php:352
 msgid "Error renaming folder:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:340
+#: includes/class-apex-folders-ui.php:353
 msgid "Error deleting folder:"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:341
+#: includes/class-apex-folders-ui.php:354
 msgid "Unknown error"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:342
+#: includes/class-apex-folders-ui.php:355
 msgid "Network error. Please try again."
 msgstr ""
 
 #. translators: %1$d: folder's own file count, %2$d: total file count including subfolders
-#: includes/class-apex-folders-ui.php:426
+#: includes/class-apex-folders-ui.php:439
 msgid "%1$d / %2$d total"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:463
+#: includes/class-apex-folders-ui.php:476
 msgid "Folder"
 msgstr ""
 
-#: includes/class-apex-folders-ui.php:466
+#: includes/class-apex-folders-ui.php:479
 msgid "Select a folder for this media item"
 msgstr ""
 
@@ -399,6 +620,26 @@ msgstr ""
 msgid "Search Folders"
 msgstr ""
 
+#: includes/class-apex-folders-utilities.php:94
+msgid "Folder name cannot be empty"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:101
+msgid "Parent folder does not exist"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:106
+msgid "Cannot create subfolders under Unassigned"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:111
+msgid "Only one level of subfolders is supported"
+msgstr ""
+
+#: includes/class-apex-folders-utilities.php:136
+msgid "The selected folder does not exist."
+msgstr ""
+
 #. translators: %s: file name
 #: includes/class-folder-drag-drop.php:71
 msgid "Moving: %s"
@@ -456,16 +697,12 @@ msgstr ""
 msgid "Invalid folder selected."
 msgstr ""
 
-#: includes/class-folder-drag-drop.php:137
-msgid "The selected folder does not exist."
-msgstr ""
-
-#: includes/class-folder-drag-drop.php:193
+#: includes/class-folder-drag-drop.php:167
 msgid "Failed to move files. Please try again."
 msgstr ""
 
 #. translators: %1$d: number of files moved, %2$s: folder name
-#: includes/class-folder-drag-drop.php:178
+#: includes/class-folder-drag-drop.php:152
 msgid "%1$d file moved successfully to \"%2$s\"."
 msgid_plural "%1$d files moved successfully to \"%2$s\"."
 msgstr[0] ""

@@ -268,6 +268,15 @@ class APEX_FOLDERS_UI {
 
         echo '<button type="button" class="apexfo-add add-new-folder"><span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>' . esc_html__( 'Add folder', 'apex-folders' ) . '</button>';
 
+        // Auto-organize with the AI provider connected to WordPress (7.0+), for users allowed to spend it
+        if ( APEX_FOLDERS_AI::is_available() && APEX_FOLDERS_AI::can_organize() ) {
+            if ( APEX_FOLDERS_AI::is_configured() ) {
+                echo '<button type="button" class="apexfo-organize"><span class="dashicons dashicons-superhero-alt" aria-hidden="true"></span>' . esc_html__( 'Auto-organize with AI', 'apex-folders' ) . '</button>';
+            } else {
+                echo '<p class="apexfo-organize-setup"><a href="' . esc_url( APEX_FOLDERS_AI::connectors_url() ) . '">' . esc_html__( 'Connect an AI provider', 'apex-folders' ) . '</a> ' . esc_html__( 'to auto-organize your library.', 'apex-folders' ) . '</p>';
+            }
+        }
+
         echo '<p class="apexfo-hint">' . esc_html__( 'Drag a file onto a folder to move it. Use Bulk select to move several at once.', 'apex-folders' ) . '</p>';
 
         echo '<p class="apexfo-credit">';
@@ -315,6 +324,10 @@ class APEX_FOLDERS_UI {
         
         wp_localize_script( 'apex-folder-management', 'apexFolderData', $folders_data );
         wp_localize_script( 'apex-folder-counts', 'apexFolderData', $folders_data );
+
+        if ( APEX_FOLDERS_AI::is_available() && APEX_FOLDERS_AI::can_organize() ) {
+            APEX_FOLDERS_AI::enqueue_script();
+        }
         
         // Add translatable strings for JavaScript
         wp_localize_script( 'apex-folder-management', 'apexFoldersL10n', array(

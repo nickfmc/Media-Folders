@@ -18,6 +18,8 @@ Apex Folders adds folders to the WordPress Media Library so you can find files i
 
 ### Features
 
+* **Auto-organize with AI**: one click asks the AI provider you connected in WordPress 7.0's Settings → Connectors for a folder plan, shows it with a cost estimate, lets you ask for changes, applies it, and can undo it
+* **Works with AI agents**: exposes folder abilities through the WordPress Abilities API, so Claude, ChatGPT or an MCP client connected to your site can organize the library
 * **Folders and subfolders** in a sidebar next to your Media Library, with live file counts
 * **Drag and drop**: drop any file onto a folder to move it
 * **Bulk moves**: use the Media Library's own Bulk select, then drag the whole selection at once
@@ -61,6 +63,14 @@ Yes. Click Bulk select in the Media Library, select the files, then drag any one
 
 Yes. Open a folder and upload, or pick a folder in the uploader's "Upload to folder" dropdown. Every file in the batch goes to that folder.
 
+= How does Auto-organize with AI work? =
+
+On WordPress 7.0 or newer, connect a provider (OpenAI, Anthropic or Google) under Settings → Connectors. Then click Auto-organize with AI in the Media Library sidebar. The plugin sends each file's name, title, alt text, caption and a small thumbnail to that provider and shows you the proposed folders before anything changes. You can type an adjustment and re-plan, skip groups, apply, and undo. Nothing is sent anywhere until you click, and the plugin never sees your API key.
+
+= What does the AI feature cost? =
+
+Your AI provider bills you for the tokens used; Apex Folders itself is free. The dialog shows an estimate before you start and the real usage as it runs. A 300px thumbnail per image keeps it small: a few hundred files typically costs cents.
+
 = Does this work with the block editor (Gutenberg)? =
 
 Yes, Apex Folders is fully compatible with the block editor and its media selection interface.
@@ -84,6 +94,11 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 3. Filter by folder in the editor's media picker
 
 == Changelog ==
+
+= 1.2.0 =
+* New: Auto-organize with AI. One click asks the provider connected in WordPress 7.0's Settings → Connectors for a folder plan, with a cost estimate, a box to ask for changes, review before apply, and undo.
+* New: folder abilities for the WordPress Abilities API (list folders, get unassigned files, create folder, move files), so AI agents and MCP clients can organize the library.
+* Folder creation and moves share one code path across the sidebar, drag and drop, the AI and the abilities.
 
 = 1.1.2 =
 * Parent folders now show their subfolders' files too, in the Media Library and in the editor's media picker, and their counts include subfolders.
@@ -113,6 +128,9 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 * Initial public release
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Auto-organize your library with the AI provider connected to WordPress 7.0, and let AI agents manage folders through the Abilities API.
 
 = 1.1.2 =
 Parent folders include their subfolders' files and counts, and can be collapsed.

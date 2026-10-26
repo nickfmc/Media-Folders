@@ -130,46 +130,20 @@ class APEX_FOLDERS_Drag_Drop {
             return;
         }
         
-        // Verify the target folder exists
-        $folder_term = get_term( $folder_id, 'apex_folder' );
-        if ( ! $folder_term || is_wp_error( $folder_term ) ) {
+        $result = APEX_FOLDERS_Utilities::move_items( $attachment_ids, $folder_id );
+
+        if ( is_wp_error( $result ) ) {
             wp_send_json_error( array(
-                'message' => esc_html__( 'The selected folder does not exist.', 'apex-folders' )
+                'message' => esc_html( $result->get_error_message() )
             ) );
             return;
         }
-        
-        // Process each attachment
-        $success_count = 0;
-        $error_count = 0;
-        $processed_ids = array();
-        
-        foreach ( $attachment_ids as $id ) {
-            $id = intval( $id );
-            
-            // Check if it's a valid attachment
-            if ( ! get_post( $id ) || get_post_type( $id ) !== 'attachment' ) {
-                $error_count++;
-                continue;
-            }
-            
-            // Remove current folder assignments
-            wp_delete_object_term_relationships( $id, 'apex_folder' );
-            
-            // Assign to new folder
-            $result = wp_set_object_terms( $id, array( $folder_id ), 'apex_folder', false );
-            
-            if ( is_wp_error( $result ) ) {
-                $error_count++;
-            } else {
-                $success_count++;
-                $processed_ids[] = $id;
-            }
-        }
-        
-        // Update folder counts
-        apex_folders_update_counts();
-        
+
+        $folder_term   = get_term( $folder_id, 'apex_folder' );
+        $success_count = count( $result['moved'] );
+        $error_count   = count( $result['failed'] );
+        $processed_ids = $result['moved'];
+
         // Prepare the response
         if ( $success_count > 0 ) {
             wp_send_json_success( array(

@@ -80,6 +80,92 @@ class APEX_FOLDERS_Utilities {
     }
 
     /**
+     * Create a folder, enforcing the one level of subfolders the sidebar supports
+     *
+     * @param string $name      Folder name.
+     * @param int    $parent_id Parent folder ID, or 0 for a top-level folder.
+     * @return int|WP_Error The new folder's term ID, or an error.
+     */
+    public static function create_folder( $name, $parent_id = 0 ) {
+        $name      = sanitize_text_field( $name );
+        $parent_id = absint( $parent_id );
+
+        if ( '' === $name ) {
+            return new WP_Error( 'apex_folders_empty_name', __( 'Folder name cannot be empty', 'apex-folders' ) );
+        }
+
+        // Ensure parent folder exists if specified
+        if ( $parent_id > 0 ) {
+            $parent_term = get_term( $parent_id, 'apex_folder' );
+            if ( ! $parent_term || is_wp_error( $parent_term ) ) {
+                return new WP_Error( 'apex_folders_no_parent', __( 'Parent folder does not exist', 'apex-folders' ) );
+            }
+
+            // Ensure parent isn't the Unassigned folder
+            if ( $parent_id === (int) APEX_FOLDERS_Unassigned::get_id() ) {
+                return new WP_Error( 'apex_folders_unassigned_parent', __( 'Cannot create subfolders under Unassigned', 'apex-folders' ) );
+            }
+
+            // Check if parent itself has a parent (limit to one level)
+            if ( (int) $parent_term->parent > 0 ) {
+                return new WP_Error( 'apex_folders_too_deep', __( 'Only one level of subfolders is supported', 'apex-folders' ) );
+            }
+        }
+
+        $result = wp_insert_term( $name, 'apex_folder', array( 'parent' => $parent_id ) );
+
+        if ( is_wp_error( $result ) ) {
+            return $result;
+        }
+
+        return (int) $result['term_id'];
+    }
+
+    /**
+     * Move attachments into a folder
+     *
+     * @param int[] $attachment_ids Attachment IDs.
+     * @param int   $folder_id      Target folder term ID.
+     * @return array|WP_Error { moved: int[], failed: int[] }, or an error if the folder does not exist.
+     */
+    public static function move_items( $attachment_ids, $folder_id ) {
+        $folder_id = absint( $folder_id );
+
+        $folder_term = $folder_id ? get_term( $folder_id, 'apex_folder' ) : null;
+        if ( ! $folder_term || is_wp_error( $folder_term ) ) {
+            return new WP_Error( 'apex_folders_no_folder', __( 'The selected folder does not exist.', 'apex-folders' ) );
+        }
+
+        $moved  = array();
+        $failed = array();
+
+        // Recount the folders once at the end rather than after every file
+        wp_defer_term_counting( true );
+
+        foreach ( array_unique( array_map( 'absint', (array) $attachment_ids ) ) as $id ) {
+            if ( ! $id || get_post_type( $id ) !== 'attachment' ) {
+                $failed[] = $id;
+                continue;
+            }
+
+            $result = wp_set_object_terms( $id, array( $folder_id ), 'apex_folder', false );
+
+            if ( is_wp_error( $result ) ) {
+                $failed[] = $id;
+            } else {
+                $moved[] = $id;
+            }
+        }
+
+        wp_defer_term_counting( false );
+
+        return array(
+            'moved'  => $moved,
+            'failed' => $failed,
+        );
+    }
+
+    /**
      * Get organized folders
      * 
      * Returns folders organized into parent folders, child folders,

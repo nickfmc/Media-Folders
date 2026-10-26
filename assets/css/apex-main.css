@@ -750,3 +750,294 @@ select#media-attachment-filters ~ select#media-attachment-date-filters ~ select#
         padding-right: 90px;
     }
 }
+
+/* ─── Auto-organize with AI ──────────────────────────────────────────── */
+
+.apexfo-organize {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 36px;
+    margin-top: 8px;
+    padding: 7px 12px;
+    color: var(--apexfo-ink);
+    background: #fff;
+    border: 1px solid var(--apexfo-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.apexfo-organize .dashicons {
+    color: var(--apexfo-green-strong);
+}
+
+.apexfo-organize:hover,
+.apexfo-organize:focus {
+    border-color: var(--apexfo-ink);
+    background: var(--apexfo-paper);
+    outline: none;
+}
+
+.apexfo-organize:focus-visible {
+    box-shadow: var(--apexfo-focus);
+}
+
+.apexfo-organize-setup {
+    margin: 10px 4px 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--apexfo-muted);
+}
+
+.apexfo-organize-setup a {
+    color: var(--apexfo-green-strong);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.apexfo-organize-setup a:hover {
+    text-decoration: underline;
+}
+
+.apex-mode-list .apexfo-organize {
+    display: inline-flex;
+    width: auto;
+    margin: 10px 0 0 8px;
+    padding: 6px 14px;
+    min-height: 32px;
+}
+
+/* The dialog */
+.apexfo-dialog .ui-dialog-content {
+    padding: 16px 20px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--apexfo-text);
+}
+
+.apexfo-dialog-intro {
+    margin: 0 0 14px;
+    color: var(--apexfo-muted);
+}
+
+.apexfo-scope {
+    display: flex;
+    gap: 16px;
+    margin: 0 0 14px;
+}
+
+.apexfo-estimate {
+    min-height: 60px;
+    padding: 12px 14px;
+    background: var(--apexfo-cream);
+    border-radius: var(--apexfo-radius-sm);
+}
+
+.apexfo-estimate p {
+    margin: 0 0 4px;
+}
+
+.apexfo-estimate-files {
+    font-weight: 600;
+}
+
+.apexfo-estimate-tokens {
+    font-family: var(--apexfo-mono);
+    font-size: 12px;
+}
+
+.apexfo-estimate-cost,
+.apexfo-review-usage {
+    color: var(--apexfo-muted);
+    font-size: 12px;
+}
+
+.apexfo-estimate-warning,
+.apexfo-applying {
+    margin: 8px 0 0;
+    padding: 8px 12px;
+    background: #fbeaea;
+    border-left: 3px solid var(--apexfo-danger);
+    border-radius: 4px;
+}
+
+.apexfo-applying {
+    background: var(--apexfo-mint);
+    border-left-color: var(--apexfo-green);
+}
+
+.apexfo-progress {
+    padding: 10px 0;
+}
+
+.apexfo-progress-bar {
+    height: 8px;
+    margin-bottom: 10px;
+    background: var(--apexfo-cream);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.apexfo-progress-bar span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--apexfo-green);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+.apexfo-progress p {
+    margin: 0 0 4px;
+}
+
+.apexfo-progress-usage,
+.apexfo-progress-cost {
+    font-family: var(--apexfo-mono);
+    font-size: 12px;
+    color: var(--apexfo-muted);
+}
+
+.apexfo-review-title {
+    margin: 0 0 4px;
+    font-size: 15px;
+}
+
+.apexfo-review-summary {
+    margin: 0 0 12px;
+    color: var(--apexfo-muted);
+}
+
+.apexfo-review-list {
+    max-height: 320px;
+    margin: 0 0 12px;
+    padding: 0;
+    overflow: auto;
+    border: 1px solid var(--apexfo-border);
+    border-radius: var(--apexfo-radius-sm);
+}
+
+.apexfo-review-group {
+    margin: 0;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--apexfo-border);
+}
+
+.apexfo-review-group:last-child {
+    border-bottom: 0;
+}
+
+.apexfo-review-group.apexfo-skipped {
+    opacity: 0.45;
+}
+
+.apexfo-review-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.apexfo-review-name {
+    font-weight: 600;
+}
+
+.apexfo-review-badge {
+    padding: 1px 7px;
+    font-family: var(--apexfo-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--apexfo-green-deep);
+    background: var(--apexfo-mint);
+    border-radius: 999px;
+}
+
+.apexfo-review-parent {
+    font-size: 12px;
+    color: var(--apexfo-muted);
+}
+
+.apexfo-review-head .apexfo-count {
+    margin-left: auto;
+}
+
+.apexfo-review-skip {
+    font-size: 12px;
+    color: var(--apexfo-muted);
+    white-space: nowrap;
+}
+
+.apexfo-review-thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.apexfo-review-thumb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    font-family: var(--apexfo-mono);
+    font-size: 10px;
+    color: var(--apexfo-muted);
+    background: var(--apexfo-cream);
+    border-radius: 4px;
+}
+
+.apexfo-review-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.apexfo-review-more {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+    font-family: var(--apexfo-mono);
+    font-size: 11px;
+    color: var(--apexfo-muted);
+}
+
+.apexfo-review-unplaced {
+    margin: 0 0 12px;
+    color: var(--apexfo-muted);
+}
+
+.apexfo-adjust label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.apexfo-adjust textarea {
+    width: 100%;
+    border-radius: 6px;
+}
+
+.apexfo-dialog .ui-dialog-buttonpane .ui-button.button-primary {
+    color: #fff;
+    background: var(--apexfo-green-strong);
+    border-color: var(--apexfo-green-strong);
+}
+
+.apexfo-dialog .ui-dialog-buttonpane .ui-button.button-primary:hover,
+.apexfo-dialog .ui-dialog-buttonpane .ui-button.button-primary:focus {
+    background: var(--apexfo-green-deep);
+    border-color: var(--apexfo-green-deep);
+}
+
+.apexfo-dialog .ui-dialog-buttonpane .ui-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
