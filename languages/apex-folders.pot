@@ -249,7 +249,7 @@ msgid "There are no files to organize."
 msgstr ""
 
 #. translators: %1$s: low cost, %2$s: high cost
-#: includes/class-apex-folders-ai.php:149 includes/class-apex-folders-ai.php:531
+#: includes/class-apex-folders-ai.php:149 includes/class-apex-folders-ai.php:532
 msgid "No AI provider is connected yet."
 msgstr ""
 
@@ -268,132 +268,136 @@ msgid "Cancel"
 msgstr ""
 
 #: includes/class-apex-folders-ai.php:153
+msgid "Stop and review"
+msgstr ""
+
+#: includes/class-apex-folders-ai.php:154
 msgid "Close"
 msgstr ""
 
 #. translators: %1$s: files analysed so far, %2$s: total files
-#: includes/class-apex-folders-ai.php:155
+#: includes/class-apex-folders-ai.php:156
 msgid "Analysed %1$s of %2$s files"
 msgstr ""
 
 #. translators: %1$s: tokens used, %2$s: model name
-#: includes/class-apex-folders-ai.php:157
+#: includes/class-apex-folders-ai.php:158
 msgid "%1$s tokens so far · %2$s"
 msgstr ""
 
 #. translators: %1$s: cost so far, %2$s: projected cost
-#: includes/class-apex-folders-ai.php:159
+#: includes/class-apex-folders-ai.php:160
 msgid "About %1$s so far, %2$s projected"
 msgstr ""
 
 #. translators: %1$s: cost so far, %2$s: projected cost
-#: includes/class-apex-folders-ai.php:160
+#: includes/class-apex-folders-ai.php:161
 msgid "Review the plan"
 msgstr ""
 
 #. translators: %1$s: number of files to move, %2$s: number of folders, %3$s: number of new folders
-#: includes/class-apex-folders-ai.php:162
+#: includes/class-apex-folders-ai.php:163
 msgid "%1$s files into %2$s folders (%3$s new)"
 msgstr ""
 
 #. translators: %1$s: number of files to move, %2$s: number of folders, %3$s: number of new folders
-#: includes/class-apex-folders-ai.php:163
+#: includes/class-apex-folders-ai.php:164
 msgid "New"
 msgstr ""
 
 #. translators: %1$s: number of files to move, %2$s: number of folders, %3$s: number of new folders
-#: includes/class-apex-folders-ai.php:164
+#: includes/class-apex-folders-ai.php:165
 msgid "in"
 msgstr ""
 
 #. translators: %1$s: number of files to move, %2$s: number of folders, %3$s: number of new folders
-#: includes/class-apex-folders-ai.php:165
+#: includes/class-apex-folders-ai.php:166
 msgid "Skip"
 msgstr ""
 
 #. translators: %1$s: number of files to move, %2$s: number of folders, %3$s: number of new folders
-#: includes/class-apex-folders-ai.php:166
+#: includes/class-apex-folders-ai.php:167
 msgid "Left in Unassigned: nothing fit well enough"
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:167
+#: includes/class-apex-folders-ai.php:168
 msgid "Anything to change?"
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:168
+#: includes/class-apex-folders-ai.php:169
 msgid "For example: put every PDF in Documents, and do not create a Screenshots folder."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:169
+#: includes/class-apex-folders-ai.php:170
 msgid "Re-plan"
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:170
+#: includes/class-apex-folders-ai.php:171
 msgid "Apply"
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:171
+#: includes/class-apex-folders-ai.php:172
 msgid "Applying…"
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:172
+#: includes/class-apex-folders-ai.php:173
 msgid "Done"
 msgstr ""
 
 #. translators: %1$s: number of files moved, %2$s: number of folders created
-#: includes/class-apex-folders-ai.php:174
+#: includes/class-apex-folders-ai.php:175
 msgid "%1$s files moved, %2$s folders created."
 msgstr ""
 
 #. translators: %1$s: number of files moved, %2$s: number of folders created
-#: includes/class-apex-folders-ai.php:175
+#: includes/class-apex-folders-ai.php:176
 msgid "Undo"
 msgstr ""
 
 #. translators: %1$s: number of files moved, %2$s: number of folders created
-#: includes/class-apex-folders-ai.php:176
+#: includes/class-apex-folders-ai.php:177
 msgid "Folders restored."
 msgstr ""
 
 #. translators: %1$s: number of files moved, %2$s: number of folders created
-#: includes/class-apex-folders-ai.php:177
+#: includes/class-apex-folders-ai.php:178
 msgid "Something went wrong."
 msgstr ""
 
 #. translators: %1$s: number of files moved, %2$s: number of folders created
-#: includes/class-apex-folders-ai.php:178
+#: includes/class-apex-folders-ai.php:179
 msgid "The AI could not place any of these files. Try adding an instruction and re-planning."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:179
+#: includes/class-apex-folders-ai.php:180
 msgid "Reload to see the folders"
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:247
+#: includes/class-apex-folders-ai.php:248
 msgid "This WordPress does not have the AI Client."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:251
+#: includes/class-apex-folders-ai.php:252
 msgid "You are not allowed to auto-organize this library."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:508
+#: includes/class-apex-folders-ai.php:509
 msgid "None of these files exist."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:636
+#: includes/class-apex-folders-ai.php:637
 msgid "The AI returned no answer."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:642
+#: includes/class-apex-folders-ai.php:643
 msgid "The AI answer could not be read."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:765
+#: includes/class-apex-folders-ai.php:766
 msgid "There is nothing to apply."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:858
+#: includes/class-apex-folders-ai.php:859
 msgid "There is nothing to undo."
 msgstr ""
 

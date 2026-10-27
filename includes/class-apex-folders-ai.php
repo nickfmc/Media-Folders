@@ -150,6 +150,7 @@ class APEX_FOLDERS_AI {
                     'connectProvider'  => __( 'Connect a provider in Settings → Connectors', 'apex-folders' ),
                     'start'            => __( 'Analyse files', 'apex-folders' ),
                     'cancel'           => __( 'Cancel', 'apex-folders' ),
+                    'stopAndReview'    => __( 'Stop and review', 'apex-folders' ),
                     'close'            => __( 'Close', 'apex-folders' ),
                     /* translators: %1$s: files analysed so far, %2$s: total files */
                     'progress'         => __( 'Analysed %1$s of %2$s files', 'apex-folders' ),

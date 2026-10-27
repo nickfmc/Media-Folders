@@ -9,6 +9,8 @@
 
     var config = window.apexfoOrganize || {};
     var strings = config.strings || {};
+    // Localized scalars arrive as strings
+    var batchSize = parseInt(config.batchSize, 10) || 20;
     var apiFetch = window.wp && wp.apiFetch;
 
     if (!apiFetch) {
@@ -162,6 +164,7 @@
             var $body = this.$dialog.empty();
 
             this.cancelled = false;
+            this.stopRequested = false;
             this.proposals = [];
             this.usage = { input: 0, output: 0, total: 0 };
             this.model = '';
@@ -171,12 +174,13 @@
             $body.append($progress);
 
             this.setButtons([
-                { text: strings.cancel, click: function() { self.cancelled = true; $(this).dialog('close'); } }
+                { text: strings.cancel, click: function() { self.cancelled = true; $(this).dialog('close'); } },
+                { text: strings.stopAndReview, 'class': 'apexfo-stop', disabled: true, click: function() { self.stopRequested = true; $(this).prop('disabled', true); } }
             ]);
 
             var batches = [];
-            for (var i = 0; i < this.ids.length; i += config.batchSize) {
-                batches.push(this.ids.slice(i, i + config.batchSize));
+            for (var i = 0; i < this.ids.length; i += batchSize) {
+                batches.push(this.ids.slice(i, i + batchSize));
             }
 
             var done = 0;
@@ -198,7 +202,8 @@
                 if (self.cancelled || !self.$dialog) {
                     return;
                 }
-                if (index >= batches.length) {
+                // Everything analysed, or the user asked to stop and review what is done so far
+                if (index >= batches.length || self.stopRequested) {
                     self.showReview();
                     return;
                 }
@@ -229,6 +234,7 @@
 
                     done += batches[index].length;
                     update();
+                    $('.apexfo-stop').prop('disabled', false);
                     run(index + 1);
                 }).catch(function(error) {
                     $progress.append($('<p class="apexfo-estimate-warning"></p>').text(errorMessage(error)));
