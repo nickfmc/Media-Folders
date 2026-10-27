@@ -45,7 +45,29 @@
     }
 
     function errorMessage(error) {
-        return (error && error.message) ? error.message : strings.error;
+        var message = (error && error.message) ? String(error.message) : strings.error;
+        var code = error && error.code ? String(error.code) : '';
+        var status = error && error.data && error.data.status ? ' / HTTP ' + error.data.status : '';
+
+        return code ? format(strings.errorDetail, message, code + status) : message;
+    }
+
+    /**
+     * Whether a failed request is worth trying again after a pause
+     */
+    function isRetryable(error) {
+        if (!error) {
+            return false;
+        }
+        if (error.data && error.data.retryable) {
+            return true;
+        }
+        var status = error.data && error.data.status;
+        if (status && [408, 429, 500, 502, 503, 504, 529].indexOf(status) !== -1) {
+            return true;
+        }
+        // apiFetch's own codes for a dead connection or a non-JSON (timeout page) answer
+        return error.code === 'fetch_error' || error.code === 'invalid_json';
     }
 
     /**
@@ -173,10 +195,13 @@
             var $progress = $('<div class="apexfo-progress"><div class="apexfo-progress-bar"><span></span></div><p class="apexfo-progress-text"></p><p class="apexfo-progress-usage"></p><p class="apexfo-progress-cost"></p></div>');
             $body.append($progress);
 
-            this.setButtons([
-                { text: strings.cancel, click: function() { self.cancelled = true; $(this).dialog('close'); } },
-                { text: strings.stopAndReview, 'class': 'apexfo-stop', disabled: true, click: function() { self.stopRequested = true; $(this).prop('disabled', true); } }
-            ]);
+            var analysingButtons = function() {
+                return [
+                    { text: strings.cancel, click: function() { self.cancelled = true; $(this).dialog('close'); } },
+                    { text: strings.stopAndReview, 'class': 'apexfo-stop', disabled: done === 0, click: function() { self.stopRequested = true; $(this).prop('disabled', true); } }
+                ];
+            };
+            var retryDelays = [5, 15, 30];
 
             var batches = [];
             for (var i = 0; i < this.ids.length; i += batchSize) {
@@ -184,6 +209,8 @@
             }
 
             var done = 0;
+            this.setButtons(analysingButtons());
+
             var update = function() {
                 var percent = self.ids.length ? Math.round(done / self.ids.length * 100) : 100;
                 $progress.find('.apexfo-progress-bar span').css('width', percent + '%');
@@ -198,7 +225,7 @@
             };
             update();
 
-            var run = function(index) {
+            var run = function(index, attempt) {
                 if (self.cancelled || !self.$dialog) {
                     return;
                 }
@@ -216,7 +243,12 @@
                         known_new_folders: self.newFolders
                     }
                 }).then(function(data) {
-                    $.each(data.proposals || [], function(i, proposal) {
+                    // An error body that arrived with a 200 status is still an error
+                    if (!data || !$.isArray(data.proposals)) {
+                        return $.Deferred().reject(data && data.code ? data : { code: 'apex_folders_bad_response', message: strings.error }).promise();
+                    }
+
+                    $.each(data.proposals, function(i, proposal) {
                         self.proposals.push(proposal);
                         if (proposal.new_folder && $.inArray(proposal.new_folder, self.newFolders) === -1) {
                             self.newFolders.push(proposal.new_folder);
@@ -235,16 +267,38 @@
                     done += batches[index].length;
                     update();
                     $('.apexfo-stop').prop('disabled', false);
-                    run(index + 1);
+                    run(index + 1, 0);
                 }).catch(function(error) {
+                    if (self.cancelled || !self.$dialog) {
+                        return;
+                    }
+
+                    // Busy providers and timeouts: wait, then try the same batch again
+                    if (isRetryable(error) && attempt < retryDelays.length) {
+                        var seconds = retryDelays[attempt];
+                        $progress.find('.apexfo-progress-retry').remove();
+                        $progress.append($('<p class="apexfo-progress-retry"></p>').text(format(strings.retrying, seconds)));
+                        setTimeout(function() {
+                            $progress.find('.apexfo-progress-retry').remove();
+                            run(index, attempt + 1);
+                        }, seconds * 1000);
+                        return;
+                    }
+
                     $progress.append($('<p class="apexfo-estimate-warning"></p>').text(errorMessage(error)));
-                    self.setButtons([
-                        { text: strings.close, click: function() { $(this).dialog('close'); } }
-                    ]);
+
+                    var buttons = [
+                        { text: strings.close, click: function() { $(this).dialog('close'); } },
+                        { text: strings.retryBatch, 'class': 'button-primary', click: function() { $progress.find('.apexfo-estimate-warning').remove(); self.setButtons(analysingButtons()); run(index, 0); } }
+                    ];
+                    if (done > 0) {
+                        buttons.push({ text: strings.stopAndReview, click: function() { self.showReview(); } });
+                    }
+                    self.setButtons(buttons);
                 });
             };
 
-            run(0);
+            run(0, 0);
         },
 
         /**

@@ -151,6 +151,11 @@ class APEX_FOLDERS_AI {
                     'start'            => __( 'Analyse files', 'apex-folders' ),
                     'cancel'           => __( 'Cancel', 'apex-folders' ),
                     'stopAndReview'    => __( 'Stop and review', 'apex-folders' ),
+                    'retryBatch'       => __( 'Retry this batch', 'apex-folders' ),
+                    /* translators: %1$s: seconds */
+                    'retrying'         => __( 'The provider is busy. Retrying in %1$s seconds…', 'apex-folders' ),
+                    /* translators: %1$s: error message, %2$s: error code */
+                    'errorDetail'      => __( '%1$s (%2$s)', 'apex-folders' ),
                     'close'            => __( 'Close', 'apex-folders' ),
                     /* translators: %1$s: files analysed so far, %2$s: total files */
                     'progress'         => __( 'Analysed %1$s of %2$s files', 'apex-folders' ),
@@ -527,6 +532,11 @@ class APEX_FOLDERS_AI {
         $model = '';
         $provider = '';
 
+        // A filter may also hand back an error (its own provider failed, say)
+        if ( is_wp_error( $plan ) ) {
+            return $this->ai_error( $plan->get_error_code(), $plan->get_error_message(), '', $plan->get_error_data() );
+        }
+        
         if ( ! is_array( $plan ) ) {
             if ( ! self::is_configured() ) {
                 return new WP_Error( 'apex_folders_not_configured', __( 'No AI provider is connected yet.', 'apex-folders' ), array( 'status' => 409 ) );
@@ -623,24 +633,23 @@ class APEX_FOLDERS_AI {
 
             $result = $builder->generate_text_result();
         } catch ( Throwable $e ) {
-            return new WP_Error( 'apex_folders_ai_failed', $e->getMessage(), array( 'status' => 502 ) );
+            return $this->ai_error( 'apex_folders_ai_failed', $e->getMessage(), get_class( $e ) );
         }
 
         if ( is_wp_error( $result ) ) {
-            $result->add_data( array( 'status' => 502 ) );
-            return $result;
+            return $this->ai_error( $result->get_error_code(), $result->get_error_message(), '', $result->get_error_data() );
         }
 
         try {
             $answer = $result->toText();
         } catch ( Throwable $e ) {
-            return new WP_Error( 'apex_folders_ai_empty', __( 'The AI returned no answer.', 'apex-folders' ), array( 'status' => 502 ) );
+            return $this->ai_error( 'apex_folders_ai_empty', __( 'The AI returned no answer.', 'apex-folders' ), get_class( $e ) );
         }
 
         $plan = json_decode( $this->strip_code_fence( $answer ), true );
 
         if ( ! is_array( $plan ) || ! isset( $plan['files'] ) ) {
-            return new WP_Error( 'apex_folders_ai_unreadable', __( 'The AI answer could not be read.', 'apex-folders' ), array( 'status' => 502 ) );
+            return $this->ai_error( 'apex_folders_ai_unreadable', __( 'The AI answer could not be read.', 'apex-folders' ), mb_substr( $answer, 0, 300 ) );
         }
 
         $usage    = array( 'input' => 0, 'output' => 0, 'total' => 0 );
@@ -666,6 +675,53 @@ class APEX_FOLDERS_AI {
             'model'    => $model,
             'provider' => $provider,
         );
+    }
+
+    /**
+     * Build an error the dialog can show and act on
+     *
+     * Rate limits, overloaded providers and timeouts are marked retryable so
+     * the dialog tries again after a pause instead of giving up.
+     *
+     * @param string $code    Error code.
+     * @param string $message Error message, possibly empty.
+     * @param string $detail  Extra detail for the message (exception class, answer excerpt).
+     * @param mixed  $data    Error data from the AI Client, if any.
+     * @return WP_Error
+     */
+    private function ai_error( $code, $message, $detail = '', $data = null ) {
+        $message = trim( (string) $message );
+        $status  = ( is_array( $data ) && ! empty( $data['status'] ) ) ? (int) $data['status'] : 502;
+        
+        // Providers answer with codes like 529 (overloaded); send the browser a standard one
+        if ( ! in_array( $status, array( 400, 401, 403, 404, 408, 409, 429, 500, 502, 503, 504 ), true ) ) {
+            $status = ( $status >= 500 || 529 === $status ) ? 503 : 502;
+        }
+
+        if ( '' === $message ) {
+            $message = sprintf(
+                /* translators: %s: error code */
+                __( 'The AI request failed (%s).', 'apex-folders' ),
+                $code
+            );
+        }
+
+        if ( '' !== $detail ) {
+            $message .= ' [' . $detail . ']';
+        }
+
+        $haystack  = strtolower( $code . ' ' . $message );
+        $retryable = in_array( $status, array( 408, 429, 500, 502, 503, 504, 529 ), true )
+            || (bool) preg_match( '/rate.?limit|overloaded|too many requests|timed? ?out|timeout|temporarily|try again|529|503|429/', $haystack );
+
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'Apex Folders auto-organize: ' . $code . ': ' . $message ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Only when WP_DEBUG is on.
+        }
+
+        return new WP_Error( $code, $message, array(
+            'status'    => $status,
+            'retryable' => $retryable,
+        ) );
     }
 
     /**

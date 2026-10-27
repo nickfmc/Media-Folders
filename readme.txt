@@ -3,7 +3,7 @@ Contributors: nickfmc
 Tags: media library, folders, ai, media folders, organize media
 Requires at least: 5.3
 Tested up to: 7.1
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -111,6 +111,11 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 
 == Changelog ==
 
+= 1.2.2 =
+* Fixed: Auto-organize now reports what went wrong (error code and HTTP status) instead of "Something went wrong".
+* Auto-organize retries a batch after a pause when the provider is busy or rate-limited, offers Retry this batch, and lets you review what was analysed before an error.
+* Fixed: an error returned with a success status no longer counts as an analysed batch.
+
 = 1.2.1 =
 * Fixed: Auto-organize stopped with "Invalid parameter(s): ids" after the first batch of 20 files.
 * New: a Stop and review button during analysis, so a large library can be organized in chunks.
@@ -148,6 +153,9 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 * Initial public release
 
 == Upgrade Notice ==
+
+= 1.2.2 =
+Auto-organize now retries busy providers and shows real error details.
 
 = 1.2.1 =
 Fixes Auto-organize stopping after the first 20 files. Update if you use the AI feature.
