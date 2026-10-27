@@ -105,9 +105,9 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 == Screenshots ==
 
 1. Folders in the Media Library sidebar, with live counts
-2. Auto-organize with AI: review the proposed folders, ask for changes, then apply
-3. Upload straight into a folder
-4. Filter by folder in the editor's media picker
+2. Upload straight into a folder
+3. Filter by folder in the editor's media picker
+4. Auto-organize with AI: review the proposed folders, ask for changes, then apply
 
 == Changelog ==
 
