@@ -426,36 +426,78 @@ class APEX_FOLDERS_AI {
     }
 
     /**
-     * Path of a small version of an image to show the model
+     * Image formats every supported provider accepts as input
+     *
+     * Anthropic, OpenAI and Google all take these four. SVG, AVIF, HEIC,
+     * TIFF and BMP are left out: at least one provider rejects each of them.
+     *
+     * @return string[]
+     */
+    private function get_sendable_image_types() {
+        /**
+         * Filters the image MIME types sent to the AI as thumbnails.
+         *
+         * @param string[] $types MIME types.
+         */
+        return apply_filters( 'apex_folders_organize_image_types', array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' ) );
+    }
+
+    /**
+     * A small picture of a file to show the model, in a format it accepts
+     *
+     * Images use their medium or thumbnail size. PDFs use the preview image
+     * WordPress generates for them; videos and audio use their poster or cover
+     * art. Anything else, or any picture in a format a provider may reject
+     * (SVG, AVIF, HEIC...), is described by metadata only.
      *
      * @param int $id Attachment ID.
-     * @return string|null
+     * @return array|null { path, mime } or null.
      */
-    private function get_thumbnail_path( $id ) {
-        if ( ! wp_attachment_is_image( $id ) ) {
-            return null;
-        }
-
+    private function get_thumbnail( $id ) {
         $file = get_attached_file( $id );
         if ( ! $file ) {
             return null;
         }
 
-        $dir = dirname( $file );
+        $allowed = $this->get_sendable_image_types();
+        $dir     = dirname( $file );
 
+        $candidate = function( $path ) use ( $allowed ) {
+            if ( ! $path || ! file_exists( $path ) || filesize( $path ) >= MB_IN_BYTES ) {
+                return null;
+            }
+
+            // Trust the file's real type, not just its name
+            $type = wp_check_filetype_and_ext( $path, wp_basename( $path ) );
+            $mime = ! empty( $type['type'] ) ? $type['type'] : '';
+            if ( ! $mime ) {
+                $checked = wp_check_filetype( $path );
+                $mime    = (string) $checked['type'];
+            }
+
+            return in_array( $mime, $allowed, true ) ? array( 'path' => $path, 'mime' => $mime ) : null;
+        };
+
+        // Generated sizes: image thumbnails, and the preview WordPress makes of a PDF
         foreach ( array( 'medium', 'thumbnail' ) as $size ) {
             $intermediate = image_get_intermediate_size( $id, $size );
             if ( $intermediate && ! empty( $intermediate['file'] ) ) {
-                $path = path_join( $dir, wp_basename( $intermediate['file'] ) );
-                if ( file_exists( $path ) ) {
-                    return $path;
+                $thumbnail = $candidate( path_join( $dir, wp_basename( $intermediate['file'] ) ) );
+                if ( $thumbnail ) {
+                    return $thumbnail;
                 }
             }
         }
 
-        // No small version: only send the original if it is small, so a 20 MB photo never goes out
-        if ( file_exists( $file ) && filesize( $file ) < MB_IN_BYTES ) {
-            return $file;
+        // No usable small version: an image under 1 MB can go as it is, so a 20 MB photo never goes out
+        if ( wp_attachment_is_image( $id ) ) {
+            return $candidate( $file );
+        }
+        
+        // Videos and audio: use the poster or cover art WordPress keeps for them, if there is one
+        $poster_id = (int) get_post_thumbnail_id( $id );
+        if ( $poster_id && $poster_id !== (int) $id && wp_attachment_is_image( $poster_id ) ) {
+            return $this->get_thumbnail( $poster_id );
         }
 
         return null;
@@ -604,36 +646,11 @@ class APEX_FOLDERS_AI {
             $text .= wp_json_encode( $file ) . "\n";
         }
 
-        try {
-            $builder = wp_ai_client_prompt()
-                ->using_system_instruction( $system )
-                ->with_text( $text );
+        $result = $this->send_prompt( $system, $text, $files, true );
 
-            // Show the model a small version of each image so badly named photos can still be sorted
-            foreach ( $files as $file ) {
-                $thumbnail = $this->get_thumbnail_path( $file['id'] );
-                if ( $thumbnail ) {
-                    $builder = $builder->with_text( sprintf( 'Image for file id %d:', $file['id'] ) )->with_file( $thumbnail );
-                }
-            }
-
-            /**
-             * Filters the model preference for auto-organize, in priority order.
-             *
-             * @param string[] $models Model IDs. Default empty: any model the provider offers.
-             */
-            $preference = apply_filters( 'apex_folders_organize_model_preference', array() );
-            if ( ! empty( $preference ) ) {
-                $builder = $builder->using_model_preference( ...$preference );
-            }
-
-            $builder = $builder
-                ->as_json_response( $this->get_plan_schema() )
-                ->using_max_tokens( 120 * count( $files ) + 200 );
-
-            $result = $builder->generate_text_result();
-        } catch ( Throwable $e ) {
-            return $this->ai_error( 'apex_folders_ai_failed', $e->getMessage(), get_class( $e ) );
+        // A provider that refuses one of the pictures should not sink the batch: describe the files in words instead
+        if ( is_wp_error( $result ) && $this->is_image_rejection( $result ) ) {
+            $result = $this->send_prompt( $system, $text, $files, false );
         }
 
         if ( is_wp_error( $result ) ) {
@@ -675,6 +692,62 @@ class APEX_FOLDERS_AI {
             'model'    => $model,
             'provider' => $provider,
         );
+    }
+
+    /**
+     * Send one batch to the AI Client
+     *
+     * @param string $system         System instruction.
+     * @param string $text           Prompt text.
+     * @param array  $files          File descriptions.
+     * @param bool   $include_images Whether to attach thumbnails.
+     * @return \WordPress\AiClient\Results\DTO\GenerativeAiResult|WP_Error
+     */
+    private function send_prompt( $system, $text, $files, $include_images ) {
+        try {
+            $builder = wp_ai_client_prompt()
+                ->using_system_instruction( $system )
+                ->with_text( $text );
+
+            // Show the model a small picture of each file so badly named photos can still be sorted
+            if ( $include_images ) {
+                foreach ( $files as $file ) {
+                    $thumbnail = $this->get_thumbnail( $file['id'] );
+                    if ( $thumbnail ) {
+                        $builder = $builder
+                            ->with_text( sprintf( 'Image for file id %d:', $file['id'] ) )
+                            ->with_file( $thumbnail['path'], $thumbnail['mime'] );
+                    }
+                }
+            }
+
+            /**
+             * Filters the model preference for auto-organize, in priority order.
+             *
+             * @param string[] $models Model IDs. Default empty: any model the provider offers.
+             */
+            $preference = apply_filters( 'apex_folders_organize_model_preference', array() );
+            if ( ! empty( $preference ) ) {
+                $builder = $builder->using_model_preference( ...$preference );
+            }
+
+            return $builder
+                ->as_json_response( $this->get_plan_schema() )
+                ->using_max_tokens( 120 * count( $files ) + 200 )
+                ->generate_text_result();
+        } catch ( Throwable $e ) {
+            return new WP_Error( 'apex_folders_ai_failed', $e->getMessage() . ' [' . get_class( $e ) . ']' );
+        }
+    }
+
+    /**
+     * Whether an error is the provider refusing an attached picture
+     *
+     * @param WP_Error $error Error.
+     * @return bool
+     */
+    private function is_image_rejection( $error ) {
+        return (bool) preg_match( '/media_type|mime|image|unsupported.{0,20}(file|format)|invalid.{0,20}(file|format)/i', $error->get_error_message() );
     }
 
     /**

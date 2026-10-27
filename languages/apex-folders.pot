@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: Apex Folders 1.2.2\n"
+"Project-Id-Version: Apex Folders 1.2.3\n"
 "Report-Msgid-Bugs-To: https://mountainairweb.com\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -249,7 +249,7 @@ msgid "There are no files to organize."
 msgstr ""
 
 #. translators: %1$s: low cost, %2$s: high cost
-#: includes/class-apex-folders-ai.php:149 includes/class-apex-folders-ai.php:542
+#: includes/class-apex-folders-ai.php:149 includes/class-apex-folders-ai.php:584
 msgid "No AI provider is connected yet."
 msgstr ""
 
@@ -396,28 +396,28 @@ msgstr ""
 msgid "You are not allowed to auto-organize this library."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:514
+#: includes/class-apex-folders-ai.php:556
 msgid "None of these files exist."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:646
+#: includes/class-apex-folders-ai.php:663
 msgid "The AI returned no answer."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:652
+#: includes/class-apex-folders-ai.php:669
 msgid "The AI answer could not be read."
 msgstr ""
 
 #. translators: %s: error code
-#: includes/class-apex-folders-ai.php:704
+#: includes/class-apex-folders-ai.php:777
 msgid "The AI request failed (%s)."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:822
+#: includes/class-apex-folders-ai.php:895
 msgid "There is nothing to apply."
 msgstr ""
 
-#: includes/class-apex-folders-ai.php:915
+#: includes/class-apex-folders-ai.php:988
 msgid "There is nothing to undo."
 msgstr ""
 

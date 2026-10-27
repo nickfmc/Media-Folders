@@ -3,7 +3,7 @@ Contributors: nickfmc
 Tags: media library, folders, ai, media folders, organize media
 Requires at least: 5.3
 Tested up to: 7.1
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -82,6 +82,10 @@ Yes. Open a folder and upload, or pick a folder in the uploader's "Upload to fol
 
 On WordPress 7.0 or newer, connect a provider (OpenAI, Anthropic or Google) under Settings → Connectors. Then click Auto-organize with AI in the Media Library sidebar. The plugin sends each file's name, title, alt text, caption and a small thumbnail to that provider and shows you the proposed folders before anything changes. You can type an adjustment and re-plan, skip groups, apply, and undo. Nothing is sent anywhere until you click, and the plugin never sees your API key.
 
+= What about SVGs, videos, PDFs and other files? =
+
+They are organized too. The AI sees a small picture only where it is a format every provider accepts (JPEG, PNG, GIF or WebP): images, a video's poster, a PDF's preview. Everything else is sorted by its filename, title and caption, and stays in Unassigned if nothing fits. A file the AI cannot read never stops the run.
+
 = What does the AI feature cost? =
 
 Your AI provider bills you for the tokens used; Apex Folders itself is free. The dialog shows an estimate before you start and the real usage as it runs. A 300px thumbnail per image keeps it small: a few hundred files typically costs cents.
@@ -110,6 +114,11 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 4. Auto-organize with AI: review the proposed folders, ask for changes, then apply
 
 == Changelog ==
+
+= 1.2.3 =
+* Fixed: Auto-organize failed with "media_type: Input should be 'image/jpeg', 'image/png', 'image/gif' or 'image/webp'" on libraries with SVG, AVIF, HEIC or other image formats some providers do not accept. Only JPEG, PNG, GIF and WebP pictures are sent now; other files are organized by name, title and caption.
+* If a provider still refuses a picture, the batch is resent without pictures instead of failing.
+* Videos and audio files are shown to the AI using their poster or cover art, and PDFs using their preview image, when WordPress has one.
 
 = 1.2.2 =
 * Fixed: Auto-organize now reports what went wrong (error code and HTTP status) instead of "Something went wrong".
@@ -153,6 +162,9 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 * Initial public release
 
 == Upgrade Notice ==
+
+= 1.2.3 =
+Fixes Auto-organize stopping on libraries with SVG, AVIF or HEIC files.
 
 = 1.2.2 =
 Auto-organize now retries busy providers and shows real error details.
