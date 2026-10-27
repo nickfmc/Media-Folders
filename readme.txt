@@ -3,7 +3,7 @@ Contributors: nickfmc
 Tags: media library, folders, media folders, file manager, organize media
 Requires at least: 5.3
 Tested up to: 7.1
-Stable tag: 1.1.2
+Stable tag: 1.2.0
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
