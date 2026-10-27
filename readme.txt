@@ -3,7 +3,7 @@ Contributors: nickfmc
 Tags: media library, folders, ai, media folders, organize media
 Requires at least: 5.3
 Tested up to: 7.1
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -111,6 +111,10 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 
 == Changelog ==
 
+= 1.2.1 =
+* Fixed: Auto-organize stopped with "Invalid parameter(s): ids" after the first batch of 20 files.
+* New: a Stop and review button during analysis, so a large library can be organized in chunks.
+
 = 1.2.0 =
 * New: Auto-organize with AI. One click asks the provider connected in WordPress 7.0's Settings → Connectors for a folder plan, with a cost estimate, a box to ask for changes, review before apply, and undo.
 * New: folder abilities for the WordPress Abilities API (list folders, get unassigned files, create folder, move files), so AI agents and MCP clients can organize the library.
@@ -144,6 +148,9 @@ Apex Folders is designed to be compatible with most media library plugins. Howev
 * Initial public release
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+Fixes Auto-organize stopping after the first 20 files. Update if you use the AI feature.
 
 = 1.2.0 =
 Auto-organize your library with the AI provider connected to WordPress 7.0, and let AI agents manage folders through the Abilities API.
